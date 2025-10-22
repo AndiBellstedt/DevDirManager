@@ -1,28 +1,28 @@
 ﻿<#
-	.SYNOPSIS
-		Installs the DevDirManager Module from github
+    .SYNOPSIS
+        Installs the DevDirManager Module from github
 
-	.DESCRIPTION
-		This script installs the DevDirManager Module from github.
+    .DESCRIPTION
+        This script installs the DevDirManager Module from github.
 
-		It does so by ...
-		- downloading the specified branch as zip to $env:TEMP
-		- Unpacking that zip file to a folder in $env:TEMP
-		- Moving that content to a module folder in either program files (default) or the user profile
+        It does so by ...
+        - downloading the specified branch as zip to $env:TEMP
+        - Unpacking that zip file to a folder in $env:TEMP
+        - Moving that content to a module folder in either program files (default) or the user profile
 
-	.PARAMETER Branch
-		The branch to install. Installs main by default.
-		Unknown branches will terminate the script in error.
+    .PARAMETER Branch
+        The branch to install. Installs main by default.
+        Unknown branches will terminate the script in error.
 
-	.PARAMETER UserMode
-		The downloaded module will be moved to the user profile, rather than program files.
+    .PARAMETER UserMode
+        The downloaded module will be moved to the user profile, rather than program files.
 
-	.PARAMETER Scope
-		By default, the downloaded module will be moved to program files.
-		Setting this to 'CurrentUser' installs to the userprofile of the current user.
+    .PARAMETER Scope
+        By default, the downloaded module will be moved to program files.
+        Setting this to 'CurrentUser' installs to the userprofile of the current user.
 
-	.PARAMETER Force
-		The install script will overwrite an existing module.
+    .PARAMETER Force
+        The install script will overwrite an existing module.
 #>
 [CmdletBinding()]
 Param (
@@ -45,7 +45,7 @@ Param (
 $ModuleName = "DevDirManager"
 
 # Base path to the github repository
-$BaseUrl = "https://github.com/<InsertUsernameHere>/DevDirManager"
+$BaseUrl = "https://github.com/AndiBellstedt/DevDirManager"
 
 # If the module is in a subfolder of the cloned repository, specify relative path here. Empty string to skip.
 $SubFolder = "DevDirManager"
@@ -63,72 +63,72 @@ if ($install_Branch) { $Branch = $install_Branch }
 #region Utility Functions
 function Compress-Archive {
     <#
-		.SYNOPSIS
-			Creates an archive, or zipped file, from specified files and folders.
+        .SYNOPSIS
+            Creates an archive, or zipped file, from specified files and folders.
 
-		.DESCRIPTION
-			The Compress-Archive cmdlet creates a zipped (or compressed) archive file from one or more specified files or folders. An archive file allows multiple files to be packaged, and optionally compressed, into a single zipped file for easier distribution and storage. An archive file can be compressed by using the compression algorithm specified by the CompressionLevel parameter.
+        .DESCRIPTION
+            The Compress-Archive cmdlet creates a zipped (or compressed) archive file from one or more specified files or folders. An archive file allows multiple files to be packaged, and optionally compressed, into a single zipped file for easier distribution and storage. An archive file can be compressed by using the compression algorithm specified by the CompressionLevel parameter.
 
-			Because Compress-Archive relies upon the Microsoft .NET Framework API System.IO.Compression.ZipArchive to compress files, the maximum file size that you can compress by using Compress-Archive is currently 2 GB. This is a limitation of the underlying API.
+            Because Compress-Archive relies upon the Microsoft .NET Framework API System.IO.Compression.ZipArchive to compress files, the maximum file size that you can compress by using Compress-Archive is currently 2 GB. This is a limitation of the underlying API.
 
-		.PARAMETER Path
-			Specifies the path or paths to the files that you want to add to the archive zipped file. This parameter can accept wildcard characters. Wildcard characters allow you to add all files in a folder to your zipped archive file. To specify multiple paths, and include files in multiple locations in your output zipped file, use commas to separate the paths.
+        .PARAMETER Path
+            Specifies the path or paths to the files that you want to add to the archive zipped file. This parameter can accept wildcard characters. Wildcard characters allow you to add all files in a folder to your zipped archive file. To specify multiple paths, and include files in multiple locations in your output zipped file, use commas to separate the paths.
 
-		.PARAMETER LiteralPath
-			Specifies the path or paths to the files that you want to add to the archive zipped file. Unlike the Path parameter, the value of LiteralPath is used exactly as it is typed. No characters are interpreted as wildcards. If the path includes escape characters, enclose each escape character in single quotation marks, to instruct Windows PowerShell not to interpret any characters as escape sequences. To specify multiple paths, and include files in multiple locations in your output zipped file, use commas to separate the paths.
+        .PARAMETER LiteralPath
+            Specifies the path or paths to the files that you want to add to the archive zipped file. Unlike the Path parameter, the value of LiteralPath is used exactly as it is typed. No characters are interpreted as wildcards. If the path includes escape characters, enclose each escape character in single quotation marks, to instruct Windows PowerShell not to interpret any characters as escape sequences. To specify multiple paths, and include files in multiple locations in your output zipped file, use commas to separate the paths.
 
-		.PARAMETER DestinationPath
-			Specifies the path to the archive output file. This parameter is required. The specified DestinationPath value should include the desired name of the output zipped file; it specifies either the absolute or relative path to the zipped file. If the file name specified in DestinationPath does not have a .zip file name extension, the cmdlet adds a .zip file name extension.
+        .PARAMETER DestinationPath
+            Specifies the path to the archive output file. This parameter is required. The specified DestinationPath value should include the desired name of the output zipped file; it specifies either the absolute or relative path to the zipped file. If the file name specified in DestinationPath does not have a .zip file name extension, the cmdlet adds a .zip file name extension.
 
-		.PARAMETER CompressionLevel
-			Specifies how much compression to apply when you are creating the archive file. Faster compression requires less time to create the file, but can result in larger file sizes. The acceptable values for this parameter are:
+        .PARAMETER CompressionLevel
+            Specifies how much compression to apply when you are creating the archive file. Faster compression requires less time to create the file, but can result in larger file sizes. The acceptable values for this parameter are:
 
-			- Fastest. Use the fastest compression method available to decrease processing time; this can result in larger file sizes.
-			- NoCompression. Do not compress the source files.
-			- Optimal. Processing time is dependent on file size.
+            - Fastest. Use the fastest compression method available to decrease processing time; this can result in larger file sizes.
+            - NoCompression. Do not compress the source files.
+            - Optimal. Processing time is dependent on file size.
 
-			If this parameter is not specified, the command uses the default value, Optimal.
+            If this parameter is not specified, the command uses the default value, Optimal.
 
-		.PARAMETER Update
-			Updates the specified archive by replacing older versions of files in the archive with newer versions of files that have the same names. You can also add this parameter to add files to an existing archive.
+        .PARAMETER Update
+            Updates the specified archive by replacing older versions of files in the archive with newer versions of files that have the same names. You can also add this parameter to add files to an existing archive.
 
-		.PARAMETER Force
-			@{Text=}
+        .PARAMETER Force
+            @{Text=}
 
-		.PARAMETER Confirm
-			Prompts you for confirmation before running the cmdlet.
+        .PARAMETER Confirm
+            Prompts you for confirmation before running the cmdlet.
 
-		.PARAMETER WhatIf
-			Shows what would happen if the cmdlet runs. The cmdlet is not run.
+        .PARAMETER WhatIf
+            Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
-		.EXAMPLE
-			Example 1: Create an archive file
+        .EXAMPLE
+            Example 1: Create an archive file
 
-			PS C:\>Compress-Archive -LiteralPath C:\Reference\Draftdoc.docx, C:\Reference\Images\diagram2.vsd -CompressionLevel Optimal -DestinationPath C:\Archives\Draft.Zip
+            PS C:\>Compress-Archive -LiteralPath C:\Reference\Draftdoc.docx, C:\Reference\Images\diagram2.vsd -CompressionLevel Optimal -DestinationPath C:\Archives\Draft.Zip
 
-			This command creates a new archive file, Draft.zip, by compressing two files, Draftdoc.docx and diagram2.vsd, specified by the LiteralPath parameter. The compression level specified for this operation is Optimal.
+            This command creates a new archive file, Draft.zip, by compressing two files, Draftdoc.docx and diagram2.vsd, specified by the LiteralPath parameter. The compression level specified for this operation is Optimal.
 
-		.EXAMPLE
-			Example 2: Create an archive with wildcard characters
+        .EXAMPLE
+            Example 2: Create an archive with wildcard characters
 
-			PS C:\>Compress-Archive -Path C:\Reference\* -CompressionLevel Fastest -DestinationPath C:\Archives\Draft
+            PS C:\>Compress-Archive -Path C:\Reference\* -CompressionLevel Fastest -DestinationPath C:\Archives\Draft
 
-			This command creates a new archive file, Draft.zip, in the C:\Archives folder. Note that though the file name extension .zip was not added to the value of the DestinationPath parameter, Windows PowerShell appends this to the specified archive file name automatically. The new archive file contains every file in the C:\Reference folder, because a wildcard character was used in place of specific file names in the Path parameter. The specified compression level is Fastest, which might result in a larger output file, but compresses a large number of files faster.
+            This command creates a new archive file, Draft.zip, in the C:\Archives folder. Note that though the file name extension .zip was not added to the value of the DestinationPath parameter, Windows PowerShell appends this to the specified archive file name automatically. The new archive file contains every file in the C:\Reference folder, because a wildcard character was used in place of specific file names in the Path parameter. The specified compression level is Fastest, which might result in a larger output file, but compresses a large number of files faster.
 
-		.EXAMPLE
-			Example 3: Update an existing archive file
+        .EXAMPLE
+            Example 3: Update an existing archive file
 
-			PS C:\>Compress-Archive -Path C:\Reference\* -Update -DestinationPath C:\Archives\Draft.Zip
+            PS C:\>Compress-Archive -Path C:\Reference\* -Update -DestinationPath C:\Archives\Draft.Zip
 
-			This command updates an existing archive file, Draft.Zip, in the C:\Archives folder. The command is run to update Draft.Zip with newer versions of existing files that came from the C:\Reference folder, and also to add new files that have been added to C:\Reference since Draft.Zip was initially created.
+            This command updates an existing archive file, Draft.Zip, in the C:\Archives folder. The command is run to update Draft.Zip with newer versions of existing files that came from the C:\Reference folder, and also to add new files that have been added to C:\Reference since Draft.Zip was initially created.
 
-		.EXAMPLE
-			Example 4: Create an archive from an entire folder
+        .EXAMPLE
+            Example 4: Create an archive from an entire folder
 
-			PS C:\>Compress-Archive -Path C:\Reference -DestinationPath C:\Archives\Draft
+            PS C:\>Compress-Archive -Path C:\Reference -DestinationPath C:\Archives\Draft
 
-			This command creates an archive from an entire folder, C:\Reference. Note that though the file name extension .zip was not added to the value of the DestinationPath parameter, Windows PowerShell appends this to the specified archive file name automatically.
-	#>
+            This command creates an archive from an entire folder, C:\Reference. Note that though the file name extension .zip was not added to the value of the DestinationPath parameter, Windows PowerShell appends this to the specified archive file name automatically.
+    #>
     [CmdletBinding(DefaultParameterSetName = "Path", SupportsShouldProcess = $true, HelpUri = "http://go.microsoft.com/fwlink/?LinkID=393252")]
     param
     (
@@ -1092,44 +1092,44 @@ PreparingToExpandVerboseMessage=Preparing to expand...
 
 function Expand-Archive {
     <#
-		.SYNOPSIS
-			Extracts files from a specified archive (zipped) file.
+        .SYNOPSIS
+            Extracts files from a specified archive (zipped) file.
 
-		.DESCRIPTION
-			The Expand-Archive cmdlet extracts files from a specified zipped archive file to a specified destination folder. An archive file allows multiple files to be packaged, and optionally compressed, into a single zipped file for easier distribution and storage.
+        .DESCRIPTION
+            The Expand-Archive cmdlet extracts files from a specified zipped archive file to a specified destination folder. An archive file allows multiple files to be packaged, and optionally compressed, into a single zipped file for easier distribution and storage.
 
-		.PARAMETER Path
-			Specifies the path to the archive file.
+        .PARAMETER Path
+            Specifies the path to the archive file.
 
-		.PARAMETER LiteralPath
-			Specifies the path to an archive file. Unlike the Path parameter, the value of LiteralPath is used exactly as it is typed. Wildcard characters are not supported. If the path includes escape characters, enclose each escape character in single quotation marks, to instruct Windows PowerShell not to interpret any characters as escape sequences.
+        .PARAMETER LiteralPath
+            Specifies the path to an archive file. Unlike the Path parameter, the value of LiteralPath is used exactly as it is typed. Wildcard characters are not supported. If the path includes escape characters, enclose each escape character in single quotation marks, to instruct Windows PowerShell not to interpret any characters as escape sequences.
 
-		.PARAMETER DestinationPath
-			Specifies the path to the folder in which you want the command to save extracted files. Enter the path to a folder, but do not specify a file name or file name extension. This parameter is required.
+        .PARAMETER DestinationPath
+            Specifies the path to the folder in which you want the command to save extracted files. Enter the path to a folder, but do not specify a file name or file name extension. This parameter is required.
 
-		.PARAMETER Force
-			Forces the command to run without asking for user confirmation.
+        .PARAMETER Force
+            Forces the command to run without asking for user confirmation.
 
-		.PARAMETER Confirm
-			Prompts you for confirmation before running the cmdlet.
+        .PARAMETER Confirm
+            Prompts you for confirmation before running the cmdlet.
 
-		.PARAMETER WhatIf
-			Shows what would happen if the cmdlet runs. The cmdlet is not run.
+        .PARAMETER WhatIf
+            Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
-		.EXAMPLE
-			Example 1: Extract the contents of an archive
+        .EXAMPLE
+            Example 1: Extract the contents of an archive
 
-			PS C:\>Expand-Archive -LiteralPath C:\Archives\Draft.Zip -DestinationPath C:\Reference
+            PS C:\>Expand-Archive -LiteralPath C:\Archives\Draft.Zip -DestinationPath C:\Reference
 
-			This command extracts the contents of an existing archive file, Draft.zip, into the folder specified by the DestinationPath parameter, C:\Reference.
+            This command extracts the contents of an existing archive file, Draft.zip, into the folder specified by the DestinationPath parameter, C:\Reference.
 
-		.EXAMPLE
-			Example 2: Extract the contents of an archive in the current folder
+        .EXAMPLE
+            Example 2: Extract the contents of an archive in the current folder
 
-			PS C:\>Expand-Archive -Path Draft.Zip -DestinationPath C:\Reference
+            PS C:\>Expand-Archive -Path Draft.Zip -DestinationPath C:\Reference
 
-			This command extracts the contents of an existing archive file in the current folder, Draft.zip, into the folder specified by the DestinationPath parameter, C:\Reference.
-	#>
+            This command extracts the contents of an existing archive file in the current folder, Draft.zip, into the folder specified by the DestinationPath parameter, C:\Reference.
+    #>
     [CmdletBinding(
         DefaultParameterSetName = "Path",
         SupportsShouldProcess = $true,

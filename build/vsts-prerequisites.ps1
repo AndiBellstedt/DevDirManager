@@ -1,12 +1,15 @@
 ﻿param (
     [string]
+    $ModuleName = 'DevDirManager',
+
+    [string]
     $Repository = 'PSGallery'
 )
 
 $modules = @("Pester", "PSModuleDevelopment", "PSScriptAnalyzer")
 
 # Automatically add missing dependencies
-$data = Import-PowerShellDataFile -Path "$PSScriptRoot\..\DevDirManager\DevDirManager.psd1"
+$data = Import-PowerShellDataFile -Path "$($PSScriptRoot)\..\$($ModuleName)\$($ModuleName).psd1"
 foreach ($dependency in $data.RequiredModules) {
     if ($dependency -is [string]) {
         if ($modules -contains $dependency) { continue }
@@ -18,7 +21,7 @@ foreach ($dependency in $data.RequiredModules) {
 }
 
 foreach ($module in $modules) {
-    Write-Host "Installing $module" -ForegroundColor Cyan
+    Write-Host "Installing $($module)" -ForegroundColor Cyan
     Install-Module $module -Force -SkipPublisherCheck -Repository $Repository
     Import-Module $module -Force -PassThru
 }
