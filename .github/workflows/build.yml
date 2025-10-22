@@ -8,16 +8,19 @@ jobs:
     build:
         runs-on: windows-latest
 
+        env:
+            PROJECT_NAME: ${{ github.event.repository.name }}
+
         steps:
             - uses: actions/checkout@v1
             - name: Install Prerequisites
-              run: .\build\vsts-prerequisites.ps1
+              run: .\build\vsts-prerequisites.ps1 -ModuleName $env:PROJECT_NAME
               shell: powershell
             - name: Validate
               run: .\build\vsts-validate.ps1
               shell: powershell
             - name: Build
-              run: .\build\vsts-build.ps1 -ApiKey $env:APIKEY
+              run: .\build\vsts-build.ps1 -ModuleName $env:PROJECT_NAME -ApiKey $env:APIKEY
               shell: powershell
               env:
                   APIKEY: ${{ secrets.ApiKey }}
