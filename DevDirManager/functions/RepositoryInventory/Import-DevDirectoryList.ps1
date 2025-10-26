@@ -44,10 +44,12 @@
     )
 
     process {
+        # Validate that the specified file exists before attempting to read it
         if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
             throw "The specified repository list file '$Path' does not exist."
         }
 
+        # Determine the import format: use explicit Format parameter or infer from file extension
         $resolvedFormat = $Format
         if (-not $resolvedFormat) {
             $extension = [System.IO.Path]::GetExtension($Path)
@@ -58,17 +60,23 @@
             }
         }
 
+        # Deserialize the repository list from the specified format
         switch ($resolvedFormat) {
             "Json" {
+                # Read the entire JSON file as a single string for ConvertFrom-Json
                 $rawContent = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
+
+                # Handle empty or whitespace-only files gracefully by returning an empty array
                 if ([string]::IsNullOrWhiteSpace($rawContent)) {
                     return @()
                 }
 
-                # Rehydrate the repository records for downstream processing and ensure an array is returned.
+                # Rehydrate the repository records and ensure an array is returned for consistent typing
+                # Use -as [object[]] to satisfy OutputType declaration and handle single-element JSON arrays
                 ($rawContent | ConvertFrom-Json -Depth 5) -as [object[]]
             }
             "Xml" {
+                # Import-Clixml automatically handles deserialization and type reconstruction
                 Import-Clixml -Path $Path
             }
         }

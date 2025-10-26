@@ -50,7 +50,7 @@
         SupportsShouldProcess = $true,
         ConfirmImpact = "Medium"
     )]
-    [OutputType([psobject])]
+    [OutputType('DevDirManager.CloneResult')]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNull()]
@@ -77,6 +77,8 @@
     )
 
     begin {
+        ## Verify that the git executable is available before processing any repositories
+        ## This early check prevents partial clone attempts when git is unavailable
         try {
             $gitCommand = Get-Command -Name $GitExecutable -ErrorAction Stop
             $resolvedGitPath = $gitCommand.Source
@@ -84,48 +86,61 @@
             throw "Unable to locate the git executable '$GitExecutable'. Ensure Git is installed and available in PATH."
         }
 
+        # Normalize the destination path to an absolute form with trailing backslash
+        # This ensures consistent path operations and prevents relative path ambiguities
         $destinationRoot = Resolve-Path -LiteralPath $DestinationPath -ErrorAction Stop
         $normalizedDestination = [System.IO.Path]::GetFullPath($destinationRoot.ProviderPath)
         if (-not $normalizedDestination.EndsWith("\", [System.StringComparison]::Ordinal)) {
             $normalizedDestination = "$($normalizedDestination)\"
         }
 
-        # Matches unsafe relative paths: starts with backslash, contains colon, or ".." (path traversal)
+        # Define regex pattern to reject unsafe relative paths that could escape the destination
+        # Matches: absolute paths (starts with \), drive letters (contains :), or path traversal (..)
         $invalidRelativePattern = [regex]::new("(^\\|:|\.\.)")
     }
 
     process {
+        # Process each repository entry from the pipeline or InputObject array
+        # Each iteration attempts to clone one repository to its target path
         foreach ($repository in $InputObject) {
+            # Skip null entries (can occur when pipeline sends empty objects)
             if (-not $repository) {
                 continue
             }
 
+            # Extract and validate the relative path and remote URL from the repository metadata
             $relativePath = [string]$repository.RelativePath
             $remoteUrl = [string]$repository.RemoteUrl
 
+            # Skip repositories missing a remote URL (cannot clone without a source)
             if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
                 Write-PSFMessage -Level Warning -Message "Skipping repository with missing RemoteUrl: $($relativePath)."
                 continue
             }
 
+            # Skip repositories missing a relative path (cannot determine target directory)
             if ([string]::IsNullOrWhiteSpace($relativePath)) {
                 Write-PSFMessage -Level Warning -Message "Skipping repository with missing RelativePath for remote $($remoteUrl)."
                 continue
             }
 
+            # Reject paths that could escape the destination root (security check)
             if ($invalidRelativePattern.IsMatch($relativePath)) {
                 Write-PSFMessage -Level Warning -Message "Skipping repository with unsafe relative path '$relativePath'."
                 continue
             }
 
+            # Construct the target path by combining destination root with the repository's relative path
             $targetPath = Join-Path -Path $normalizedDestination -ChildPath $relativePath
             $targetPath = [System.IO.Path]::GetFullPath($targetPath)
 
+            # Verify that the resolved target path is still within the destination root (defense-in-depth check)
             if (-not $targetPath.StartsWith($normalizedDestination, [System.StringComparison]::OrdinalIgnoreCase)) {
                 Write-PSFMessage -Level Warning -Message "Skipping repository with out-of-scope path '$relativePath'."
                 continue
             }
 
+            # Ensure the parent directory exists before attempting to clone
             $targetParent = Split-Path -Path $targetPath
             if ([string]::IsNullOrEmpty($targetParent)) {
                 $targetParent = $targetPath
@@ -135,6 +150,7 @@
                 New-Item -ItemType Directory -Path $targetParent -Force | Out-Null
             }
 
+            # Handle existing target directories according to SkipExisting/Force switch settings
             if (Test-Path -LiteralPath $targetPath -PathType Container) {
                 if ($SkipExisting.IsPresent) {
                     Write-PSFMessage -Level Verbose -Message "Skipping existing repository target $($targetPath)."
@@ -146,25 +162,29 @@
                     continue
                 }
 
-                # Remove the existing directory tree so cloning produces a clean checkout.
+                # Remove the existing directory tree to ensure a clean clone (when -Force is specified)
                 Remove-Item -LiteralPath $targetPath -Recurse -Force
             }
 
+            # Check for WhatIf/Confirm before performing the clone operation
             if (-not $PSCmdlet.ShouldProcess($targetPath, "Clone repository from $remoteUrl")) {
                 continue
             }
 
+            # Build the git clone command with --recurse-submodules to include nested repositories
+            # Use -- separator to prevent URLs starting with - from being interpreted as options
             $argumentList = @("clone", "--recurse-submodules", "--", $remoteUrl, $targetPath)
             $cloneProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $argumentList -NoNewWindow -Wait -PassThru
 
+            # Check the git clone exit code and log errors for failed clones
             if ($cloneProcess.ExitCode -ne 0) {
-                # Use PSFramework to log errors so they are captured by the module's logging configuration
                 Write-PSFMessage -Level Error -Message "git clone for '$remoteUrl' failed with exit code $($cloneProcess.ExitCode)."
                 continue
             }
 
-            # Emit a summary object so callers can audit what was cloned.
+            # Emit a summary object to the pipeline so callers can audit what was cloned
             [pscustomobject]@{
+                PSTypeName = 'DevDirManager.CloneResult'
                 RemoteUrl  = $remoteUrl
                 TargetPath = $targetPath
                 Status     = "Cloned"

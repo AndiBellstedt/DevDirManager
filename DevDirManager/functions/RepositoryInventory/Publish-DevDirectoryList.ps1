@@ -65,7 +65,7 @@
         SupportsShouldProcess = $true,
         DefaultParameterSetName = "FromPath"
     )]
-    [OutputType([psobject])]
+    [OutputType('DevDirManager.GistResult')]
     param(
         [Parameter(ParameterSetName = "FromPath", Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -182,6 +182,7 @@
 
             # Return summary details so callers have the gist identifier for follow-up automation.
             [pscustomobject]@{
+                PSTypeName  = 'DevDirManager.GistResult'
                 Description = $response.description
                 GistId      = $response.id
                 HtmlUrl     = $response.html_url

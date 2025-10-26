@@ -64,20 +64,24 @@
     )
 
     begin {
-        # Buffer pipeline input so we can serialize once in the end block.
+        # Buffer all pipeline input into a List for single serialization in the end block
+        # Using a List provides efficient Add() operations and avoids array resizing overhead
         $repositoryList = [System.Collections.Generic.List[psobject]]::new()
     }
 
     process {
+        # Collect each pipeline object into the repository list buffer
         $repositoryList.Add($InputObject)
     }
 
     end {
+        # Early exit if no repositories were provided via pipeline or parameter
         if ($repositoryList.Count -eq 0) {
             Write-PSFMessage -Level Verbose -Message "No repository entries received for export."
             return
         }
 
+        # Determine the output format: use explicit Format parameter or infer from file extension
         $resolvedFormat = $Format
         if (-not $resolvedFormat) {
             $extension = [System.IO.Path]::GetExtension($Path)
@@ -88,25 +92,32 @@
             }
         }
 
+        # Extract the output directory path and resolve relative paths to current location
         $outputDirectory = Split-Path -Path $Path
         if ([string]::IsNullOrEmpty($outputDirectory) -or $outputDirectory -eq ".") {
             $outputDirectory = (Get-Location).ProviderPath
         }
 
+        # Ensure the output directory exists before attempting to write the file
         if (-not [string]::IsNullOrEmpty($outputDirectory) -and -not (Test-Path -LiteralPath $outputDirectory -PathType Container)) {
             New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
         }
 
+        # Check for WhatIf/Confirm before performing the write operation
         if (-not $PSCmdlet.ShouldProcess($Path, "Export repository list as $resolvedFormat")) {
             return
         }
 
+        # Serialize the repository list to the specified format
         switch ($resolvedFormat) {
             "Json" {
+                # Use Depth 5 to ensure nested properties are fully serialized
+                # Set-Content with UTF8 ensures compatibility across systems
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 5
                 $jsonContent | Set-Content -LiteralPath $Path -Encoding UTF8
             }
             "Xml" {
+                # Export-Clixml handles depth automatically and preserves type information
                 $repositoryList | Export-Clixml -Path $Path
             }
         }

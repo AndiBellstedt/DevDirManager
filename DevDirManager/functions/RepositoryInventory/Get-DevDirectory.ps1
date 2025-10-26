@@ -31,7 +31,7 @@
 
     #>
     [CmdletBinding()]
-    [OutputType([psobject[]])]
+    [OutputType('DevDirManager.Repository')]
     param(
         [Parameter()]
         [ValidateNotNullOrEmpty()]
@@ -45,71 +45,42 @@
     )
 
     begin {
+        # Initialize a strongly-typed list to collect repository metadata throughout the scan
+        # Using List[T] provides better performance than += array concatenation for large result sets
         $repositoryLayoutList = [System.Collections.Generic.List[pscustomobject]]::new()
-
-        function Get-DevDirectoryRemoteUrl {
-            param(
-                [Parameter(Mandatory = $true)]
-                [ValidateNotNullOrEmpty()]
-                [string]
-                $RepositoryPath,
-
-                [Parameter(Mandatory = $true)]
-                [ValidateNotNullOrEmpty()]
-                [string]
-                $RemoteName
-            )
-
-            $gitFolderPath = Join-Path -Path $RepositoryPath -ChildPath ".git"
-            $gitConfigPath = Join-Path -Path $gitFolderPath -ChildPath "config"
-
-            if (-not (Test-Path -LiteralPath $gitConfigPath -PathType Leaf)) {
-                # Use PSFramework logging to provide consistent output handling across the module
-                Write-PSFMessage -Level Verbose -Message "No .git\\config file found at $($gitConfigPath)."
-                return $null
-            }
-
-            $configLineList = Get-Content -LiteralPath $gitConfigPath -ErrorAction Stop
-            $escapedRemoteName = [Regex]::Escape($RemoteName)
-            $sectionPattern = "^\s*\[remote\s+`"$($escapedRemoteName)`"\]\s*$"
-            $insideTargetSection = $false
-
-            foreach ($line in $configLineList) {
-                if ($line -match "^\s*\[.+\]\s*$") {
-                    $insideTargetSection = ($line -match $sectionPattern)
-                    continue
-                }
-
-                if ($insideTargetSection -and $line -match "^\s*url\s*=\s*(.+)$") {
-                    return $matches[1].Trim()
-                }
-            }
-
-            return $null
-        }
     }
 
     process {
+        # Resolve the root path to its canonical absolute form
+        # This ensures consistent path comparison and relative path calculation
         $resolvedRoot = Resolve-Path -LiteralPath $RootPath -ErrorAction Stop
         $rootDirectory = $resolvedRoot.ProviderPath
         $normalizedRoot = [System.IO.Path]::GetFullPath($rootDirectory)
 
+        # Ensure the normalized root ends with a backslash for consistent URI-based path operations
         if (-not $normalizedRoot.EndsWith("\", [System.StringComparison]::Ordinal)) {
             $normalizedRoot = "$($normalizedRoot)\"
         }
 
-        # Prepare the traversal queue so we scan directories breadth-first and avoid stack overflows.
+        # Use breadth-first search (BFS) with a queue instead of recursion to avoid stack overflow
+        # when scanning deeply nested directory structures. BFS also allows us to stop descending
+        # at repository boundaries, which is more efficient than depth-first approaches.
         $rootUri = [System.Uri]::new($normalizedRoot)
         $pendingDirectoryQueue = [System.Collections.Generic.Queue[string]]::new()
         $pendingDirectoryQueue.Enqueue($rootDirectory)
 
         while ($pendingDirectoryQueue.Count -gt 0) {
+            # Dequeue the next directory to process
             $currentDirectory = $pendingDirectoryQueue.Dequeue()
             $gitFolderPath = Join-Path -Path $currentDirectory -ChildPath ".git"
 
+            # Check if this directory is a Git repository root (contains .git folder)
             if (Test-Path -LiteralPath $gitFolderPath -PathType Container) {
+                # Found a repository; extract remote URL using the internal helper function
                 $remoteUrl = Get-DevDirectoryRemoteUrl -RepositoryPath $currentDirectory -RemoteName $RemoteName
 
+                # Calculate the relative path from the scan root to this repository
+                # URI-based relative path calculation handles special characters and encodings correctly
                 $resolvedCurrent = [System.IO.Path]::GetFullPath($currentDirectory)
                 if (-not $resolvedCurrent.EndsWith("\", [System.StringComparison]::Ordinal)) {
                     $resolvedCurrent = "$($resolvedCurrent)\"
@@ -118,14 +89,19 @@
                 $currentUri = [System.Uri]::new($resolvedCurrent)
                 $relativeUri = $rootUri.MakeRelativeUri($currentUri)
                 $relativePath = [System.Uri]::UnescapeDataString($relativeUri.ToString()).TrimEnd("/")
+
+                # Handle the edge case where the repository is at the root of the scan path
                 if ([string]::IsNullOrEmpty($relativePath)) {
                     $relativePath = "."
                 }
 
+                # Convert forward slashes (from URI) to backslashes (Windows convention)
                 $relativePath = $relativePath -replace "/", "\\"
 
-                # Capture repository metadata so downstream commands can recreate the layout.
+                # Add the repository metadata record to the result collection
+                # This structure is compatible with Export/Import and Restore/Sync commands
                 $repositoryLayoutList.Add([pscustomobject]@{
+                        PSTypeName   = 'DevDirManager.Repository'
                         RootPath     = $normalizedRoot.TrimEnd("\\")
                         RelativePath = $relativePath
                         FullPath     = $resolvedCurrent.TrimEnd("\\")
@@ -133,18 +109,24 @@
                         RemoteUrl    = $remoteUrl
                     })
 
+                # Do NOT descend into subdirectories of a repository (treat repo as a leaf node)
+                # This prevents scanning nested repositories or internal .git structures
                 continue
             }
 
+            # This directory is not a repository root; enumerate its child directories
             $childDirectoryList = @()
             try {
                 $childDirectoryList = Get-ChildItem -LiteralPath $currentDirectory -Directory -ErrorAction Stop
             } catch {
-                # Directory enumeration can fail for permissions; log verbosely and continue
+                # Directory enumeration can fail due to permissions or I/O errors
+                # Log the issue and continue scanning other directories
                 Write-PSFMessage -Level Verbose -Message "Skipping directory $($currentDirectory) due to $($_.Exception.Message)."
             }
 
+            # Enqueue child directories for subsequent processing (breadth-first order)
             foreach ($childDirectory in $childDirectoryList) {
+                # Skip .git folders to avoid processing Git internals as repositories
                 if ($childDirectory.Name -eq ".git") {
                     continue
                 }
@@ -155,6 +137,8 @@
     }
 
     end {
+        # Convert the List to an array for output to match the declared OutputType
+        # This ensures compatibility with downstream commands expecting array input
         $repositoryLayoutList.ToArray()
     }
 }

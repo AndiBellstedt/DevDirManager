@@ -1,5 +1,42 @@
 ﻿# Changelog
-## 1.0.0 (2025-10-26)
- - New: Some Stuff
- - Upd: Moar Stuff
- - Fix: Much Stuff
+
+# 1.0.0 (2025-10-26)
+- New: Command Get-DevDirectory
+    - Scans a directory tree and returns metadata about all Git repositories found
+    - Performs breadth-first traversal that stops descending at repository roots
+    - Resolves remote URLs for each repository without invoking external git commands
+    - Returns strongly-typed DevDirManager.Repository objects with RelativePath, FullPath, RemoteName, and RemoteUrl properties
+- New: Command Export-DevDirectoryList
+    - Writes repository lists to disk in JSON or XML format
+    - Accepts pipeline input and aggregates entries before serialization
+    - Automatically infers format from file extension or accepts explicit Format parameter
+- New: Command Import-DevDirectoryList
+    - Imports repository lists from JSON or XML files
+    - Automatically detects format from file extension
+    - Returns strongly-typed DevDirManager.Repository objects for downstream processing
+- New: Command Restore-DevDirectory
+    - Clones repositories from a repository list while preserving folder layout
+    - Supports Force switch to overwrite existing directories
+    - Supports SkipExisting switch to skip repositories whose directories already exist
+    - Returns DevDirManager.CloneResult objects with status information
+    - Includes comprehensive path validation to prevent directory traversal attacks
+- New: Command Sync-DevDirectoryList
+    - Bi-directional synchronization between local directory and repository list file
+    - Clones repositories that exist only in the file
+    - Adds locally discovered repositories to the list
+    - Intelligently merges metadata when conflicts are detected
+    - Returns merged repository list when PassThru switch is specified
+- New: Command Publish-DevDirectoryList
+    - Publishes repository lists to GitHub Gists
+    - Creates new gists or updates existing ones by description or ID
+    - Supports both pipeline input and file-based input
+    - Returns DevDirManager.GistResult objects with gist URL and metadata
+- New: Custom type definitions
+    - DevDirManager.Repository type for repository metadata objects
+    - DevDirManager.CloneResult type for clone operation results
+    - DevDirManager.GistResult type for gist publication results
+    - Custom format views provide clean tabular output in the console
+- New: Comprehensive inline documentation
+    - All functions include detailed comment-based help with examples
+    - Internal code includes extensive developer comments explaining algorithms and design decisions
+    - Security considerations and edge cases are documented throughout
