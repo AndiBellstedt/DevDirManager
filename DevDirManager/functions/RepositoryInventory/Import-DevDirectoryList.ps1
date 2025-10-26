@@ -46,7 +46,7 @@
     process {
         # Validate that the specified file exists before attempting to read it
         if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-            throw "The specified repository list file '$Path' does not exist."
+            throw "The specified repository list file '$($Path)' does not exist."
         }
 
         # Determine the import format: use explicit Format parameter or infer from file extension
@@ -56,7 +56,7 @@
             switch -Regex ($extension) {
                 "^\.json$" { $resolvedFormat = "Json" }
                 "^\.xml$" { $resolvedFormat = "Xml" }
-                default { throw "Unable to infer import format from path '$Path'. Specify the Format parameter." }
+                default { throw "Unable to infer import format from path '$($Path)'. Specify the Format parameter." }
             }
         }
 

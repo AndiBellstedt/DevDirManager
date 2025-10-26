@@ -169,7 +169,7 @@
                 }
             } | ConvertTo-Json -Depth 6
 
-            $targetLabel = if ($GistId) { "Update gist $GistId" } else { "Create gist GitRepositoryList" }
+            $targetLabel = if ($GistId) { "Update gist $($GistId)" } else { "Create gist GitRepositoryList" }
             if (-not $PSCmdlet.ShouldProcess($targetLabel, "Publish DevDirManager repository list to GitHub Gist")) {
                 return
             }

@@ -156,7 +156,7 @@
 
             # Skip entries with unsafe paths (absolute, drive letters, or path traversal)
             if ($invalidRelativePattern.IsMatch($relative)) {
-                Write-PSFMessage -Level Warning -Message "Repository list entry with unsafe relative path $relative has been skipped."
+                Write-PSFMessage -Level Warning -Message "Repository list entry with unsafe relative path $($relative) has been skipped."
                 continue
             }
 
@@ -201,7 +201,7 @@
 
             # Skip local repositories with unsafe relative paths
             if ($invalidRelativePattern.IsMatch($relative)) {
-                Write-PSFMessage -Level Verbose -Message "Ignoring local repository with unsafe relative path $relative."
+                Write-PSFMessage -Level Verbose -Message "Ignoring local repository with unsafe relative path $($relative)."
                 continue
             }
 
@@ -235,7 +235,7 @@
                     $changesMade = $true
                 } elseif (-not [string]::IsNullOrWhiteSpace($remoteUrl) -and -not [string]::IsNullOrWhiteSpace($existing.RemoteUrl) -and ($existing.RemoteUrl -ne $remoteUrl)) {
                     # Remote URL conflict: prefer the local value (it's more authoritative)
-                    Write-PSFMessage -Level Verbose -Message "Remote URL mismatch for $relative. Keeping local value $($existing.RemoteUrl) over file value $remoteUrl."
+                    Write-PSFMessage -Level Verbose -Message "Remote URL mismatch for $($relative). Keeping local value $($existing.RemoteUrl) over file value $($remoteUrl)."
                 }
 
                 # If local entry is missing a remote name but file has one, use the file's remote name
@@ -258,7 +258,7 @@
 
                 # Queue for cloning if it has a valid remote URL
                 if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
-                    Write-PSFMessage -Level Warning -Message "Repository list entry $relative lacks a RemoteUrl and cannot be cloned."
+                    Write-PSFMessage -Level Warning -Message "Repository list entry $($relative) lacks a RemoteUrl and cannot be cloned."
                 } else {
                     $repositoriesToClone.Add([pscustomobject]@{
                             RelativePath = $relative
@@ -276,7 +276,7 @@
         # Step 4: Clone repositories that exist only in the file
         if ($repositoriesToClone.Count -gt 0) {
             if (-not $directoryExists) {
-                Write-PSFMessage -Level Warning -Message "Repository root directory $trimmedDirectory does not exist; skipping clone operations."
+                Write-PSFMessage -Level Warning -Message "Repository root directory $($trimmedDirectory) does not exist; skipping clone operations."
             } elseif ($PSCmdlet.ShouldProcess($trimmedDirectory, "Clone $($repositoriesToClone.Count) repository/repositories from list")) {
                 # Build parameters for Restore-DevDirectory and forward switches
                 $restoreParameters = @{

@@ -126,7 +126,7 @@
 
             # Reject paths that could escape the destination root (security check)
             if ($invalidRelativePattern.IsMatch($relativePath)) {
-                Write-PSFMessage -Level Warning -Message "Skipping repository with unsafe relative path '$relativePath'."
+                Write-PSFMessage -Level Warning -Message "Skipping repository with unsafe relative path '$($relativePath)'."
                 continue
             }
 
@@ -136,7 +136,7 @@
 
             # Verify that the resolved target path is still within the destination root (defense-in-depth check)
             if (-not $targetPath.StartsWith($normalizedDestination, [System.StringComparison]::OrdinalIgnoreCase)) {
-                Write-PSFMessage -Level Warning -Message "Skipping repository with out-of-scope path '$relativePath'."
+                Write-PSFMessage -Level Warning -Message "Skipping repository with out-of-scope path '$($relativePath)'."
                 continue
             }
 
@@ -167,7 +167,7 @@
             }
 
             # Check for WhatIf/Confirm before performing the clone operation
-            if (-not $PSCmdlet.ShouldProcess($targetPath, "Clone repository from $remoteUrl")) {
+            if (-not $PSCmdlet.ShouldProcess($targetPath, "Clone repository from $($remoteUrl)")) {
                 continue
             }
 
@@ -178,7 +178,7 @@
 
             # Check the git clone exit code and log errors for failed clones
             if ($cloneProcess.ExitCode -ne 0) {
-                Write-PSFMessage -Level Error -Message "git clone for '$remoteUrl' failed with exit code $($cloneProcess.ExitCode)."
+                Write-PSFMessage -Level Error -Message "git clone for '$($remoteUrl)' failed with exit code $($cloneProcess.ExitCode)."
                 continue
             }
 

@@ -4,15 +4,12 @@
     <Type>
         <Name>Deserialized.DevDirManager.Repository</Name>
         <Members>
-            <MemberSet>
-                <Name>PSStandardMembers</Name>
-                <Members>
-                    <NoteProperty>
-                        <Name>TargetTypeForDeserialization</Name>
-                        <Value>DevDirManager.Repository</Value>
-                    </NoteProperty>
-                </Members>
-            </MemberSet>
+            <PropertySet>
+                <Name>TargetTypeForDeserialization</Name>
+                <ReferencedProperties>
+                    <Name>DevDirManager.Repository</Name>
+                </ReferencedProperties>
+            </PropertySet>
         </Members>
     </Type>
     <Type>
@@ -35,15 +32,12 @@
     <Type>
         <Name>Deserialized.DevDirManager.CloneResult</Name>
         <Members>
-            <MemberSet>
-                <Name>PSStandardMembers</Name>
-                <Members>
-                    <NoteProperty>
-                        <Name>TargetTypeForDeserialization</Name>
-                        <Value>DevDirManager.CloneResult</Value>
-                    </NoteProperty>
-                </Members>
-            </MemberSet>
+            <PropertySet>
+                <Name>TargetTypeForDeserialization</Name>
+                <ReferencedProperties>
+                    <Name>DevDirManager.CloneResult</Name>
+                </ReferencedProperties>
+            </PropertySet>
         </Members>
     </Type>
     <Type>
@@ -66,15 +60,12 @@
     <Type>
         <Name>Deserialized.DevDirManager.GistResult</Name>
         <Members>
-            <MemberSet>
-                <Name>PSStandardMembers</Name>
-                <Members>
-                    <NoteProperty>
-                        <Name>TargetTypeForDeserialization</Name>
-                        <Value>DevDirManager.GistResult</Value>
-                    </NoteProperty>
-                </Members>
-            </MemberSet>
+            <PropertySet>
+                <Name>TargetTypeForDeserialization</Name>
+                <ReferencedProperties>
+                    <Name>DevDirManager.GistResult</Name>
+                </ReferencedProperties>
+            </PropertySet>
         </Members>
     </Type>
     <Type>

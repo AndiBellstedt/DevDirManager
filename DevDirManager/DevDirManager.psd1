@@ -36,10 +36,10 @@
     # RequiredAssemblies = @('bin\DevDirManager.dll')
 
     # Type files (.ps1xml) to be loaded when importing this module
-    # TypesToProcess = @('xml\DevDirManager.Types.ps1xml')
+    TypesToProcess       = @('xml\DevDirManager.Types.ps1xml')
 
     # Format files (.ps1xml) to be loaded when importing this module
-    # FormatsToProcess = @('xml\DevDirManager.Format.ps1xml')
+    FormatsToProcess     = @('xml\DevDirManager.Format.ps1xml')
 
     # Functions to export from this module
     FunctionsToExport    = @(

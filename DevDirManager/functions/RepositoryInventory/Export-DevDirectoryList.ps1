@@ -88,7 +88,7 @@
             switch -Regex ($extension) {
                 "^\.json$" { $resolvedFormat = "Json" }
                 "^\.xml$" { $resolvedFormat = "Xml" }
-                default { throw "Unable to infer export format from path '$Path'. Specify the Format parameter." }
+                default { throw "Unable to infer export format from path '$($Path)'. Specify the Format parameter." }
             }
         }
 
@@ -104,7 +104,7 @@
         }
 
         # Check for WhatIf/Confirm before performing the write operation
-        if (-not $PSCmdlet.ShouldProcess($Path, "Export repository list as $resolvedFormat")) {
+        if (-not $PSCmdlet.ShouldProcess($Path, "Export repository list as $($resolvedFormat)")) {
             return
         }
 
