@@ -30,7 +30,7 @@
 
     #>
     [CmdletBinding()]
-    [OutputType([object[]])]
+    [OutputType('DevDirManager.Repository')]
     param(
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
@@ -68,16 +68,29 @@
 
                 # Handle empty or whitespace-only files gracefully by returning an empty array
                 if ([string]::IsNullOrWhiteSpace($rawContent)) {
-                    return @()
+                    return
                 }
 
-                # Rehydrate the repository records and ensure an array is returned for consistent typing
-                # Use -as [object[]] to satisfy OutputType declaration and handle single-element JSON arrays
-                ($rawContent | ConvertFrom-Json -Depth 5) -as [object[]]
+                # Rehydrate the repository records from JSON
+                $importedObjects = $rawContent | ConvertFrom-Json -Depth 5
+
+                # Add the DevDirManager.Repository type to each imported object
+                foreach ($obj in $importedObjects) {
+                    $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
+                    # Output each object to the pipeline
+                    $obj
+                }
             }
             "Xml" {
                 # Import-Clixml automatically handles deserialization and type reconstruction
-                Import-Clixml -Path $Path
+                $importedObjects = Import-Clixml -Path $Path
+
+                # Add the DevDirManager.Repository type to each imported object
+                foreach ($obj in $importedObjects) {
+                    $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
+                    # Output each object to the pipeline
+                    $obj
+                }
             }
         }
     }
