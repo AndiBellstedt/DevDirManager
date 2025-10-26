@@ -1,31 +1,35 @@
-﻿# Description
+﻿<!-- markdownlint-disable MD041 -->
+# DevDirManager
+DevDirManager keeps local development folders in sync across machines. The module inventories every Git
+repository beneath a directory, exports the structure to JSON or XML, restores repositories on another
+computer, and even publishes or synchronises the inventory through a shared file or GitHub Gist. It is
+designed for repeatable workstation setup when you maintain many repositories.
 
-Insert a useful description for the DevDirManager project here.
+## Key Features
+- Discover every Git repository below a root directory and record remote metadata.
+- Export or import repository inventories in JSON or XML without losing folder hierarchy.
+- Restore repositories with `git clone`, respecting existing folders via `-Force` or `-SkipExisting`.
+- Publish or synchronise inventories so multiple machines stay aligned.
 
-Remember, it's the first thing a visitor will see.
+## How to Use DevDirManager
+```powershell
+# Inventory repositories beneath a folder
+PS C:\> Import-Module ".\DevDirManager\DevDirManager.psd1"
+PS C:\> $repositoryList = Get-DevDirectory -RootPath "C:\Dev"
 
-# Project Setup Instructions
-## Working with the layout
+# Export the inventory to JSON and keep it under version control or a gist
+PS C:\> $repositoryList | Export-DevDirectoryList -Path "C:\Dev\repos.json"
 
-- Don't touch the psm1 file
-- Place functions you export in `functions/` (can have subfolders)
-- Place private/internal functions invisible to the user in `internal/functions` (can have subfolders)
-- Don't add code directly to the `postimport.ps1` or `preimport.ps1`.
-  Those files are designed to import other files only.
-- When adding files & folders, make sure they are covered by either `postimport.ps1` or `preimport.ps1`.
-  This adds them to both the import and the build sequence.
+# Restore the repositories on another machine in the same folder layout
+PS C:\> Import-DevDirectoryList -Path "C:\Dev\repos.json" |
+>> Restore-DevDirectory -DestinationPath "D:\Dev" -WhatIf
 
-## Setting up CI/CD
+# Synchronise a directory with a shared inventory file
+PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Dev" -RepositoryListPath "C:\Dev\repos.json" -PassThru
 
-> To create a PR validation pipeline, set up tasks like this:
+# Publish the latest inventory to a GitHub Gist (requires a gist-scoped token)
+PS C:\> Publish-DevDirectoryList -Path "C:\Dev\repos.json" -AccessToken (Get-Secret "GitHubGistToken")
+```
 
-- Install Prerequisites (PowerShell Task; VSTS-Prerequisites.ps1)
-- Validate (PowerShell Task; VSTS-Validate.ps1)
-- Publish Test Results (Publish Test Results; NUnit format; Run no matter what)
-
-> To create a build/publish pipeline, set up tasks like this:
-
-- Install Prerequisites (PowerShell Task; VSTS-Prerequisites.ps1)
-- Validate (PowerShell Task; VSTS-Validate.ps1)
-- Build (PowerShell Task; VSTS-Build.ps1)
-- Publish Test Results (Publish Test Results; NUnit format; Run no matter what)
+Use `-WhatIf` on `Restore-DevDirectory` and `Sync-DevDirectoryList` when previewing
+changes, and combine the commands to keep your development environment reproducible across machines.
