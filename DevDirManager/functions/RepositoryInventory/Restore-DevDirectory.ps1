@@ -14,9 +14,6 @@
     .PARAMETER DestinationPath
         The root directory under which repositories will be restored. Defaults to the current location.
 
-    .PARAMETER GitExecutable
-        The git executable to invoke. Defaults to "git".
-
     .PARAMETER Force
         Overwrites existing directories by deleting them before cloning.
 
@@ -37,9 +34,9 @@
         Restores the repositories under C:\Repos using the layout described in repos.json.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
+        Date      : 2025-10-27
         Keywords  : Git, Restore, Clone
 
     .LINK
@@ -63,11 +60,6 @@
         $DestinationPath = (Get-Location).ProviderPath,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $GitExecutable = "git",
-
-        [Parameter()]
         [switch]
         $Force,
 
@@ -77,13 +69,19 @@
     )
 
     begin {
+        # Retrieve the git executable path from configuration
+        # This allows users to configure a custom git path via Set-PSFConfig
+        $gitExecutable = Get-PSFConfigValue -FullName 'DevDirManager.Git.Executable'
+
         ## Verify that the git executable is available before processing any repositories
         ## This early check prevents partial clone attempts when git is unavailable
         try {
-            $gitCommand = Get-Command -Name $GitExecutable -ErrorAction Stop
+            $gitCommand = Get-Command -Name $gitExecutable -ErrorAction Stop
             $resolvedGitPath = $gitCommand.Source
         } catch {
-            throw "Unable to locate the git executable '$GitExecutable'. Ensure Git is installed and available in PATH."
+            $message = "Unable to locate the git executable '$($gitExecutable)'. Ensure Git is installed and available in PATH."
+            Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet -ErrorRecord $_
+            throw $message
         }
 
         # Normalize the destination path to an absolute form with trailing backslash

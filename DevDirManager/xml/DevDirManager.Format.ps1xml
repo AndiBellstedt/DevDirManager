@@ -10,15 +10,11 @@
             <TableControl>
                 <AutoSize/>
                 <TableHeaders>
-                    <TableColumnHeader>
-                        <Label>RelativePath</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
-                        <Label>RemoteName</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
-                        <Label>RemoteUrl</Label>
-                    </TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
                 </TableHeaders>
                 <TableRowEntries>
                     <TableRowEntry>
@@ -32,10 +28,50 @@
                             <TableColumnItem>
                                 <PropertyName>RemoteUrl</PropertyName>
                             </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>RootPath</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>FullPath</PropertyName>
+                            </TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>
                 </TableRowEntries>
             </TableControl>
+        </View>
+        <View>
+            <Name>DevDirManager.Repository.List</Name>
+            <ViewSelectedBy>
+                <TypeName>DevDirManager.Repository</TypeName>
+            </ViewSelectedBy>
+            <ListControl>
+                <ListEntries>
+                    <ListEntry>
+                        <ListItems>
+                            <ListItem>
+                                <Label>RelativePath</Label>
+                                <PropertyName>RelativePath</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>RemoteName</Label>
+                                <PropertyName>RemoteName</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>RemoteUrl</Label>
+                                <PropertyName>RemoteUrl</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>RootPath</Label>
+                                <PropertyName>RootPath</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>FullPath</Label>
+                                <PropertyName>FullPath</PropertyName>
+                            </ListItem>
+                        </ListItems>
+                    </ListEntry>
+                </ListEntries>
+            </ListControl>
         </View>
 
         <!-- DevDirManager.CloneResult -->

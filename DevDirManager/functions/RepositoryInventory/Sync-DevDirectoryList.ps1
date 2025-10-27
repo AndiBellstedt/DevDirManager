@@ -15,14 +15,8 @@
         exist it will be created.
 
     .PARAMETER RepositoryListPath
-        The JSON file (compatible with Export-DevDirectoryList) used to store the shared repository list.
-
-    .PARAMETER RemoteName
-        The Git remote name to inspect when building the local repository list. Defaults to "origin".
-
-    .PARAMETER GitExecutable
-        The git executable to use when cloning repositories that exist only in the repository list file.
-        Defaults to "git".
+        The repository list file (compatible with Export-DevDirectoryList) used to store the shared repository list.
+        Supports CSV, JSON, and XML formats. Format is auto-detected from the file extension.
 
     .PARAMETER Force
         Forwards to Restore-DevDirectory to overwrite existing directories when cloning.
@@ -48,9 +42,9 @@
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
+        Date      : 2025-10-27
         Keywords  : Git, Sync, Repository
 
     .LINK
@@ -74,16 +68,6 @@
         $RepositoryListPath,
 
         [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $RemoteName = "origin",
-
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $GitExecutable = "git",
-
-        [Parameter()]
         [switch]
         $Force,
 
@@ -97,6 +81,10 @@
     )
 
     begin {
+        # Retrieve configuration value for Git remote name
+        # This allows users to customize this setting via Set-PSFConfig
+        $remoteName = Get-PSFConfigValue -FullName 'DevDirManager.Git.RemoteName'
+
         # Normalize the target directory path to a canonical absolute form with trailing backslash
         # This ensures consistent path operations and comparisons throughout the sync logic
         $normalizedDirectory = [System.IO.Path]::GetFullPath($DirectoryPath)
@@ -138,14 +126,17 @@
     }
 
     end {
-        # Step 1: Load and normalize the repository list from the JSON file (if it exists)
+        # Step 1: Load and normalize the repository list from the file (if it exists)
+        # The format is auto-detected based on file extension or uses the configured default
         $repositoryFileExists = Test-Path -LiteralPath $RepositoryListPath -PathType Leaf
         $fileEntriesRaw = @()
         if ($repositoryFileExists) {
             try {
-                $fileEntriesRaw = Import-DevDirectoryList -Path $RepositoryListPath -Format Json
+                $fileEntriesRaw = Import-DevDirectoryList -Path $RepositoryListPath
             } catch {
-                throw "Unable to import repository list from $($RepositoryListPath): $($_.Exception.Message)"
+                $message = "Unable to import repository list from $($RepositoryListPath): $($_.Exception.Message)"
+                Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet -ErrorRecord $_
+                throw $message
             }
         }
 
@@ -190,7 +181,7 @@
 
         # Scan for local repositories only if the directory exists
         $localEntriesRaw = if ($directoryExists) {
-            Get-DevDirectory -RootPath $trimmedDirectory -RemoteName $RemoteName
+            Get-DevDirectory -RootPath $trimmedDirectory
         } else {
             @()
         }
@@ -282,7 +273,6 @@
                 $restoreParameters = @{
                     InputObject     = $repositoriesToClone.ToArray()
                     DestinationPath = $trimmedDirectory
-                    GitExecutable   = $GitExecutable
                 }
 
                 if ($Force.IsPresent) { $restoreParameters.Force = $true }
@@ -306,13 +296,15 @@
             }
 
             # Write the updated repository list back to disk
+            # Format is auto-detected from file extension or uses the configured default
             if ($PSCmdlet.ShouldProcess($RepositoryListPath, "Update repository list file")) {
-                $finalEntries | Export-DevDirectoryList -Path $RepositoryListPath -Format Json
+                $finalEntries | Export-DevDirectoryList -Path $RepositoryListPath
             }
         } elseif (-not $repositoryFileExists) {
             # Edge case: file doesn't exist and no changes were detected; still create it
+            # Format is auto-detected from file extension or uses the configured default
             if ($PSCmdlet.ShouldProcess($RepositoryListPath, "Update repository list file")) {
-                $finalEntries | Export-DevDirectoryList -Path $RepositoryListPath -Format Json
+                $finalEntries | Export-DevDirectoryList -Path $RepositoryListPath
             }
         }
 

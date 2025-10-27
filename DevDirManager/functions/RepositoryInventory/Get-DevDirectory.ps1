@@ -12,18 +12,15 @@
     .PARAMETER RootPath
         The directory that serves as the traversal root. The default is the current location.
 
-    .PARAMETER RemoteName
-        The Git remote name whose URL should be reported. Defaults to "origin".
-
     .EXAMPLE
         PS C:\> Get-DevDirectory -RootPath "C:\Projects"
 
-        Lists all repositories under C:\Projects and includes the origin remote URL for each entry.
+        Lists all repositories under C:\Projects and includes the configured remote URL for each entry.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
+        Date      : 2025-10-27
         Keywords  : Git, Inventory, Repository
 
     .LINK
@@ -36,15 +33,14 @@
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [string]
-        $RootPath = (Get-Location).ProviderPath,
-
-        [Parameter()]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $RemoteName = "origin"
+        $RootPath = (Get-Location).ProviderPath
     )
 
     begin {
+        # Retrieve the default remote name from configuration
+        # This allows users to configure a custom remote name via Set-PSFConfig
+        $remoteName = Get-PSFConfigValue -FullName 'DevDirManager.Git.RemoteName'
+
         # Initialize a strongly-typed list to collect repository metadata throughout the scan
         # Using List[T] provides better performance than += array concatenation for large result sets
         $repositoryLayoutList = [System.Collections.Generic.List[pscustomobject]]::new()
@@ -77,7 +73,7 @@
             # Check if this directory is a Git repository root (contains .git folder)
             if (Test-Path -LiteralPath $gitFolderPath -PathType Container) {
                 # Found a repository; extract remote URL using the internal helper function
-                $remoteUrl = Get-DevDirectoryRemoteUrl -RepositoryPath $currentDirectory -RemoteName $RemoteName
+                $remoteUrl = Get-DevDirectoryRemoteUrl -RepositoryPath $currentDirectory -RemoteName $remoteName
 
                 # Calculate the relative path from the scan root to this repository
                 # URI-based relative path calculation handles special characters and encodings correctly
@@ -105,7 +101,7 @@
                         RootPath     = $normalizedRoot.TrimEnd("\\")
                         RelativePath = $relativePath
                         FullPath     = $resolvedCurrent.TrimEnd("\\")
-                        RemoteName   = $RemoteName
+                        RemoteName   = $remoteName
                         RemoteUrl    = $remoteUrl
                     })
 

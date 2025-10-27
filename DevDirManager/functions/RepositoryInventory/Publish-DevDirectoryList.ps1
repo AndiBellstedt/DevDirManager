@@ -52,9 +52,9 @@
         Streams repository metadata directly from the pipeline and publishes it to a public gist.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
+        Date      : 2025-10-27
         Keywords  : Git, Gist, Publish
 
     .LINK
@@ -67,12 +67,20 @@
     )]
     [OutputType('DevDirManager.GistResult')]
     param(
-        [Parameter(ParameterSetName = "FromPath", Mandatory = $true)]
+        [Parameter(
+            ParameterSetName = "FromPath",
+            Mandatory = $true
+        )]
         [ValidateNotNullOrEmpty()]
         [string]
         $Path,
 
-        [Parameter(ParameterSetName = "FromInput", Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+        [Parameter(
+            ParameterSetName = "FromInput",
+            Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
+        )]
         [ValidateNotNull()]
         [psobject]
         $InputObject,
@@ -112,7 +120,9 @@
         }
 
         if ([string]::IsNullOrWhiteSpace($resolvedToken)) {
-            throw "The provided access token is empty after conversion."
+            $message = "The provided access token is empty after conversion."
+            Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+            throw $message
         }
 
         $requestHeaders = @{
@@ -141,7 +151,24 @@
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 6
             } else {
                 $resolvedPath = Resolve-Path -LiteralPath $Path -ErrorAction Stop
-                $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
+                $extension = [System.IO.Path]::GetExtension($resolvedPath).ToLower()
+
+                # Determine if we need to convert the file format to JSON
+                switch -Regex ($extension) {
+                    "^\.json$" {
+                        # File is already JSON, read it directly
+                        $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
+                    }
+                    "^\.csv$|^\.xml$" {
+                        # Import the file using Import-DevDirectoryList and convert to JSON
+                        $importedData = Import-DevDirectoryList -Path $resolvedPath
+                        $jsonContent = $importedData | ConvertTo-Json -Depth 6
+                    }
+                    default {
+                        # Assume it's JSON if extension is unknown
+                        $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
+                    }
+                }
             }
 
             if ([string]::IsNullOrWhiteSpace($jsonContent)) {

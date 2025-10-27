@@ -32,7 +32,7 @@
         Exports the repository list to repos.json in JSON format.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-10-26
         Keywords  : Git, Export, Serialization
@@ -58,12 +58,23 @@
         $Path,
 
         [Parameter()]
-        [ValidateSet("Json", "Xml")]
+        [ValidateSet("CSV", "JSON", "XML")]
         [string]
         $Format
     )
 
     begin {
+        # Normalize Format parameter to uppercase if provided
+        if ($PSBoundParameters.ContainsKey('Format')) {
+            $Format = $Format.ToUpper()
+        }
+
+        # Retrieve the default output format from configuration if not explicitly specified
+        # This allows users to set a preferred format via Set-PSFConfig
+        if (-not $PSBoundParameters.ContainsKey('Format')) {
+            $defaultFormat = Get-PSFConfigValue -FullName 'DevDirManager.DefaultOutputFormat'
+        }
+
         # Buffer all pipeline input into a List for single serialization in the end block
         # Using a List provides efficient Add() operations and avoids array resizing overhead
         $repositoryList = [System.Collections.Generic.List[psobject]]::new()
@@ -84,11 +95,22 @@
         # Determine the output format: use explicit Format parameter or infer from file extension
         $resolvedFormat = $Format
         if (-not $resolvedFormat) {
-            $extension = [System.IO.Path]::GetExtension($Path)
+            $extension = [System.IO.Path]::GetExtension($Path).ToLower()
             switch -Regex ($extension) {
-                "^\.json$" { $resolvedFormat = "Json" }
-                "^\.xml$" { $resolvedFormat = "Xml" }
-                default { throw "Unable to infer export format from path '$($Path)'. Specify the Format parameter." }
+                "^\.csv$" { $resolvedFormat = "CSV" }
+                "^\.json$" { $resolvedFormat = "JSON" }
+                "^\.xml$" { $resolvedFormat = "XML" }
+                default {
+                    # Use the configured default format if file extension doesn't match
+                    if ($defaultFormat) {
+                        $resolvedFormat = $defaultFormat
+                        Write-PSFMessage -Level Verbose -Message "Using configured default format '$($resolvedFormat)' for file '$($Path)'."
+                    } else {
+                        $message = "Unable to infer export format from path '$($Path)'. Specify the Format parameter."
+                        Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+                        throw $message
+                    }
+                }
             }
         }
 
@@ -110,13 +132,18 @@
 
         # Serialize the repository list to the specified format
         switch ($resolvedFormat) {
-            "Json" {
+            "CSV" {
+                # Export to CSV with UTF8 encoding for cross-platform compatibility
+                # Include all repository properties in a consistent order
+                $repositoryList | Export-Csv -LiteralPath $Path -NoTypeInformation -Encoding UTF8
+            }
+            "JSON" {
                 # Use Depth 5 to ensure nested properties are fully serialized
                 # Set-Content with UTF8 ensures compatibility across systems
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 5
                 $jsonContent | Set-Content -LiteralPath $Path -Encoding UTF8
             }
-            "Xml" {
+            "XML" {
                 # Export-Clixml handles depth automatically and preserves type information
                 $repositoryList | Export-Clixml -Path $Path
             }

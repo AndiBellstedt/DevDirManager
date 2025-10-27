@@ -20,7 +20,7 @@
         Reads repository metadata from the JSON file and returns it to the pipeline.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-10-26
         Keywords  : Git, Import, Serialization
@@ -38,31 +38,68 @@
         $Path,
 
         [Parameter()]
-        [ValidateSet("Json", "Xml")]
+        [ValidateSet("CSV", "JSON", "XML")]
         [string]
         $Format
     )
 
+    begin {
+        # Normalize Format parameter to uppercase if provided
+        if ($PSBoundParameters.ContainsKey('Format')) {
+            $Format = $Format.ToUpper()
+        }
+
+        # Retrieve the default output format from configuration if not explicitly specified
+        # This allows users to set a preferred format via Set-PSFConfig
+        if (-not $PSBoundParameters.ContainsKey('Format')) {
+            $defaultFormat = Get-PSFConfigValue -FullName 'DevDirManager.DefaultOutputFormat'
+        }
+    }
+
     process {
         # Validate that the specified file exists before attempting to read it
         if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-            throw "The specified repository list file '$($Path)' does not exist."
+            $message = "The specified repository list file '$($Path)' does not exist."
+            Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+            throw $message
         }
 
         # Determine the import format: use explicit Format parameter or infer from file extension
         $resolvedFormat = $Format
         if (-not $resolvedFormat) {
-            $extension = [System.IO.Path]::GetExtension($Path)
+            $extension = [System.IO.Path]::GetExtension($Path).ToLower()
             switch -Regex ($extension) {
-                "^\.json$" { $resolvedFormat = "Json" }
-                "^\.xml$" { $resolvedFormat = "Xml" }
-                default { throw "Unable to infer import format from path '$($Path)'. Specify the Format parameter." }
+                "^\.csv$" { $resolvedFormat = "CSV" }
+                "^\.json$" { $resolvedFormat = "JSON" }
+                "^\.xml$" { $resolvedFormat = "XML" }
+                default {
+                    # Use the configured default format if file extension doesn't match
+                    if ($defaultFormat) {
+                        $resolvedFormat = $defaultFormat
+                        Write-PSFMessage -Level Verbose -Message "Using configured default format '$($resolvedFormat)' for file '$($Path)'."
+                    } else {
+                        $message = "Unable to infer import format from path '$($Path)'. Specify the Format parameter."
+                        Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+                        throw $message
+                    }
+                }
             }
         }
 
         # Deserialize the repository list from the specified format
         switch ($resolvedFormat) {
-            "Json" {
+            "CSV" {
+                # Import CSV with UTF8 encoding
+                $importedObjects = Import-Csv -LiteralPath $Path -Encoding UTF8
+
+                # Add the DevDirManager.Repository type to each imported object
+                foreach ($obj in $importedObjects) {
+                    $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
+                    # Output each object to the pipeline
+                    $obj
+                }
+            }
+            "JSON" {
                 # Read the entire JSON file as a single string for ConvertFrom-Json
                 $rawContent = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
 
@@ -81,7 +118,7 @@
                     $obj
                 }
             }
-            "Xml" {
+            "XML" {
                 # Import-Clixml automatically handles deserialization and type reconstruction
                 $importedObjects = Import-Clixml -Path $Path
 
