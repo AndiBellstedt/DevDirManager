@@ -1,11 +1,279 @@
 ﻿TOPIC
-	about_DevDirManager
-	
+    about_DevDirManager
+
 SHORT DESCRIPTION
-	Explains how to use the DevDirManager powershell module
-	
+    DevDirManager is a PowerShell module for managing and organizing development
+    directories containing Git repositories. It provides tools to scan directory
+    structures, maintain repository inventories, and automate repository cloning
+    operations.
+
 LONG DESCRIPTION
-	<Insert Content here>
+    The DevDirManager module helps developers manage large collections of Git
+    repositories across multiple directory structures. It offers functionality to:
+
+    * Scan directory trees to discover Git repositories
+    * Export repository inventories to multiple file formats (CSV, JSON, XML)
+    * Import and restore repository collections preserving folder layouts
+    * Synchronize repository lists with actual directory contents
+    * Publish repository inventories to GitHub Gists
+    * Configure behavior through the PSFramework configuration system
+
+    The module uses a breadth-first search algorithm to efficiently scan large
+    directory structures and supports custom output formats for repository data.
+
+CONFIGURATION SYSTEM
+    DevDirManager leverages the PSFramework configuration system to provide
+    flexible, user-customizable settings. Configuration values can be set using
+    the Set-PSFConfig cmdlet and persist across PowerShell sessions.
+
+    Available Configuration Settings:
+
+    DevDirManager.Git.Executable
+        Path to the git executable used for clone operations.
+        Default Value: git.exe
+        Example: Set-PSFConfig -FullName 'DevDirManager.Git.Executable' -Value 'C:\Program Files\Git\cmd\git.exe'
+
+    DevDirManager.Git.RemoteName
+        Default Git remote name to query when scanning repositories.
+        Default Value: origin
+        Example: Set-PSFConfig -FullName 'DevDirManager.Git.RemoteName' -Value 'upstream'
+
+    DevDirManager.DefaultOutputFormat
+        Default file format for exporting/importing repository lists.
+        Valid Values: CSV, JSON, XML
+        Default Value: CSV
+        Example: Set-PSFConfig -FullName 'DevDirManager.DefaultOutputFormat' -Value 'JSON'
+
+    To view current configuration values:
+        Get-PSFConfig -Module DevDirManager
+
+    Configuration values are automatically retrieved by module functions and do
+    not need to be specified as parameters unless you want to override the
+    configured defaults for a specific operation.
+
+CORE FUNCTIONS
+    Repository Discovery
+    --------------------
+    Get-DevDirectory
+        Scans a directory tree to discover all Git repositories and retrieves
+        their remote URLs. Returns DevDirManager.Repository objects with:
+        - RootPath: Base directory that was scanned
+        - RelativePath: Repository path relative to RootPath
+        - FullPath: Absolute path to the repository
+        - RemoteName: Name of the Git remote (e.g., 'origin')
+        - RemoteUrl: URL of the remote repository
+
+    Repository List Management
+    --------------------------
+    Export-DevDirectoryList
+        Exports a collection of repository objects to a file in CSV, JSON, or
+        XML format. Automatically detects format from file extension or uses
+        the configured default format.
+
+    Import-DevDirectoryList
+        Imports repository lists from CSV, JSON, or XML files. Preserves the
+        DevDirManager.Repository type information for seamless integration with
+        other module functions.
+
+    Repository Operations
+    --------------------
+    Restore-DevDirectory
+        Clones repositories from a repository list file, preserving the original
+        directory structure. Creates necessary parent directories and supports
+        recursive submodule cloning.
+
+    Sync-DevDirectoryList
+        Performs bi-directional synchronization between a directory structure
+        and a repository list file. Can update the file with new repositories
+        found in the directory, or clone missing repositories from the file.
+
+    GitHub Integration
+    -----------------
+    Publish-DevDirectoryList
+        Publishes a repository list to GitHub as a public or private Gist.
+        Automatically converts CSV and XML files to JSON for Gist compatibility.
+        Requires a GitHub Personal Access Token with gist scope.
+
+FILE FORMAT SUPPORT
+    DevDirManager supports three file formats for repository inventories:
+
+    CSV (Comma-Separated Values)
+        - Human-readable tabular format
+        - UTF8 encoding for international character support
+        - Best for viewing in spreadsheet applications
+        - Type information is added during import
+
+    JSON (JavaScript Object Notation)
+        - Structured data format
+        - UTF8 encoding
+        - Best for web applications and APIs
+        - Depth 5 serialization for nested properties
+        - Type information is added during import
+
+    XML (PowerShell CLIXML)
+        - PowerShell native serialization format
+        - Automatically preserves type information
+        - Best for PowerShell-to-PowerShell data exchange
+        - Handles complex object structures
+
+    Format Auto-Detection
+        When no explicit format is specified, DevDirManager determines the format
+        using this precedence:
+        1. Explicit -Format parameter value
+        2. File extension (.csv, .json, .xml)
+        3. Configured default format (DevDirManager.DefaultOutputFormat)
+        4. Error if unable to determine format
+
+    Format parameters accept both uppercase and lowercase values (CSV, csv, Json,
+    JSON, etc.) and are normalized to uppercase internally.
+
+CUSTOM TYPES
+    DevDirManager.Repository
+        Represents a Git repository discovered in a directory scan. Contains:
+        - RootPath [string]: Base directory that was scanned
+        - RelativePath [string]: Path relative to RootPath
+        - FullPath [string]: Complete absolute path
+        - RemoteName [string]: Git remote name
+        - RemoteUrl [string]: Remote repository URL
+
+        Custom format view displays: RelativePath, RemoteName, RemoteUrl
+
+    DevDirManager.CloneResult
+        Represents the result of a repository clone operation. Contains:
+        - Status [string]: Success, Failed, or Skipped
+        - TargetPath [string]: Destination directory path
+        - RemoteUrl [string]: Source repository URL
+
+    DevDirManager.GistResult
+        Represents a published GitHub Gist. Contains:
+        - Description [string]: Gist description
+        - Public [bool]: Public or private Gist
+        - GistId [string]: Unique Gist identifier
+        - HtmlUrl [string]: Browser URL for the Gist
+
+EXAMPLES
+    Example 1: Discover repositories in a directory
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse
+
+        Scans C:\Projects recursively and returns all Git repositories with their
+        remote URLs.
+
+    Example 2: Export repository list to CSV
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
+                Export-DevDirectoryList -Path C:\Temp\repos.csv
+
+        Exports the discovered repositories to a CSV file using UTF8 encoding.
+
+    Example 3: Export to JSON with explicit format
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
+                Export-DevDirectoryList -Path C:\Temp\repos.txt -Format JSON
+
+        Exports to JSON format even though the file extension is .txt.
+
+    Example 4: Import repository list and view type
+        PS C:\> $repos = Import-DevDirectoryList -Path C:\Temp\repos.csv
+        PS C:\> $repos[0].PSObject.TypeNames
+
+        Imports repositories from CSV and displays the type information.
+
+    Example 5: Clone repositories from a list
+        PS C:\> Restore-DevDirectory -RepositoryListPath C:\Temp\repos.csv -TargetDirectory D:\Projects
+
+        Clones all repositories from the CSV file to D:\Projects, preserving the
+        original directory structure.
+
+    Example 6: Synchronize directory with repository list
+        PS C:\> Sync-DevDirectoryList -RepositoryListPath C:\Temp\repos.csv -Path C:\Projects -Recurse
+
+        Compares C:\Projects with repos.csv and adds new repositories to the file.
+
+    Example 7: Configure default format to JSON
+        PS C:\> Set-PSFConfig -FullName 'DevDirManager.DefaultOutputFormat' -Value 'JSON'
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
+                Export-DevDirectoryList -Path C:\Temp\repos
+
+        Exports to JSON format because no extension is provided and default is JSON.
+
+    Example 8: Publish repository list to GitHub Gist
+        PS C:\> $token = Read-Host -AsSecureString -Prompt "GitHub Token"
+        PS C:\> Publish-DevDirectoryList -FromPath C:\Temp\repos.csv -Description "My Repositories" -GitHubToken $token
+
+        Publishes the repository list as a public Gist on GitHub.
+
+    Example 9: Change Git executable path
+        PS C:\> Set-PSFConfig -FullName 'DevDirManager.Git.Executable' -Value 'C:\PortableGit\bin\git.exe'
+
+        Configures DevDirManager to use a portable Git installation.
+
+    Example 10: Scan for repositories using different remote
+        PS C:\> Set-PSFConfig -FullName 'DevDirManager.Git.RemoteName' -Value 'upstream'
+        PS C:\> Get-DevDirectory -Path C:\Forks -Recurse
+
+        Scans for repositories and retrieves the 'upstream' remote URL instead of 'origin'.
+
+WORKFLOW PATTERNS
+    Common DevDirManager workflows:
+
+    Inventory and Backup
+        1. Scan your development directories
+        2. Export to CSV/JSON for backup
+        3. Optionally publish to GitHub Gist for cloud backup
+
+    Restore Development Environment
+        1. Obtain repository list (from backup or Gist)
+        2. Use Restore-DevDirectory to clone all repositories
+        3. Maintains original folder structure
+
+    Keep Inventory Updated
+        1. Use Sync-DevDirectoryList periodically
+        2. Automatically adds new repositories to your inventory
+        3. Optionally clone missing repositories
+
+    Multi-Machine Synchronization
+        1. Export repository list from primary machine
+        2. Publish to GitHub Gist
+        3. Download Gist on other machines
+        4. Restore repositories to mirror setup
+
+TECHNICAL DETAILS
+    Search Algorithm
+        DevDirManager uses a breadth-first search (BFS) algorithm when scanning
+        directory structures. This approach:
+        - Minimizes recursion depth for large directory trees
+        - Provides predictable memory usage
+        - Efficiently handles deep hierarchies
+        - Skips .git directories to avoid scanning repository internals
+
+    UTF8 Encoding
+        All file operations use UTF8 encoding to ensure:
+        - International character support
+        - Cross-platform compatibility
+        - Consistent behavior across Windows, Linux, and macOS
+
+    Type Preservation
+        Repository objects maintain their type information across serialization:
+        - XML format: Automatic via Export-Clixml/Import-Clixml
+        - CSV format: Type inserted during Import-DevDirectoryList
+        - JSON format: Type inserted during Import-DevDirectoryList
+
+    Custom Format View
+        DevDirManager.Repository objects have a custom table view that displays:
+        - RelativePath (for easy identification)
+        - RemoteName (to show which remote)
+        - RemoteUrl (for verification)
+        Other properties are available but hidden by default in table view.
 
 KEYWORDS
-	DevDirManager
+    Git, Repository, DevOps, Source Control, Directory Management, Inventory,
+    Backup, Restore, Synchronization, GitHub, Gist, PSFramework, Configuration
+
+SEE ALSO
+    Get-DevDirectory
+    Export-DevDirectoryList
+    Import-DevDirectoryList
+    Restore-DevDirectory
+    Sync-DevDirectoryList
+    Publish-DevDirectoryList
+    about_PSFramework_Configuration
+    Get-PSFConfig
+    Set-PSFConfig
