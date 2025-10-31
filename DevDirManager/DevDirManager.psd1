@@ -92,7 +92,7 @@
             ProjectUri   = 'https://github.com/AndiBellstedt/DevDirManager'
 
             # A URL to an icon representing this module.
-            IconUri      = 'https://github.com/AndiBellstedt/DevDirManager/raw/Development/assets/DevDirManager_128x128.png'
+            IconUri      = 'https://github.com/AndiBellstedt/DevDirManager/raw/main/assets/DevDirManager_128x128.png'
 
             # ReleaseNotes of this module
             ReleaseNotes = 'https://github.com/AndiBellstedt/DevDirManager/blob/main/DevDirManager/changelog.md'
