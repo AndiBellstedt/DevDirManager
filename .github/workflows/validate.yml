@@ -4,6 +4,7 @@
 
 jobs:
     validate:
+        if: ${{ github.event_name == 'push' }}
         runs-on: windows-latest
 
         env:
