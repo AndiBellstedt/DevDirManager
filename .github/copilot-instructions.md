@@ -112,3 +112,17 @@
   #region -- Name of the block
   #regionend Name of the block
   ```
+
+# Versioning
+- Follow semantic versioning for the module versioning
+- Ensure that the module version in the module manifest matches the version in the changelog for each release
+- Ensure internal version together with last modified date of functions are updated on any change of a function.
+    - Follow the existing format for versioning in the functions
+    - Follow semantic versioning for function versioning as well
+    - When making breaking changes to a function, increment the major version
+    - When adding new functionality in a backwards-compatible manner, increment the minor version
+    - When making backwards-compatible bug fixes, increment the patch version
+    - When making non functional changes (e.g., documentation updates, comment changes, formatting changes), increment the revision number
+
+# Additional instructions
+- If there are user custom instructions in the user data, you must follow these as well. In case of there are conflicting instructions between this file and the user data, the instructions from this file have higher priority and must be followed
