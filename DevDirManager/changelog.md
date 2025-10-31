@@ -1,6 +1,6 @@
 ﻿# Changelog
 
-# 1.0.0 (2025-10-26)
+# 1.0.0 (2025-10-31)
 - New: Command Get-DevDirectory
     - Scans a directory tree and returns metadata about all Git repositories found
     - Performs breadth-first traversal that stops descending at repository roots
