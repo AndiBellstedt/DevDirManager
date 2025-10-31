@@ -3,17 +3,32 @@
 
 steps:
   - task: PowerShell@2
-    displayName: Prerequisites
+    displayName: "Prerequisites (Windows PowerShell 5.1)"
     inputs:
       targetType: filePath
       filePath: "./build/vsts-prerequisites.ps1"
       arguments: "-ModuleName $(system.teamProject)"
 
   - task: PowerShell@2
-    displayName: Validate
+    displayName: "Validate (Windows PowerShell 5.1)"
     inputs:
       targetType: filePath
       filePath: "./build/vsts-validate.ps1"
+
+  - task: PowerShell@2
+    displayName: "Prerequisites (PowerShell 7)"
+    inputs:
+      targetType: filePath
+      filePath: "./build/vsts-prerequisites.ps1"
+      arguments: "-ModuleName $(system.teamProject)"
+      pwsh: true
+
+  - task: PowerShell@2
+    displayName: "Validate (PowerShell 7)"
+    inputs:
+      targetType: filePath
+      filePath: "./build/vsts-validate.ps1"
+      pwsh: true
 
   - task: PublishTestResults@2
     displayName: "Publish Test Results **/TEST-*.xml"
