@@ -20,9 +20,9 @@
         Reads repository metadata from the JSON file and returns it to the pipeline.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 1.1.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
+        Date      : 2025-10-31
         Keywords  : Git, Import, Serialization
 
     .LINK
@@ -59,8 +59,10 @@
     process {
         # Validate that the specified file exists before attempting to read it
         if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-            $message = "The specified repository list file '$($Path)' does not exist."
-            Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+            $messageValues = @($Path)
+            $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'ImportDevDirectoryList.FileNotFound'
+            $message = $messageTemplate -f $messageValues
+            Stop-PSFFunction -String 'ImportDevDirectoryList.FileNotFound' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet
             throw $message
         }
 
@@ -76,10 +78,12 @@
                     # Use the configured default format if file extension doesn't match
                     if ($defaultFormat) {
                         $resolvedFormat = $defaultFormat
-                        Write-PSFMessage -Level Verbose -Message "Using configured default format '$($resolvedFormat)' for file '$($Path)'."
+                        Write-PSFMessage -Level Verbose -String 'RepositoryList.UsingDefaultFormat' -StringValues @($resolvedFormat, $Path)
                     } else {
-                        $message = "Unable to infer import format from path '$($Path)'. Specify the Format parameter."
-                        Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+                        $messageValues = @($Path)
+                        $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'ImportDevDirectoryList.InferFormatFailed'
+                        $message = $messageTemplate -f $messageValues
+                        Stop-PSFFunction -String 'ImportDevDirectoryList.InferFormatFailed' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet
                         throw $message
                     }
                 }

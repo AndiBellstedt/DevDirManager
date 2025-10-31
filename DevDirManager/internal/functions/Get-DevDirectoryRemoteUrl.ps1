@@ -24,8 +24,8 @@
 
     .NOTES
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
-        Version   : 1.0.0
+        Date      : 2025-10-31
+        Version   : 1.0.1
         Keywords  : Git, Internal, Helper
 
     #>
@@ -50,7 +50,7 @@
     # Validate that the config file exists before attempting to parse it
     if (-not (Test-Path -LiteralPath $gitConfigPath -PathType Leaf)) {
         # Use PSFramework logging to provide consistent output handling across the module
-        Write-PSFMessage -Level Verbose -Message "No .git\\config file found at $($gitConfigPath)."
+        Write-PSFMessage -Level Verbose -String 'GetDevDirectoryRemoteUrl.ConfigMissing' -StringValues @($gitConfigPath)
         return $null
     }
 

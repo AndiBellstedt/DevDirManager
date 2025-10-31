@@ -52,9 +52,9 @@
         Streams repository metadata directly from the pipeline and publishes it to a public gist.
 
     .NOTES
-        Version   : 1.1.1
+        Version   : 1.1.2
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-27
+        Date      : 2025-10-31
         Keywords  : Git, Gist, Publish
 
     .LINK
@@ -120,8 +120,9 @@
         }
 
         if ([string]::IsNullOrWhiteSpace($resolvedToken)) {
-            $message = "The provided access token is empty after conversion."
-            Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+            $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'PublishDevDirectoryList.TokenEmpty'
+            $message = $messageTemplate
+            Stop-PSFFunction -String 'PublishDevDirectoryList.TokenEmpty' -EnableException $true -Cmdlet $PSCmdlet
             throw $message
         }
 
@@ -132,6 +133,10 @@
         }
 
         $gistEndpoint = "$($ApiUrl.TrimEnd("/"))/gists"
+
+        $publishAction = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'PublishDevDirectoryList.ActionPublish'
+        $targetLabelCreate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'PublishDevDirectoryList.TargetLabelCreate'
+        $targetLabelUpdateTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'PublishDevDirectoryList.TargetLabelUpdate'
     }
 
     process {
@@ -144,7 +149,7 @@
         try {
             if ($PSCmdlet.ParameterSetName -eq "FromInput") {
                 if ($repositoryList.Count -eq 0) {
-                    Write-PSFMessage -Level Verbose -Message "No repository metadata was received from the pipeline."
+                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.NoPipelineData'
                     return
                 }
 
@@ -172,7 +177,7 @@
             }
 
             if ([string]::IsNullOrWhiteSpace($jsonContent)) {
-                Write-PSFMessage -Level Warning -Message "The repository list content is empty. Nothing will be published."
+                Write-PSFMessage -Level Warning -String 'PublishDevDirectoryList.EmptyContent'
                 return
             }
 
@@ -184,7 +189,7 @@
                         $GistId = $matchingGist.id
                     }
                 } catch {
-                    Write-PSFMessage -Level Verbose -Message "Failed to query existing gists: $($_.Exception.Message)"
+                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.QueryGistFailed' -StringValues @($_.Exception.Message)
                 }
             }
 
@@ -196,8 +201,8 @@
                 }
             } | ConvertTo-Json -Depth 6
 
-            $targetLabel = if ($GistId) { "Update gist $($GistId)" } else { "Create gist GitRepositoryList" }
-            if (-not $PSCmdlet.ShouldProcess($targetLabel, "Publish DevDirManager repository list to GitHub Gist")) {
+            $targetLabel = if ($GistId) { $targetLabelUpdateTemplate -f @($GistId) } else { $targetLabelCreate }
+            if (-not $PSCmdlet.ShouldProcess($targetLabel, $publishAction)) {
                 return
             }
 

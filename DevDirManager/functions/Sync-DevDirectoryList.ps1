@@ -42,9 +42,9 @@
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 1.1.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-27
+        Date      : 2025-10-31
         Keywords  : Git, Sync, Repository
 
     .LINK
@@ -119,6 +119,11 @@
 
         # Track whether any modifications were made during sync (determines if file needs updating)
         $changesMade = $false
+
+        $createRootDirectoryAction = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'SyncDevDirectoryList.ActionCreateRootDirectory'
+        $cloneFromListActionTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'SyncDevDirectoryList.ActionCloneFromList'
+        $createListDirectoryAction = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'SyncDevDirectoryList.ActionCreateListDirectory'
+        $updateListFileAction = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'SyncDevDirectoryList.ActionUpdateListFile'
     }
 
     process {
@@ -134,8 +139,10 @@
             try {
                 $fileEntriesRaw = Import-DevDirectoryList -Path $RepositoryListPath
             } catch {
-                $message = "Unable to import repository list from $($RepositoryListPath): $($_.Exception.Message)"
-                Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet -ErrorRecord $_
+                $messageValues = @($RepositoryListPath, $_.Exception.Message)
+                $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'SyncDevDirectoryList.ImportFailed'
+                $message = $messageTemplate -f $messageValues
+                Stop-PSFFunction -String 'SyncDevDirectoryList.ImportFailed' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet -ErrorRecord $_
                 throw $message
             }
         }
@@ -147,7 +154,7 @@
 
             # Skip entries with unsafe paths (absolute, drive letters, or path traversal)
             if ($invalidRelativePattern.IsMatch($relative)) {
-                Write-PSFMessage -Level Warning -Message "Repository list entry with unsafe relative path $($relative) has been skipped."
+                Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.UnsafeFileEntry' -StringValues @($relative)
                 continue
             }
 
@@ -173,7 +180,7 @@
         $directoryExists = Test-Path -LiteralPath $trimmedDirectory -PathType Container
         if (-not $directoryExists) {
             # If the directory doesn't exist and user approves, create it
-            if ($PSCmdlet.ShouldProcess($trimmedDirectory, "Create repository root directory")) {
+            if ($PSCmdlet.ShouldProcess($trimmedDirectory, $createRootDirectoryAction)) {
                 New-Item -ItemType Directory -Path $trimmedDirectory -Force -ErrorAction Stop | Out-Null
                 $directoryExists = $true
             }
@@ -192,7 +199,7 @@
 
             # Skip local repositories with unsafe relative paths
             if ($invalidRelativePattern.IsMatch($relative)) {
-                Write-PSFMessage -Level Verbose -Message "Ignoring local repository with unsafe relative path $($relative)."
+                Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.UnsafeLocalEntry' -StringValues @($relative)
                 continue
             }
 
@@ -226,7 +233,7 @@
                     $changesMade = $true
                 } elseif (-not [string]::IsNullOrWhiteSpace($remoteUrl) -and -not [string]::IsNullOrWhiteSpace($existing.RemoteUrl) -and ($existing.RemoteUrl -ne $remoteUrl)) {
                     # Remote URL conflict: prefer the local value (it's more authoritative)
-                    Write-PSFMessage -Level Verbose -Message "Remote URL mismatch for $($relative). Keeping local value $($existing.RemoteUrl) over file value $($remoteUrl)."
+                    Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.RemoteUrlMismatch' -StringValues @($relative, $existing.RemoteUrl, $remoteUrl)
                 }
 
                 # If local entry is missing a remote name but file has one, use the file's remote name
@@ -249,7 +256,7 @@
 
                 # Queue for cloning if it has a valid remote URL
                 if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
-                    Write-PSFMessage -Level Warning -Message "Repository list entry $($relative) lacks a RemoteUrl and cannot be cloned."
+                    Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.MissingRemoteUrl' -StringValues @($relative)
                 } else {
                     $repositoriesToClone.Add([pscustomobject]@{
                             RelativePath = $relative
@@ -267,8 +274,8 @@
         # Step 4: Clone repositories that exist only in the file
         if ($repositoriesToClone.Count -gt 0) {
             if (-not $directoryExists) {
-                Write-PSFMessage -Level Warning -Message "Repository root directory $($trimmedDirectory) does not exist; skipping clone operations."
-            } elseif ($PSCmdlet.ShouldProcess($trimmedDirectory, "Clone $($repositoriesToClone.Count) repository/repositories from list")) {
+                Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.MissingRootDirectory' -StringValues @($trimmedDirectory)
+            } elseif ($PSCmdlet.ShouldProcess($trimmedDirectory, ($cloneFromListActionTemplate -f @($repositoriesToClone.Count)))) {
                 # Build parameters for Restore-DevDirectory and forward switches
                 $restoreParameters = @{
                     InputObject     = $repositoriesToClone.ToArray()
@@ -290,20 +297,20 @@
         if (-not $repositoryFileExists -or $changesMade) {
             # Ensure the directory for the repository list file exists
             if (-not [string]::IsNullOrEmpty($repositoryDirectory) -and -not (Test-Path -LiteralPath $repositoryDirectory -PathType Container)) {
-                if ($PSCmdlet.ShouldProcess($repositoryDirectory, "Create directory for repository list file")) {
+                if ($PSCmdlet.ShouldProcess($repositoryDirectory, $createListDirectoryAction)) {
                     New-Item -ItemType Directory -Path $repositoryDirectory -Force -ErrorAction Stop | Out-Null
                 }
             }
 
             # Write the updated repository list back to disk
             # Format is auto-detected from file extension or uses the configured default
-            if ($PSCmdlet.ShouldProcess($RepositoryListPath, "Update repository list file")) {
+            if ($PSCmdlet.ShouldProcess($RepositoryListPath, $updateListFileAction)) {
                 $finalEntries | Export-DevDirectoryList -Path $RepositoryListPath
             }
         } elseif (-not $repositoryFileExists) {
             # Edge case: file doesn't exist and no changes were detected; still create it
             # Format is auto-detected from file extension or uses the configured default
-            if ($PSCmdlet.ShouldProcess($RepositoryListPath, "Update repository list file")) {
+            if ($PSCmdlet.ShouldProcess($RepositoryListPath, $updateListFileAction)) {
                 $finalEntries | Export-DevDirectoryList -Path $RepositoryListPath
             }
         }

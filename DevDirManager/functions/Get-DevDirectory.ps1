@@ -18,9 +18,9 @@
         Lists all repositories under C:\Projects and includes the configured remote URL for each entry.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 1.1.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-27
+        Date      : 2025-10-31
         Keywords  : Git, Inventory, Repository
 
     .LINK
@@ -117,7 +117,7 @@
             } catch {
                 # Directory enumeration can fail due to permissions or I/O errors
                 # Log the issue and continue scanning other directories
-                Write-PSFMessage -Level Verbose -Message "Skipping directory $($currentDirectory) due to $($_.Exception.Message)."
+                Write-PSFMessage -Level Verbose -String 'GetDevDirectory.DirectoryEnumerationFailed' -StringValues @($currentDirectory, $_.Exception.Message)
             }
 
             # Enqueue child directories for subsequent processing (breadth-first order)

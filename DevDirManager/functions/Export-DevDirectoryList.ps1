@@ -32,9 +32,9 @@
         Exports the repository list to repos.json in JSON format.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 1.1.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
+        Date      : 2025-10-31
         Keywords  : Git, Export, Serialization
 
     .LINK
@@ -88,7 +88,7 @@
     end {
         # Early exit if no repositories were provided via pipeline or parameter
         if ($repositoryList.Count -eq 0) {
-            Write-PSFMessage -Level Verbose -Message "No repository entries received for export."
+            Write-PSFMessage -Level Verbose -String 'ExportDevDirectoryList.NoRepositoryEntries'
             return
         }
 
@@ -104,10 +104,12 @@
                     # Use the configured default format if file extension doesn't match
                     if ($defaultFormat) {
                         $resolvedFormat = $defaultFormat
-                        Write-PSFMessage -Level Verbose -Message "Using configured default format '$($resolvedFormat)' for file '$($Path)'."
+                        Write-PSFMessage -Level Verbose -String 'RepositoryList.UsingDefaultFormat' -StringValues @($resolvedFormat, $Path)
                     } else {
-                        $message = "Unable to infer export format from path '$($Path)'. Specify the Format parameter."
-                        Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet
+                        $messageValues = @($Path)
+                        $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'ExportDevDirectoryList.InferFormatFailed'
+                        $message = $messageTemplate -f $messageValues
+                        Stop-PSFFunction -String 'ExportDevDirectoryList.InferFormatFailed' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet
                         throw $message
                     }
                 }
@@ -126,7 +128,8 @@
         }
 
         # Check for WhatIf/Confirm before performing the write operation
-        if (-not $PSCmdlet.ShouldProcess($Path, "Export repository list as $($resolvedFormat)")) {
+        $exportActionTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'ExportDevDirectoryList.ActionExport'
+        if (-not $PSCmdlet.ShouldProcess($Path, ($exportActionTemplate -f @($resolvedFormat)))) {
             return
         }
 

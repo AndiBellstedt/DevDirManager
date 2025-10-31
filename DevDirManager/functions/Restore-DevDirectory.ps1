@@ -34,9 +34,9 @@
         Restores the repositories under C:\Repos using the layout described in repos.json.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 1.1.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-27
+        Date      : 2025-10-31
         Keywords  : Git, Restore, Clone
 
     .LINK
@@ -79,8 +79,10 @@
             $gitCommand = Get-Command -Name $gitExecutable -ErrorAction Stop
             $resolvedGitPath = $gitCommand.Source
         } catch {
-            $message = "Unable to locate the git executable '$($gitExecutable)'. Ensure Git is installed and available in PATH."
-            Stop-PSFFunction -Message $message -EnableException $true -Cmdlet $PSCmdlet -ErrorRecord $_
+            $messageValues = @($gitExecutable)
+            $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'RestoreDevDirectory.GitExecutableMissing'
+            $message = $messageTemplate -f $messageValues
+            Stop-PSFFunction -String 'RestoreDevDirectory.GitExecutableMissing' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet -ErrorRecord $_
             throw $message
         }
 
@@ -95,6 +97,8 @@
         # Define regex pattern to reject unsafe relative paths that could escape the destination
         # Matches: absolute paths (starts with \), drive letters (contains :), or path traversal (..)
         $invalidRelativePattern = [regex]::new("(^\\|:|\.\.)")
+
+        $cloneActionTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'RestoreDevDirectory.ActionClone'
     }
 
     process {
@@ -112,19 +116,19 @@
 
             # Skip repositories missing a remote URL (cannot clone without a source)
             if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
-                Write-PSFMessage -Level Warning -Message "Skipping repository with missing RemoteUrl: $($relativePath)."
+                Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.MissingRemoteUrl' -StringValues @($relativePath)
                 continue
             }
 
             # Skip repositories missing a relative path (cannot determine target directory)
             if ([string]::IsNullOrWhiteSpace($relativePath)) {
-                Write-PSFMessage -Level Warning -Message "Skipping repository with missing RelativePath for remote $($remoteUrl)."
+                Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.MissingRelativePath' -StringValues @($remoteUrl)
                 continue
             }
 
             # Reject paths that could escape the destination root (security check)
             if ($invalidRelativePattern.IsMatch($relativePath)) {
-                Write-PSFMessage -Level Warning -Message "Skipping repository with unsafe relative path '$($relativePath)'."
+                Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.UnsafeRelativePath' -StringValues @($relativePath)
                 continue
             }
 
@@ -134,7 +138,7 @@
 
             # Verify that the resolved target path is still within the destination root (defense-in-depth check)
             if (-not $targetPath.StartsWith($normalizedDestination, [System.StringComparison]::OrdinalIgnoreCase)) {
-                Write-PSFMessage -Level Warning -Message "Skipping repository with out-of-scope path '$($relativePath)'."
+                Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.OutOfScopePath' -StringValues @($relativePath)
                 continue
             }
 
@@ -151,12 +155,12 @@
             # Handle existing target directories according to SkipExisting/Force switch settings
             if (Test-Path -LiteralPath $targetPath -PathType Container) {
                 if ($SkipExisting.IsPresent) {
-                    Write-PSFMessage -Level Verbose -Message "Skipping existing repository target $($targetPath)."
+                    Write-PSFMessage -Level Verbose -String 'RestoreDevDirectory.ExistingTargetVerbose' -StringValues @($targetPath)
                     continue
                 }
 
                 if (-not $Force.IsPresent) {
-                    Write-PSFMessage -Level Warning -Message "Target directory $($targetPath) already exists. Use -Force to overwrite or -SkipExisting to ignore."
+                    Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.TargetExistsWarning' -StringValues @($targetPath)
                     continue
                 }
 
@@ -165,7 +169,7 @@
             }
 
             # Check for WhatIf/Confirm before performing the clone operation
-            if (-not $PSCmdlet.ShouldProcess($targetPath, "Clone repository from $($remoteUrl)")) {
+            if (-not $PSCmdlet.ShouldProcess($targetPath, ($cloneActionTemplate -f @($remoteUrl)))) {
                 continue
             }
 
@@ -176,7 +180,7 @@
 
             # Check the git clone exit code and log errors for failed clones
             if ($cloneProcess.ExitCode -ne 0) {
-                Write-PSFMessage -Level Error -Message "git clone for '$($remoteUrl)' failed with exit code $($cloneProcess.ExitCode)."
+                Write-PSFMessage -Level Error -String 'RestoreDevDirectory.CloneFailed' -StringValues @($remoteUrl, $cloneProcess.ExitCode)
                 continue
             }
 
