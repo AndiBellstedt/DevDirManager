@@ -18,9 +18,14 @@ designed for repeatable workstation setup when you maintain many repositories.
 - Publish or synchronise inventories so multiple machines stay aligned.
 
 ## How to Use DevDirManager
+
+### Installation from PowerShell Gallery
 ```powershell
-# Inventory repositories beneath a folder
-PS C:\> Import-Module ".\DevDirManager\DevDirManager.psd1"
+# Install the module from PowerShell Gallery (run as administrator if required)
+PS C:\> Install-Module DevDirManager
+
+# Import the module
+PS C:\> Import-Module DevDirManager
 PS C:\> $repositoryList = Get-DevDirectory -RootPath "C:\Dev"
 
 # Export the inventory to JSON and keep it under version control or a gist
