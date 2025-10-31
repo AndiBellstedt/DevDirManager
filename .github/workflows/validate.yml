@@ -1,7 +1,10 @@
-﻿on: [pull_request]
+﻿on:
+    push:
+    pull_request:
 
 jobs:
     validate:
+        if: ${{ github.event_name == 'push' }}
         runs-on: windows-latest
 
         env:
@@ -9,9 +12,15 @@ jobs:
 
         steps:
             - uses: actions/checkout@v1
-            - name: Install Prerequisites
+            - name: Install Prerequisites (Windows PowerShell 5.1)
               run: .\build\vsts-prerequisites.ps1 -ModuleName $env:PROJECT_NAME
               shell: powershell
-            - name: Validate
+            - name: Validate (Windows PowerShell 5.1)
               run: .\build\vsts-validate.ps1
               shell: powershell
+            - name: Install Prerequisites (PowerShell 7)
+              run: .\build\vsts-prerequisites.ps1 -ModuleName $env:PROJECT_NAME
+              shell: pwsh
+            - name: Validate (PowerShell 7)
+              run: .\build\vsts-validate.ps1
+              shell: pwsh

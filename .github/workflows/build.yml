@@ -13,14 +13,20 @@ jobs:
 
         steps:
             - uses: actions/checkout@v1
-            - name: Install Prerequisites
+            - name: Install Prerequisites (Windows PowerShell 5.1)
               run: .\build\vsts-prerequisites.ps1 -ModuleName $env:PROJECT_NAME
               shell: powershell
-            - name: Validate
+            - name: Validate (Windows PowerShell 5.1)
               run: .\build\vsts-validate.ps1
               shell: powershell
+            - name: Install Prerequisites (PowerShell 7)
+              run: .\build\vsts-prerequisites.ps1 -ModuleName $env:PROJECT_NAME
+              shell: pwsh
+            - name: Validate (PowerShell 7)
+              run: .\build\vsts-validate.ps1
+              shell: pwsh
             - name: Build
               run: .\build\vsts-build.ps1 -ModuleName $env:PROJECT_NAME -ApiKey $env:APIKEY
-              shell: powershell
+              shell: pwsh
               env:
                   APIKEY: ${{ secrets.ApiKey }}
