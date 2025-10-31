@@ -109,7 +109,12 @@
                 }
 
                 # Rehydrate the repository records from JSON
-                $importedObjects = $rawContent | ConvertFrom-Json -Depth 5
+                $convertParams = @{ InputObject = $rawContent }
+                if ($PSVersionTable.PSVersion.Major -ge 6) {
+                    $convertParams['Depth'] = 5
+                }
+
+                $importedObjects = ConvertFrom-Json @convertParams
 
                 # Add the DevDirManager.Repository type to each imported object
                 foreach ($obj in $importedObjects) {
