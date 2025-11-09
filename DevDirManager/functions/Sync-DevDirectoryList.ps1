@@ -45,8 +45,38 @@
         Synchronizes the repositories beneath C:\Repos with the entries stored in repos.json, cloning any
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Projects" -RepositoryListPath "repos.csv" -PassThru | 
+                Export-DevDirectoryList -Path "backup.json"
+
+        Synchronizes and returns the merged list, then exports it to a backup file in JSON format.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Dev" -RepositoryListPath "repos.json" -SkipExisting
+
+        Synchronizes without overwriting existing repository directories, only cloning new ones
+        from the list that don't exist locally.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Repos" -RepositoryListPath "repos.xml" -ShowGitOutput -Verbose
+
+        Synchronizes with detailed verbose output and displays git command output during clone
+        operations, useful for troubleshooting.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Projects" -RepositoryListPath "repos.json" -WhatIf
+
+        Shows what changes would be made (directories created, repositories cloned, file updated)
+        without actually performing the synchronization.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Dev" -RepositoryListPath "C:\Backup\repos.csv" -Force
+
+        Synchronizes and overwrites any existing directories when cloning repositories from the
+        list, useful for forcing a clean state.
+
     .NOTES
-        Version   : 1.4.1
+        Version   : 1.4.2
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Sync, Repository

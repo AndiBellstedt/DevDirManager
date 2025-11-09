@@ -19,8 +19,31 @@
 
         Reads repository metadata from the JSON file and returns it to the pipeline.
 
+    .EXAMPLE
+        PS C:\> $repos = Import-DevDirectoryList -Path "repos.csv"
+        PS C:\> $repos | Where-Object RemoteUrl -like "*github.com*"
+
+        Imports from CSV and filters to show only GitHub repositories.
+
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "repos.xml" | 
+                Where-Object StatusDate -gt (Get-Date).AddDays(-30)
+
+        Imports from XML and shows only repositories modified in the last 30 days.
+
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "repos.txt" -Format JSON
+
+        Imports JSON data from a file with .txt extension by explicitly specifying the format.
+
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "C:\Backup\repos.csv" -Verbose
+
+        Imports with verbose output showing detailed progress including deserialization steps
+        and type conversion operations.
+
     .NOTES
-        Version   : 1.2.3
+        Version   : 1.2.4
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Import, Serialization

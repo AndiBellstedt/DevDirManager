@@ -45,8 +45,37 @@
 
         Restores the repositories and displays detailed git clone output to the console.
 
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "repos.csv" | 
+                Restore-DevDirectory -DestinationPath "D:\Projects" -SkipExisting
+
+        Clones only repositories that don't already exist in D:\Projects, skipping any
+        that are already present without error.
+
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "repos.json" | 
+                Where-Object RemoteUrl -like "*github.com*" |
+                Restore-DevDirectory -DestinationPath "C:\GitHub"
+
+        Restores only GitHub repositories to a specific location, filtering the list
+        before restoration.
+
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "repos.xml" | 
+                Restore-DevDirectory -DestinationPath "C:\Repos" -Force -Verbose
+
+        Restores repositories with verbose output, overwriting any existing directories.
+        The -Force parameter removes existing directories before cloning.
+
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "repos.json" | 
+                Restore-DevDirectory -DestinationPath "C:\Repos" -WhatIf
+
+        Shows what repositories would be cloned without actually performing the operation,
+        useful for validating the restoration plan.
+
     .NOTES
-        Version   : 1.4.2
+        Version   : 1.4.3
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Restore, Clone

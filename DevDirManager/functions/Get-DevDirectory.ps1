@@ -31,8 +31,31 @@
         Lists all repositories under C:\Projects without checking if remotes are accessible.
         This is faster but won't mark inaccessible repositories.
 
+    .EXAMPLE
+        PS C:\> Get-DevDirectory | Where-Object IsRemoteAccessible -eq $false
+
+        Finds all repositories in the current directory with inaccessible remotes, helping
+        identify repositories that may have been deleted or moved on the remote server.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | Select-Object RelativePath, UserName, UserEmail
+
+        Lists all repositories showing only their path and configured user identity, useful
+        for verifying commit author settings across multiple repositories.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory | Sort-Object StatusDate -Descending | Select-Object -First 5
+
+        Shows the 5 most recently modified repositories, helping identify active projects.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" -Verbose
+
+        Scans repositories with verbose output showing detailed progress information including
+        each repository found and remote accessibility checks.
+
     .NOTES
-        Version   : 1.3.3
+        Version   : 1.3.4
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Inventory, Repository

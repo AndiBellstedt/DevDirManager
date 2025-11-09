@@ -51,8 +51,34 @@
 
         Streams repository metadata directly from the pipeline and publishes it to a public gist.
 
+    .EXAMPLE
+        PS C:\> $token = Read-Host -AsSecureString -Prompt "GitHub PAT"
+        PS C:\> Publish-DevDirectoryList -Path "repos.csv" -AccessToken $token
+
+        Prompts for GitHub Personal Access Token securely, then publishes the CSV file
+        (automatically converted to JSON for Gist compatibility).
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory | 
+                Publish-DevDirectoryList -AccessToken $token -GistId "abc123def456"
+
+        Updates an existing gist by providing its ID instead of searching by description.
+
+    .EXAMPLE
+        PS C:\> Publish-DevDirectoryList -Path "repos.xml" -AccessToken $token -Verbose
+
+        Publishes with verbose output showing conversion steps, API calls, and gist details.
+        XML format is automatically converted to JSON before publishing.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | 
+                Where-Object RemoteUrl -like "*github.com*" |
+                Publish-DevDirectoryList -AccessToken $token -Public
+
+        Publishes only GitHub repositories to a public gist, filtering before publication.
+
     .NOTES
-        Version   : 1.1.4
+        Version   : 1.1.5
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Gist, Publish

@@ -66,6 +66,13 @@ CORE FUNCTIONS
         - UserName: Repository-local git user.name configuration
         - UserEmail: Repository-local git user.email configuration
         - StatusDate: Most recent commit or repository activity date
+        - IsRemoteAccessible: Boolean indicating if the remote URL is accessible
+          (null if -SkipRemoteCheck was used)
+
+        Parameters:
+        - RootPath: Directory to scan for repositories (default: current location)
+        - SkipRemoteCheck: Skips remote accessibility verification, improving
+          performance but not marking inaccessible repositories
 
     Repository List Management
     --------------------------
@@ -89,12 +96,26 @@ CORE FUNCTIONS
         repository using 'git config --local', ensuring the cloned repository
         maintains the same user identity as the original.
 
+        Parameters:
+        - DestinationPath: Root directory where repositories will be restored
+        - Force: Overwrites existing directories by deleting them before cloning
+        - SkipExisting: Skips repositories whose target directory already exists
+        - ShowGitOutput: Displays git command output instead of suppressing it
+
     Sync-DevDirectoryList
         Performs bi-directional synchronization between a directory structure
         and a repository list file. Can update the file with new repositories
         found in the directory, or clone missing repositories from the file.
         When merging metadata, local repository values for UserName, UserEmail,
         and StatusDate are preferred over file values to ensure accuracy.
+
+        Parameters:
+        - DirectoryPath: Root directory containing Git repositories
+        - RepositoryListPath: Path to the repository list file
+        - Force: Forwards to Restore-DevDirectory for overwriting existing dirs
+        - SkipExisting: Forwards to Restore-DevDirectory for skipping existing
+        - ShowGitOutput: Forwards to Restore-DevDirectory to show git output
+        - PassThru: Returns the merged repository list after synchronization
 
     GitHub Integration
     -----------------
@@ -315,9 +336,91 @@ TECHNICAL DETAILS
         - Falls back to .git folder modification time if HEAD is unavailable
         - Provides a simple way to identify recently active repositories
 
+LOGGING SYSTEM
+    DevDirManager uses the PSFramework logging system to provide comprehensive
+    diagnostic information. All logging messages support internationalization,
+    with English (en-us), French (fr-fr), and Spanish (es-es) localizations
+    available.
+
+    Logging Levels
+        The module uses PSFramework's logging levels to categorize messages:
+        - Debug: Detailed diagnostic information for troubleshooting
+        - Verbose: Informative messages about normal operations
+        - System: Configuration and system-level operations
+        - Warning: Non-critical issues that don't stop execution
+        - Error: Errors that may prevent operations from completing
+
+    Viewing Logging Messages
+        Use PowerShell's common parameters to control log visibility:
+        - -Verbose: Shows Verbose-level messages and above
+        - -Debug: Shows Debug-level messages and all other levels
+
+        Example:
+        PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose
+
+    PSFramework Logging Features
+        DevDirManager leverages PSFramework's advanced logging capabilities:
+        - Automatic log file creation for persistent diagnostics
+        - Structured logging with tags for filtering
+        - Message templates for consistent internationalization
+        - Runtime configuration of logging providers
+
+        Configure logging providers:
+        PS C:\> Set-PSFLoggingProvider -Name logfile -FilePath C:\Logs\DevDirManager.log
+        PS C:\> Set-PSFLoggingProvider -Name logfile -Enabled $true
+
+        View logged messages:
+        PS C:\> Get-PSFMessage | Where-Object ModuleName -eq 'DevDirManager'
+
+    Internationalization
+        Logging messages are automatically localized based on PowerShell's
+        current culture ($PSCulture). Supported languages:
+        - English (en-us): Default
+        - French (fr-fr): Français
+        - Spanish (es-es): Español
+
+        Override culture for testing:
+        PS C:\> [System.Threading.Thread]::CurrentThread.CurrentUICulture = 'fr-fr'
+        PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose
+
+    Common Logging Patterns
+        Repository scanning operations:
+        - GetDevDirectory.ScanStart: When directory scanning begins
+        - GetDevDirectory.RepositoryFound: Each time a repository is discovered
+        - GetDevDirectory.ScanComplete: Summary when scanning finishes
+
+        Import/Export operations:
+        - ImportDevDirectoryList.Start: Import operation begins
+        - ExportDevDirectoryList.FormatResolved: File format determined
+        - ImportDevDirectoryList.CompleteCSV/JSON/XML: Import success
+
+        Clone/Restore operations:
+        - RestoreDevDirectory.CloningRepository: Each repository being cloned
+        - RestoreDevDirectory.CloneFailed: git clone errors
+        - RestoreDevDirectory.Complete: Summary when restoration finishes
+
+        Synchronization operations:
+        - SyncDevDirectoryList.SyncStart: Sync process begins
+        - SyncDevDirectoryList.RemoteUrlMismatch: URL conflicts detected
+        - SyncDevDirectoryList.Complete: Final repository count
+
+    Troubleshooting with Logs
+        When encountering issues:
+        1. Re-run the command with -Verbose to see detailed progress
+        2. Use -Debug for maximum diagnostic detail
+        3. Check PSFramework logs: Get-PSFMessage | Where-Object Level -eq Error
+        4. Review specific operation tags for targeted troubleshooting
+        5. Enable file logging for persistent diagnostic records
+
+        Example troubleshooting workflow:
+        PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose -Debug
+        PS C:\> Get-PSFMessage | Where-Object Tag -contains "GetDevDirectory"
+        PS C:\> Get-PSFMessage | Where-Object Level -eq Error | Format-List *
+
 KEYWORDS
     Git, Repository, DevOps, Source Control, Directory Management, Inventory,
-    Backup, Restore, Synchronization, GitHub, Gist, PSFramework, Configuration
+    Backup, Restore, Synchronization, GitHub, Gist, PSFramework, Configuration,
+    Logging, Internationalization
 
 SEE ALSO
     Get-DevDirectory

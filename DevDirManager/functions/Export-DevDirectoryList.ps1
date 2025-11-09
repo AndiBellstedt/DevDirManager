@@ -31,8 +31,34 @@
 
         Exports the repository list to repos.json in JSON format.
 
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | Export-DevDirectoryList -Path "repos.csv"
+
+        Exports to CSV format, automatically detected from the .csv extension. CSV is ideal
+        for viewing in Excel or other spreadsheet applications.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory | Export-DevDirectoryList -Path "C:\Backup\repos.xml" -Format XML
+
+        Exports to XML format explicitly, useful for PowerShell-to-PowerShell data exchange
+        as it preserves all type information.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | 
+                Export-DevDirectoryList -Path "repos" -WhatIf
+
+        Shows what would happen without actually creating the file, useful for verifying
+        the operation before execution.
+
+    .EXAMPLE
+        PS C:\> Set-PSFConfig -FullName 'DevDirManager.DefaultOutputFormat' -Value 'JSON'
+        PS C:\> Get-DevDirectory | Export-DevDirectoryList -Path "C:\Data\repos"
+
+        Sets JSON as the default format, then exports without extension. The file will be
+        created as JSON due to the configured default.
+
     .NOTES
-        Version   : 1.2.3
+        Version   : 1.2.4
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Export, Serialization
