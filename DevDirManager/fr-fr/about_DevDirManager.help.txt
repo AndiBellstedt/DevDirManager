@@ -399,7 +399,6 @@ SYSTÈME DE JOURNALISATION
         - ImportDevDirectoryList.CompleteCSV/JSON/XML : Succès de l'importation
 
         Opérations de clonage/restauration :
-        - RestoreDevDirectory.CloningRepository : Chaque référentiel en cours de clonage
         - RestoreDevDirectory.CloneFailed : Erreurs de git clone
         - RestoreDevDirectory.Complete : Résumé lorsque la restauration se termine
 

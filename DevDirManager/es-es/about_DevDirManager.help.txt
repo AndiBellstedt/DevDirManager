@@ -397,7 +397,6 @@ SISTEMA DE REGISTRO
         - ImportDevDirectoryList.CompleteCSV/JSON/XML: Importación exitosa
 
         Operaciones de clonación/restauración:
-        - RestoreDevDirectory.CloningRepository: Cada repositorio siendo clonado
         - RestoreDevDirectory.CloneFailed: Errores de git clone
         - RestoreDevDirectory.Complete: Resumen cuando termina restauración
 

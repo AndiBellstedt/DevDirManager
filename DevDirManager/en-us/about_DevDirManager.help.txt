@@ -395,7 +395,6 @@ LOGGING SYSTEM
         - ImportDevDirectoryList.CompleteCSV/JSON/XML: Import success
 
         Clone/Restore operations:
-        - RestoreDevDirectory.CloningRepository: Each repository being cloned
         - RestoreDevDirectory.CloneFailed: git clone errors
         - RestoreDevDirectory.Complete: Summary when restoration finishes
 

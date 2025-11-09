@@ -13,8 +13,6 @@ $exceptions['LegalSurplus'] = @(
 )
 #>
 $exceptions['LegalSurplus'] = @(
-    'ExportDevDirectoryList.InferFormatFailed'
-    'ImportDevDirectoryList.InferFormatFailed'
 )
 <#
 A list of entries that MAY be used without needing to have text defined.
