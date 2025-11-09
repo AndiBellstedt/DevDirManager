@@ -52,9 +52,9 @@
         Streams repository metadata directly from the pipeline and publishes it to a public gist.
 
     .NOTES
-        Version   : 1.1.3
+        Version   : 1.1.4
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-01-24
+        Date      : 2025-11-09
         Keywords  : Git, Gist, Publish
 
     .LINK
@@ -106,9 +106,12 @@
     )
 
     begin {
+        Write-PSFMessage -Level Debug -Message "Starting Publish-DevDirectoryList with ParameterSet: '$($PSCmdlet.ParameterSetName)', Public: $($Public), GistId: '$($GistId)'" -Tag "PublishDevDirectoryList", "Start"
+
         # Collect data so we can upload once per invocation.
         $repositoryList = [System.Collections.Generic.List[psobject]]::new()
 
+        Write-PSFMessage -Level System -Message "Decrypting AccessToken for GitHub API authentication" -Tag "PublishDevDirectoryList", "Authentication"
         $tokenPointer = [System.IntPtr]::Zero
         try {
             $tokenPointer = [System.Runtime.InteropServices.Marshal]::SecureStringToGlobalAllocUnicode($AccessToken)
@@ -120,12 +123,14 @@
         }
 
         if ([string]::IsNullOrWhiteSpace($resolvedToken)) {
+            Write-PSFMessage -Level Error -Message "AccessToken is empty or null" -Tag "PublishDevDirectoryList", "Authentication"
             $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'PublishDevDirectoryList.TokenEmpty'
             $message = $messageTemplate
             Stop-PSFFunction -String 'PublishDevDirectoryList.TokenEmpty' -EnableException $true -Cmdlet $PSCmdlet
             throw $message
         }
 
+        Write-PSFMessage -Level System -Message "Configured API endpoint: '$($ApiUrl)'" -Tag "PublishDevDirectoryList", "Configuration"
         $requestHeaders = @{
             Authorization = "Bearer $resolvedToken"
             "User-Agent"  = "DevDirManager"
@@ -141,6 +146,7 @@
 
     process {
         if ($PSCmdlet.ParameterSetName -eq "FromInput") {
+            Write-PSFMessage -Level Debug -Message "Collecting repository object from pipeline" -Tag "PublishDevDirectoryList", "Collect"
             $repositoryList.Add($InputObject)
         }
     }
@@ -149,25 +155,30 @@
         try {
             if ($PSCmdlet.ParameterSetName -eq "FromInput") {
                 if ($repositoryList.Count -eq 0) {
-                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.NoPipelineData'
+                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.NoPipelineData' -Tag "PublishDevDirectoryList", "Validation"
                     return
                 }
 
+                Write-PSFMessage -Level Verbose -Message "Converting $($repositoryList.Count) pipeline objects to JSON" -Tag "PublishDevDirectoryList", "Serialization"
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 6
             } else {
+                Write-PSFMessage -Level Verbose -Message "Reading repository list from file: '$($Path)'" -Tag "PublishDevDirectoryList", "FileRead"
                 $resolvedPath = Resolve-Path -LiteralPath $Path -ErrorAction Stop
 
                 # Determine the file format to decide how to read the content
                 # Since Publish always outputs JSON, we need to convert non-JSON formats
                 $fileFormat = Resolve-RepositoryListFormat -Path $resolvedPath -ErrorContext "PublishDevDirectoryList"
+                Write-PSFMessage -Level Verbose -Message "Detected file format: '$($fileFormat)'" -Tag "PublishDevDirectoryList", "Format"
 
                 # Read or convert file content to JSON based on format
                 switch ($fileFormat) {
                     "JSON" {
+                        Write-PSFMessage -Level Debug -Message "File is JSON, reading directly" -Tag "PublishDevDirectoryList", "Serialization"
                         # File is already JSON, read it directly
                         $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
                     }
                     default {
+                        Write-PSFMessage -Level Debug -Message "Converting $($fileFormat) to JSON" -Tag "PublishDevDirectoryList", "Serialization"
                         # CSV or XML: Import the file using Import-DevDirectoryList and convert to JSON
                         $importedData = Import-DevDirectoryList -Path $resolvedPath
                         $jsonContent = $importedData | ConvertTo-Json -Depth 6
@@ -176,20 +187,26 @@
             }
 
             if ([string]::IsNullOrWhiteSpace($jsonContent)) {
-                Write-PSFMessage -Level Warning -String 'PublishDevDirectoryList.EmptyContent'
+                Write-PSFMessage -Level Warning -String 'PublishDevDirectoryList.EmptyContent' -Tag "PublishDevDirectoryList", "Validation"
                 return
             }
 
             if (-not $GistId) {
+                Write-PSFMessage -Level Verbose -Message "Searching for existing gist with description 'GitRepositoryList'" -Tag "PublishDevDirectoryList", "GistQuery"
                 try {
                     $existingGistList = Invoke-RestMethod -Method Get -Uri "$($gistEndpoint)?per_page=100" -Headers $requestHeaders -ErrorAction Stop
                     $matchingGist = $existingGistList | Where-Object description -eq "GitRepositoryList" | Select-Object -First 1
                     if ($matchingGist) {
                         $GistId = $matchingGist.id
+                        Write-PSFMessage -Level Verbose -Message "Found existing gist with ID: '$($GistId)'" -Tag "PublishDevDirectoryList", "GistQuery"
+                    } else {
+                        Write-PSFMessage -Level Verbose -Message "No existing gist found, will create new" -Tag "PublishDevDirectoryList", "GistQuery"
                     }
                 } catch {
-                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.QueryGistFailed' -StringValues @($_.Exception.Message)
+                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.QueryGistFailed' -StringValues @($_.Exception.Message) -Tag "PublishDevDirectoryList", "GistQuery"
                 }
+            } else {
+                Write-PSFMessage -Level Verbose -Message "Using provided GistId: '$($GistId)'" -Tag "PublishDevDirectoryList", "Configuration"
             }
 
             $payload = @{
@@ -202,14 +219,19 @@
 
             $targetLabel = if ($GistId) { $targetLabelUpdateTemplate -f @($GistId) } else { $targetLabelCreate }
             if (-not $PSCmdlet.ShouldProcess($targetLabel, $publishAction)) {
+                Write-PSFMessage -Level Verbose -Message "Publish canceled by user (WhatIf/Confirm)" -Tag "PublishDevDirectoryList", "Abort"
                 return
             }
 
             if ($GistId) {
+                Write-PSFMessage -Level Verbose -Message "Updating existing gist: '$($GistId)'" -Tag "PublishDevDirectoryList", "GistUpdate"
                 $response = Invoke-RestMethod -Method Patch -Uri "$($gistEndpoint)/$GistId" -Headers $requestHeaders -Body $payload -ContentType "application/json"
             } else {
+                Write-PSFMessage -Level Verbose -Message "Creating new gist" -Tag "PublishDevDirectoryList", "GistCreate"
                 $response = Invoke-RestMethod -Method Post -Uri $gistEndpoint -Headers $requestHeaders -Body $payload -ContentType "application/json"
             }
+
+            Write-PSFMessage -Level Verbose -Message "Successfully published repository list to gist. GistId: '$($response.id)', URL: '$($response.html_url)'" -Tag "PublishDevDirectoryList", "Complete"
 
             # Return summary details so callers have the gist identifier for follow-up automation.
             [pscustomobject]@{
@@ -221,6 +243,7 @@
                 Files       = $response.files.Keys
             }
         } finally {
+            Write-PSFMessage -Level System -Message "Cleaning up authentication tokens" -Tag "PublishDevDirectoryList", "Cleanup"
             if ($null -ne $requestHeaders -and $requestHeaders.ContainsKey("Authorization")) {
                 $requestHeaders["Authorization"] = $null
             }

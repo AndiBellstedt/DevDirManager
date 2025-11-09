@@ -32,9 +32,9 @@
         Processes each object in the pipeline, adding the type name to all objects.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.0.1
         Author    : Copilot, Andi Bellstedt
-        Date      : 2025-01-24
+        Date      : 2025-11-09
         Keywords  : type, typename, repository, psobject, formatting
 
     .LINK
@@ -53,9 +53,12 @@
 
     process {
         foreach ($obj in $InputObject) {
+            Write-PSFMessage -Level Debug -Message "Adding DevDirManager.Repository type name to object" -Tag "AddRepositoryTypeName", "Start"
+
             # Insert the custom type name at position 0 to ensure it takes precedence
             # over any existing type names in the inheritance chain
             $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
+            Write-PSFMessage -Level Verbose -Message "Type name added to object" -Tag "AddRepositoryTypeName", "Result"
 
             # Return the modified object to the pipeline
             $obj

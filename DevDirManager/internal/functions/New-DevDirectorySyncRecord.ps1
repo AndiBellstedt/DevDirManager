@@ -48,8 +48,8 @@
 
     .NOTES
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
-        Version   : 1.1.0
+        Date      : 2025-11-09
+        Version   : 1.1.1
         Keywords  : Internal, Helper, Sync
 
     #>
@@ -93,8 +93,11 @@
         $StatusDate
     )
 
+    Write-PSFMessage -Level Debug -Message "Creating sync record for RelativePath: '$($RelativePath)', RootDirectory: '$($RootDirectory)'" -Tag "NewDevDirectorySyncRecord", "Start"
+
     # Normalize the relative path: empty strings are treated as "." (repository at root)
     $effectiveRelativePath = if ([string]::IsNullOrEmpty($RelativePath)) { "." } else { $RelativePath }
+    Write-PSFMessage -Level Debug -Message "Effective RelativePath: '$($effectiveRelativePath)'" -Tag "NewDevDirectorySyncRecord", "Normalization"
 
     # Compute the full absolute path by combining root and relative path
     # Special case: if the relative path is ".", the full path is simply the root directory
@@ -103,10 +106,11 @@
     } else {
         Join-Path -Path $RootDirectory -ChildPath $effectiveRelativePath
     }
+    Write-PSFMessage -Level Debug -Message "Computed FullPath: '$($fullPath)'" -Tag "NewDevDirectorySyncRecord", "PathResolution"
 
     # Construct and return the standardized sync record object
     # All properties are consistently ordered and typed for downstream processing
-    [pscustomobject]@{
+    $syncRecord = [pscustomobject]@{
         PSTypeName   = 'DevDirManager.Repository'
         RootPath     = $RootDirectory        # Base directory for all repositories
         RelativePath = $effectiveRelativePath # Normalized relative path (never empty)
@@ -117,4 +121,7 @@
         UserEmail    = $UserEmail            # Repository-local git user.email
         StatusDate   = $StatusDate           # Most recent commit or modification date
     }
+
+    Write-PSFMessage -Level Verbose -Message "Sync record created for '$($effectiveRelativePath)' (FullPath: '$($fullPath)')" -Tag "NewDevDirectorySyncRecord", "Result"
+    $syncRecord
 }

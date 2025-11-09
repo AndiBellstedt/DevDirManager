@@ -46,7 +46,7 @@
         Restores the repositories and displays detailed git clone output to the console.
 
     .NOTES
-        Version   : 1.4.1
+        Version   : 1.4.2
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Restore, Clone
@@ -85,16 +85,21 @@
     )
 
     begin {
+        Write-PSFMessage -Level Debug -Message "Starting Restore-DevDirectory to destination: '$($DestinationPath)', Force: $($Force), SkipExisting: $($SkipExisting), ShowGitOutput: $($ShowGitOutput)" -Tag "RestoreDevDirectory", "Start"
+
         # Retrieve the git executable path from configuration
         # This allows users to configure a custom git path via Set-PSFConfig
         $gitExecutable = Get-PSFConfigValue -FullName 'DevDirManager.Git.Executable'
+        Write-PSFMessage -Level System -Message "Using git executable: '$($gitExecutable)'" -Tag "RestoreDevDirectory", "Configuration"
 
         ## Verify that the git executable is available before processing any repositories
         ## This early check prevents partial clone attempts when git is unavailable
         try {
             $gitCommand = Get-Command -Name $gitExecutable -ErrorAction Stop
             $resolvedGitPath = $gitCommand.Source
+            Write-PSFMessage -Level Verbose -Message "Git executable resolved to: '$($resolvedGitPath)'" -Tag "RestoreDevDirectory", "Configuration"
         } catch {
+            Write-PSFMessage -Level Error -Message "Git executable not found: '$($gitExecutable)'" -Tag "RestoreDevDirectory", "Error"
             $messageValues = @($gitExecutable)
             $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'RestoreDevDirectory.GitExecutableMissing'
             $message = $messageTemplate -f $messageValues
@@ -105,6 +110,7 @@
         # Normalize the destination path to an absolute form with trailing backslash
         # This ensures consistent path operations and prevents relative path ambiguities
         $normalizedDestination = Resolve-NormalizedPath -Path $DestinationPath -EnsureTrailingBackslash
+        Write-PSFMessage -Level Verbose -Message "Normalized destination path: '$($normalizedDestination.TrimEnd('\\'))'" -Tag "RestoreDevDirectory", "Configuration"
 
         # Use the module-wide unsafe path pattern for security validation
         # This pattern rejects paths with: absolute paths (starts with \), drive letters (contains :), or path traversal (..)
@@ -292,5 +298,7 @@
 
         # Complete the progress bar
         Write-Progress -Activity "Cloning repositories" -Completed
+
+        Write-PSFMessage -Level Verbose -Message "Restore operation completed. Processed $totalCount repositories" -Tag "RestoreDevDirectory", "Complete"
     }
 }

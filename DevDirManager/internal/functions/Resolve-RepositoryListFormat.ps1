@@ -48,9 +48,9 @@
         Returns "JSON" since explicit format parameter overrides extension inference.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.0.1
         Author    : Copilot, Andi Bellstedt
-        Date      : 2025-01-24
+        Date      : 2025-01-09
         Keywords  : format, inference, extension, repository, list
     #>
     [CmdletBinding()]
@@ -76,25 +76,37 @@
     )
 
     begin {
+        Write-PSFMessage -Level Debug -Message "Resolving format for path: '$($Path)', explicit Format: '$($Format)', DefaultFormat: '$($DefaultFormat)'" -Tag "ResolveRepositoryListFormat", "Start"
+
         # Early return if explicit format is provided
         if ($Format) {
-            Write-PSFMessage -Level Verbose -Message "Using explicit format: $($Format)"
+            Write-PSFMessage -Level Verbose -Message "Using explicit format: $($Format)" -Tag "ResolveRepositoryListFormat", "Result"
             $Format
             return
         }
 
         # Extract file extension and convert to lowercase for comparison
         $extension = [System.IO.Path]::GetExtension($Path).ToLower()
+        Write-PSFMessage -Level Debug -Message "Extracted extension: '$($extension)'" -Tag "ResolveRepositoryListFormat", "Inference"
 
         # Attempt to infer format from extension using regex matching
         $resolvedFormat = switch -Regex ($extension) {
-            "^\.csv$" { "CSV" }
-            "^\.json$" { "JSON" }
-            "^\.xml$" { "XML" }
+            "^\.csv$" {
+                Write-PSFMessage -Level Debug -Message "Inferred format from extension: CSV" -Tag "ResolveRepositoryListFormat", "Inference"
+                "CSV"
+            }
+            "^\.json$" {
+                Write-PSFMessage -Level Debug -Message "Inferred format from extension: JSON" -Tag "ResolveRepositoryListFormat", "Inference"
+                "JSON"
+            }
+            "^\.xml$" {
+                Write-PSFMessage -Level Debug -Message "Inferred format from extension: XML" -Tag "ResolveRepositoryListFormat", "Inference"
+                "XML"
+            }
             default {
                 # Use the default format if provided when extension doesn't match
                 if ($DefaultFormat) {
-                    Write-PSFMessage -Level Verbose -String 'RepositoryList.UsingDefaultFormat' -StringValues @($DefaultFormat, $Path)
+                    Write-PSFMessage -Level Verbose -String 'RepositoryList.UsingDefaultFormat' -StringValues @($DefaultFormat, $Path) -Tag "ResolveRepositoryListFormat", "Fallback"
                     $DefaultFormat
                 } else {
                     # No default available, format inference failed
@@ -109,6 +121,7 @@
             }
         }
 
+        Write-PSFMessage -Level Verbose -Message "Resolved format: '$($resolvedFormat)' for path: '$($Path)'" -Tag "ResolveRepositoryListFormat", "Result"
         # Return the resolved format
         $resolvedFormat
     }

@@ -39,6 +39,7 @@
     .NOTES
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
+        Version   : 1.0.1
         Version   : 1.0.0
         Keywords  : Path, Internal, Helper, Normalization
 
@@ -58,22 +59,29 @@
 
     # Handle edge case where Path might consist only of whitespace
     if ([string]::IsNullOrWhiteSpace($Path)) {
+        Write-PSFMessage -Level Error -Message "Path parameter is null, empty, or whitespace" -Tag "ResolveNormalizedPath", "Error"
         throw "Path parameter cannot be null, empty, or whitespace."
     }
+
+    Write-PSFMessage -Level Debug -Message "Resolving and normalizing path: '$($Path)', EnsureTrailingBackslash: $($EnsureTrailingBackslash)" -Tag "ResolveNormalizedPath", "Start"
 
     # Resolve the path to its canonical absolute form
     # This handles relative paths, environment variables, and provider-specific paths
     $resolvedPath = Resolve-Path -LiteralPath $Path -ErrorAction Stop
     $providerPath = $resolvedPath.ProviderPath
+    Write-PSFMessage -Level Debug -Message "Resolved to provider path: '$($providerPath)'" -Tag "ResolveNormalizedPath", "Resolution"
 
     # Normalize using .NET GetFullPath to ensure consistent formatting
     # This handles redundant separators, "." and ".." segments, and case normalization
     $normalizedPath = [System.IO.Path]::GetFullPath($providerPath)
+    Write-PSFMessage -Level Debug -Message "Normalized path: '$($normalizedPath)'" -Tag "ResolveNormalizedPath", "Normalization"
 
     # Add trailing backslash if requested (typically for directory operations)
     if ($EnsureTrailingBackslash -and -not $normalizedPath.EndsWith("\", [System.StringComparison]::Ordinal)) {
         $normalizedPath = "$($normalizedPath)\"
+        Write-PSFMessage -Level Debug -Message "Added trailing backslash: '$($normalizedPath)'" -Tag "ResolveNormalizedPath", "Formatting"
     }
 
+    Write-PSFMessage -Level Verbose -Message "Path normalized: '$($Path)' -> '$($normalizedPath)'" -Tag "ResolveNormalizedPath", "Result"
     return $normalizedPath
 }

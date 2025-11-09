@@ -32,7 +32,7 @@
         This is faster but won't mark inaccessible repositories.
 
     .NOTES
-        Version   : 1.3.2
+        Version   : 1.3.3
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Inventory, Repository
@@ -55,9 +55,12 @@
     )
 
     begin {
+        Write-PSFMessage -Level Debug -Message "Starting Get-DevDirectory with RootPath: '$($RootPath)', SkipRemoteCheck: $($SkipRemoteCheck)" -Tag "GetDevDirectory", "Start"
+
         # Retrieve the default remote name from configuration
         # This allows users to configure a custom remote name via Set-PSFConfig
         $remoteName = Get-PSFConfigValue -FullName 'DevDirManager.Git.RemoteName'
+        Write-PSFMessage -Level System -Message "Using remote name '$($remoteName)' from configuration" -Tag "GetDevDirectory", "Configuration"
 
         # Initialize a strongly-typed list to collect repository metadata throughout the scan
         # Using List[T] provides better performance than += array concatenation for large result sets
@@ -68,6 +71,7 @@
         # Resolve the root path to its canonical absolute form with trailing backslash
         # This ensures consistent path comparison and relative path calculation
         $normalizedRoot = Resolve-NormalizedPath -Path $RootPath -EnsureTrailingBackslash
+        Write-PSFMessage -Level Verbose -Message "Scanning directory tree starting at: '$($normalizedRoot.TrimEnd('\\'))'" -Tag "GetDevDirectory", "Scan"
 
         # Use breadth-first search (BFS) with a queue instead of recursion to avoid stack overflow
         # when scanning deeply nested directory structures. BFS also allows us to stop descending
@@ -84,6 +88,8 @@
 
             # Check if this directory is a Git repository root (contains .git folder)
             if (Test-Path -LiteralPath $gitFolderPath -PathType Container) {
+                Write-PSFMessage -Level Debug -Message "Found repository at: '$($currentDirectory)'" -Tag "GetDevDirectory", "Repository"
+
                 # Found a repository; extract remote URL using the internal helper function
                 $remoteUrl = Get-DevDirectoryRemoteUrl -RepositoryPath $currentDirectory -RemoteName $remoteName
 
@@ -98,12 +104,13 @@
                 if (-not $SkipRemoteCheck) {
                     # Only check if we have a valid remote URL
                     if (-not [string]::IsNullOrWhiteSpace($remoteUrl)) {
+                        Write-PSFMessage -Level Debug -Message "Checking remote accessibility for: '$($remoteUrl)'" -Tag "GetDevDirectory", "RemoteCheck"
                         $isRemoteAccessible = Test-DevDirectoryRemoteAccessible -RemoteUrl $remoteUrl
-                        Write-PSFMessage -Level Verbose -Message "Remote accessibility check for '$relativePath': $isRemoteAccessible"
+                        Write-PSFMessage -Level Verbose -Message "Remote accessibility for '$($relativePath)': $($isRemoteAccessible)" -Tag "GetDevDirectory", "RemoteCheck"
                     } else {
                         # No remote URL means not accessible
                         $isRemoteAccessible = $false
-                        Write-PSFMessage -Level Verbose -Message "No remote URL found for '$relativePath', marking as inaccessible"
+                        Write-PSFMessage -Level Verbose -Message "No remote URL found for '$($relativePath)', marking as inaccessible" -Tag "GetDevDirectory", "RemoteCheck"
                     }
                 }
 
@@ -169,6 +176,8 @@
     }
 
     end {
+        Write-PSFMessage -Level Verbose -Message "Repository scan completed. Found $($repositoryLayoutList.Count) repositories" -Tag "GetDevDirectory", "Result"
+
         # Convert the List to an array for output to match the declared OutputType
         # This ensures compatibility with downstream commands expecting array input
         $repositoryLayoutList.ToArray()

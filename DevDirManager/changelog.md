@@ -2,6 +2,79 @@
 
 ## [Unreleased]
 
+### Added
+- **Comprehensive PSFramework Logging**
+  - Added comprehensive `Write-PSFMessage` logging to all public functions following patterns from PSPersonio, ABe.ActiveDirectory, and PSTANSS reference modules
+  - Logging includes appropriate levels: Debug (detailed operations), Verbose (informational), System (technical details), Significant (important milestones), Error/Warning (issues)
+  - All log messages include Tags for categorization and filtering (e.g., "GetDevDirectory", "Export", "Import", "Restore", "Sync", "Publish")
+  - **Get-DevDirectory (1.3.2 → 1.3.3)**:
+    - Debug logging for function start with parameters and repository discovery
+    - System logging for configuration usage
+    - Verbose logging for scanning operations and remote accessibility checks
+    - Significant logging for completion with repository count
+  - **Export-DevDirectoryList (1.2.2 → 1.2.3)**:
+    - Debug logging for function start and object collection
+    - System logging for format detection and configuration
+    - Verbose logging for export processing and serialization steps
+    - Significant logging for completion with export count
+  - **Import-DevDirectoryList (1.2.2 → 1.2.3)**:
+    - Debug logging for function start and deserialization methods
+    - System logging for format configuration
+    - Warning logging for file not found
+    - Verbose logging for import operations and type conversions
+    - Significant logging for completion with import count
+  - **Restore-DevDirectory (1.4.1 → 1.4.2)**:
+    - Enhanced existing logging with Debug logging for function start and configuration
+    - System logging for git executable resolution
+    - Verbose logging for destination path normalization
+    - Significant logging for operation completion
+    - Already had comprehensive logging for clone operations, errors, and warnings
+  - **Sync-DevDirectoryList (1.4.0 → 1.4.1)**:
+    - Debug logging for function start with all parameters
+    - System logging for configuration usage
+    - Verbose logging for synchronization process stages
+    - Significant logging for completion with repository count
+  - **Publish-DevDirectoryList (1.1.3 → 1.1.4)**:
+    - Debug logging for function start and collection
+    - System logging for authentication and API configuration
+    - Verbose logging for file reading, format detection, gist queries, and operations
+    - Significant logging for successful publish with gist details
+    - System logging for cleanup operations
+
+- **Comprehensive PSFramework Logging for Internal Functions**
+  - Extended comprehensive logging to internal helper functions using Verbose level for completion messages (instead of Significant for public functions)
+  - Internal functions now use Debug for entry/technical details, Verbose for operations/results, Warning/Error for issues
+  - All log messages include Tags for categorization and filtering
+  - **Resolve-RepositoryListFormat (1.0.0 → 1.0.1)**:
+    - Debug logging for function entry, extension extraction, and format inference
+    - Verbose logging for fallback to default format and final resolved format
+    - Warning logging for format inference failure
+  - **Resolve-NormalizedPath (1.0.0 → 1.0.1)**:
+    - Debug logging for function entry, path resolution, normalization, and formatting
+    - Verbose logging for completion with normalized path result
+    - Error logging for invalid path parameter
+  - **New-DirectoryIfNeeded (1.0.0 → 1.0.1)**:
+    - Debug logging for each directory being processed
+    - Verbose logging for skipped (already existing) directories and successful creation
+  - **New-DevDirectorySyncRecord (1.1.0 → 1.1.1)**:
+    - Debug logging for function entry, relative path normalization, and full path computation
+    - Verbose logging for sync record creation with path details
+  - **Get-DevDirectoryUserInfo (1.0.0 → 1.0.1)**:
+    - Debug logging for function entry, config path resolution, file reading, and parsing
+    - Verbose logging for user info extraction result and missing config scenarios
+  - **Get-DevDirectoryStatusDate (1.0.0 → 1.0.1)**:
+    - Debug logging for function entry, git folder path, HEAD reference check, and fallback
+    - Verbose logging for status date extraction from branch ref, detached HEAD, or .git directory
+  - **Get-DevDirectoryRemoteUrl (1.0.1 → 1.0.2)**:
+    - Debug logging for function entry, config path resolution, file reading, and section pattern search
+    - Verbose logging for remote URL result and missing remote/config scenarios
+  - **ConvertTo-NormalizedRelativePath (1.0.0 → 1.0.1)**:
+    - Debug logging for function entry and normalization steps
+    - Verbose logging for empty/root path handling and final normalized result
+  - **Add-RepositoryTypeName (1.0.0 → 1.0.1)**:
+    - Debug logging for adding type name to objects
+    - Verbose logging for type name addition completion
+
 ### Changed
 - **Improved Logging for Existing Target Directories**
   - Changed "target directory already exists" message level from Warning to VeryVerbose in `Restore-DevDirectory`
@@ -9,7 +82,7 @@
   - Reduces noise in standard output while information remains available with `-Verbose`
   - Updated function version: Restore-DevDirectory: 1.4.0 → 1.4.1
 
-### Added
+### Added (Previous Features)
 - **Improved Git Clone with Progress Tracking and Output Control**
   - `Restore-DevDirectory` now suppresses git command output by default (follows PowerShell best practice: no console output unless something goes wrong)
   - Added `-ShowGitOutput` parameter to `Restore-DevDirectory` to explicitly display git clone output for troubleshooting

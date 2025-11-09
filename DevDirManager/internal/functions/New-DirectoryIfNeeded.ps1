@@ -36,9 +36,9 @@
         Creates the directory with explicit error handling, ensuring any failures are caught.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.0.1
         Author    : Copilot, Andi Bellstedt
-        Date      : 2025-01-24
+        Date      : 2025-11-09
         Keywords  : directory, folder, creation, filesystem, path
 
     .LINK
@@ -59,21 +59,24 @@
 
     process {
         foreach ($directory in $Path) {
+            Write-PSFMessage -Level Debug -Message "Processing directory: '$($directory)'" -Tag "NewDirectoryIfNeeded", "Start"
+
             # Skip processing if path is null, empty, or already exists
             if ([string]::IsNullOrEmpty($directory)) {
-                Write-PSFMessage -Level Verbose -Message "Skipping empty directory path"
+                Write-PSFMessage -Level Verbose -Message "Skipping empty directory path" -Tag "NewDirectoryIfNeeded", "Skip"
                 continue
             }
 
             # Check if directory already exists
             if (Test-Path -LiteralPath $directory -PathType Container) {
-                Write-PSFMessage -Level Verbose -Message "Directory already exists: $($directory)"
+                Write-PSFMessage -Level Verbose -Message "Directory already exists: '$($directory)'" -Tag "NewDirectoryIfNeeded", "Skip"
                 continue
             }
 
             # Create the directory with Force to ensure parent directories are created
-            Write-PSFMessage -Level Verbose -Message "Creating directory: $($directory)"
+            Write-PSFMessage -Level Verbose -Message "Creating directory: '$($directory)'" -Tag "NewDirectoryIfNeeded", "Create"
             New-Item -ItemType Directory -Path $directory -Force -ErrorAction Stop | Out-Null
+            Write-PSFMessage -Level Verbose -Message "Directory created successfully: '$($directory)'" -Tag "NewDirectoryIfNeeded", "Result"
         }
     }
 }
