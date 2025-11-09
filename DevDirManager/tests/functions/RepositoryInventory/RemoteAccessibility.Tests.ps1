@@ -86,14 +86,14 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
         }
 
         It "Should mark invalid remote as inaccessible" -Skip:(-not (Test-Connection -ComputerName "github.com" -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
-            $repos = @(Get-DevDirectory -RootPath $script:TestRoot)
+            $repos = @(Get-DevDirectory -RootPath $script:TestRoot )
             $invalidRepo = $repos | Where-Object { $_.FullPath -eq $script:InvalidRepoDir }
 
             $invalidRepo | Should -Not -BeNullOrEmpty
             $invalidRepo.IsRemoteAccessible | Should -Be $false
         }
 
-        It "Should mark repository with no remote as inaccessible" {
+        It "Should mark repository with no remote as inaccessible" -Skip:(-not (Test-Connection -ComputerName "github.com" -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
             $repos = @(Get-DevDirectory -RootPath $script:TestRoot)
             $noRemoteRepo = $repos | Where-Object { $_.FullPath -eq $script:NoRemoteRepoDir }
 
