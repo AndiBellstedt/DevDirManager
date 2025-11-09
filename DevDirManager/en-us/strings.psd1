@@ -128,7 +128,7 @@
     'GetDevDirectoryRemoteUrl.ConfigNotFound'               = "Git config file not found, returning null"
     'GetDevDirectoryRemoteUrl.ReadingConfig'                = "Reading git config file"
     'GetDevDirectoryRemoteUrl.SearchingSection'             = "Searching for section pattern: '{0}'"
-    'GetDevDirectoryRemoteUrl.SectionFound'                 = "Found [remote \"{0}\"] section in git config"
+    'GetDevDirectoryRemoteUrl.SectionFound'                 = "Found [remote ""{0}""] section in git config"
     'GetDevDirectoryRemoteUrl.RemoteUrlFound'               = "Remote URL for '{0}': '{1}'"
     'GetDevDirectoryRemoteUrl.RemoteNotFound'               = "Remote '{0}' not found or has no URL configured"
 

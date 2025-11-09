@@ -128,7 +128,7 @@
     'GetDevDirectoryRemoteUrl.ConfigNotFound'               = "Fichier de config git introuvable, retour de null"
     'GetDevDirectoryRemoteUrl.ReadingConfig'                = "Lecture du fichier de config git"
     'GetDevDirectoryRemoteUrl.SearchingSection'             = "Recherche du motif de section : '{0}'"
-    'GetDevDirectoryRemoteUrl.SectionFound'                 = "Section [remote \"{0}\"] trouvée dans la config git"
+    'GetDevDirectoryRemoteUrl.SectionFound'                 = "Section [remote ""{0}""] trouvée dans la config git"
     'GetDevDirectoryRemoteUrl.RemoteUrlFound'               = "URL distante pour '{0}' : '{1}'"
     'GetDevDirectoryRemoteUrl.RemoteNotFound'               = "Distant '{0}' introuvable ou sans URL configurée"
 
