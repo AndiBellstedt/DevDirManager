@@ -89,12 +89,12 @@
     )
 
     begin {
-        Write-PSFMessage -Level Debug -Message "Starting Sync-DevDirectoryList with DirectoryPath: '$($DirectoryPath)', RepositoryListPath: '$($RepositoryListPath)', Force: $($Force), SkipExisting: $($SkipExisting), ShowGitOutput: $($ShowGitOutput)" -Tag "SyncDevDirectoryList", "Start"
+        Write-PSFMessage -Level Debug -String 'SyncDevDirectoryList.Start' -StringValues @($DirectoryPath, $RepositoryListPath, $Force, $SkipExisting, $ShowGitOutput) -Tag "SyncDevDirectoryList", "Start"
 
         # Retrieve configuration value for Git remote name
         # This allows users to customize this setting via Set-PSFConfig
         $remoteName = Get-PSFConfigValue -FullName 'DevDirManager.Git.RemoteName'
-        Write-PSFMessage -Level System -Message "Using remote name '$($remoteName)' from configuration" -Tag "SyncDevDirectoryList", "Configuration"
+        Write-PSFMessage -Level System -String 'SyncDevDirectoryList.ConfigurationRemoteName' -StringValues @($remoteName) -Tag "SyncDevDirectoryList", "Configuration"
 
         # Normalize the target directory path to a canonical absolute form with trailing backslash
         # This ensures consistent path operations and comparisons throughout the sync logic
@@ -107,7 +107,7 @@
 
         # Store a trimmed version (no trailing slash) for cleaner output properties
         $trimmedDirectory = $normalizedDirectory.TrimEnd("\")
-        Write-PSFMessage -Level Verbose -Message "Normalized directory path: '$($trimmedDirectory)'" -Tag "SyncDevDirectoryList", "Configuration"
+        Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.DirectoryNormalized' -StringValues @($trimmedDirectory) -Tag "SyncDevDirectoryList", "Configuration"
 
         # Extract the parent directory of the repository list file for later directory creation
         $repositoryDirectory = Split-Path -Path $RepositoryListPath -Parent
@@ -143,14 +143,14 @@
     }
 
     end {
-        Write-PSFMessage -Level Verbose -Message "Starting synchronization process" -Tag "SyncDevDirectoryList", "Sync"
+        Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.SyncStart' -Tag "SyncDevDirectoryList", "Sync"
 
         # Step 1: Load and normalize the repository list from the file (if it exists)
         # The format is auto-detected based on file extension or uses the configured default
         $repositoryFileExists = Test-Path -LiteralPath $RepositoryListPath -PathType Leaf
         $fileEntriesRaw = @()
         if ($repositoryFileExists) {
-            Write-PSFMessage -Level Verbose -Message "Repository list file exists, importing entries from: '$($RepositoryListPath)'" -Tag "SyncDevDirectoryList", "Import"
+            Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.ImportingFromFile' -StringValues @($RepositoryListPath) -Tag "SyncDevDirectoryList", "Import"
             try {
                 $fileEntriesRaw = Import-DevDirectoryList -Path $RepositoryListPath
             } catch {
@@ -370,7 +370,7 @@
         }
 
         # Step 7: Return the merged repository list if PassThru was specified
-        Write-PSFMessage -Level Verbose -Message "Synchronization completed. Final repository count: $($finalEntries.Count)" -Tag "SyncDevDirectoryList", "Complete"
+        Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.Complete' -StringValues @($finalEntries.Count) -Tag "SyncDevDirectoryList", "Complete"
 
         if ($PassThru.IsPresent) {
             $finalEntries

@@ -43,22 +43,22 @@
         $RemoteName
     )
 
-    Write-PSFMessage -Level Debug -Message "Extracting remote URL for '$($RemoteName)' from repository: '$($RepositoryPath)'" -Tag "GetDevDirectoryRemoteUrl", "Start"
+    Write-PSFMessage -Level Debug -String 'GetDevDirectoryRemoteUrl.Start' -StringValues @($RemoteName, $RepositoryPath) -Tag "GetDevDirectoryRemoteUrl", "Start"
 
     # Build the path to the repository's Git configuration file
     $gitFolderPath = Join-Path -Path $RepositoryPath -ChildPath ".git"
     $gitConfigPath = Join-Path -Path $gitFolderPath -ChildPath "config"
-    Write-PSFMessage -Level Debug -Message "Git config path: '$($gitConfigPath)'" -Tag "GetDevDirectoryRemoteUrl", "PathResolution"
+    Write-PSFMessage -Level Debug -String 'GetDevDirectoryRemoteUrl.ConfigPath' -StringValues @($gitConfigPath) -Tag "GetDevDirectoryRemoteUrl", "PathResolution"
 
     # Validate that the config file exists before attempting to parse it
     if (-not (Test-Path -LiteralPath $gitConfigPath -PathType Leaf)) {
         # Use PSFramework logging to provide consistent output handling across the module
         Write-PSFMessage -Level Verbose -String 'GetDevDirectoryRemoteUrl.ConfigMissing' -StringValues @($gitConfigPath)
-        Write-PSFMessage -Level Verbose -Message "Git config file not found, returning null" -Tag "GetDevDirectoryRemoteUrl", "Result"
+        Write-PSFMessage -Level Verbose -String 'GetDevDirectoryRemoteUrl.ConfigNotFound' -Tag "GetDevDirectoryRemoteUrl", "Result"
         return $null
     }
 
-    Write-PSFMessage -Level Debug -Message "Reading git config file" -Tag "GetDevDirectoryRemoteUrl", "FileRead"
+    Write-PSFMessage -Level Debug -String 'GetDevDirectoryRemoteUrl.ReadingConfig' -Tag "GetDevDirectoryRemoteUrl", "FileRead"
 
     # Read the entire configuration file into memory for parsing
     # Git config files are typically small (a few KB), so this is efficient
@@ -68,7 +68,7 @@
     # Escape the remote name to handle special regex characters safely
     $escapedRemoteName = [Regex]::Escape($RemoteName)
     $sectionPattern = "^\s*\[remote\s+`"$($escapedRemoteName)`"\]\s*$"
-    Write-PSFMessage -Level Debug -Message "Searching for section pattern: '$($sectionPattern)'" -Tag "GetDevDirectoryRemoteUrl", "Parse"
+    Write-PSFMessage -Level Debug -String 'GetDevDirectoryRemoteUrl.SearchingSection' -StringValues @($sectionPattern) -Tag "GetDevDirectoryRemoteUrl", "Parse"
 
     # Track whether we are currently parsing lines within the target remote section
     $insideTargetSection = $false
@@ -89,12 +89,12 @@
         if ($insideTargetSection -and $line -match "^\s*url\s*=\s*(.+)$") {
             # Return the captured URL value, trimmed of leading/trailing whitespace
             $remoteUrl = $matches[1].Trim()
-            Write-PSFMessage -Level Verbose -Message "Remote URL for '$($RemoteName)': '$($remoteUrl)'" -Tag "GetDevDirectoryRemoteUrl", "Result"
+            Write-PSFMessage -Level Verbose -String 'GetDevDirectoryRemoteUrl.RemoteUrlFound' -StringValues @($RemoteName, $remoteUrl) -Tag "GetDevDirectoryRemoteUrl", "Result"
             return $remoteUrl
         }
     }
 
     # If we reach here, the remote was not found or it has no URL configured
-    Write-PSFMessage -Level Verbose -Message "Remote '$($RemoteName)' not found or has no URL configured" -Tag "GetDevDirectoryRemoteUrl", "Result"
+    Write-PSFMessage -Level Verbose -String 'GetDevDirectoryRemoteUrl.RemoteNotFound' -StringValues @($RemoteName) -Tag "GetDevDirectoryRemoteUrl", "Result"
     return $null
 }

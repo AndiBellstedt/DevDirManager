@@ -35,12 +35,12 @@
         $RepositoryPath
     )
 
-    Write-PSFMessage -Level Debug -Message "Extracting user info from repository: '$($RepositoryPath)'" -Tag "GetDevDirectoryUserInfo", "Start"
+    Write-PSFMessage -Level Debug -String 'GetDevDirectoryUserInfo.Start' -StringValues @($RepositoryPath) -Tag "GetDevDirectoryUserInfo", "Start"
 
     # Build the path to the repository's Git configuration file
     $gitFolderPath = Join-Path -Path $RepositoryPath -ChildPath ".git"
     $gitConfigPath = Join-Path -Path $gitFolderPath -ChildPath "config"
-    Write-PSFMessage -Level Debug -Message "Git config path: '$($gitConfigPath)'" -Tag "GetDevDirectoryUserInfo", "PathResolution"
+    Write-PSFMessage -Level Debug -String 'GetDevDirectoryUserInfo.ConfigPath' -StringValues @($gitConfigPath) -Tag "GetDevDirectoryUserInfo", "PathResolution"
 
     # Initialize result with null values
     $result = @{
@@ -51,11 +51,11 @@
     # Validate that the config file exists before attempting to parse it
     if (-not (Test-Path -LiteralPath $gitConfigPath -PathType Leaf)) {
         Write-PSFMessage -Level Verbose -String 'GetDevDirectoryUserInfo.ConfigMissing' -StringValues @($gitConfigPath)
-        Write-PSFMessage -Level Verbose -Message "Git config file not found, returning null values" -Tag "GetDevDirectoryUserInfo", "Result"
+        Write-PSFMessage -Level Verbose -String 'GetDevDirectoryUserInfo.ConfigNotFound' -Tag "GetDevDirectoryUserInfo", "Result"
         return $result
     }
 
-    Write-PSFMessage -Level Debug -Message "Reading git config file" -Tag "GetDevDirectoryUserInfo", "FileRead"
+    Write-PSFMessage -Level Debug -String 'GetDevDirectoryUserInfo.ReadingConfig' -Tag "GetDevDirectoryUserInfo", "FileRead"
 
     # Read the entire configuration file into memory for parsing
     # Git config files are typically small (a few KB), so this is efficient
@@ -71,7 +71,7 @@
             # Update the state: are we now inside the [user] section?
             $insideUserSection = ($matches[1] -eq "user")
             if ($insideUserSection) {
-                Write-PSFMessage -Level Debug -Message "Found [user] section in git config" -Tag "GetDevDirectoryUserInfo", "Parse"
+                Write-PSFMessage -Level Debug -String 'GetDevDirectoryUserInfo.SectionFound' -Tag "GetDevDirectoryUserInfo", "Parse"
             }
             continue
         }
@@ -80,14 +80,14 @@
         if ($insideUserSection) {
             if ($line -match "^\s*name\s*=\s*(.+)$") {
                 $result.UserName = $matches[1].Trim()
-                Write-PSFMessage -Level Debug -Message "Found user.name: '$($result.UserName)'" -Tag "GetDevDirectoryUserInfo", "Parse"
+                Write-PSFMessage -Level Debug -String 'GetDevDirectoryUserInfo.UserNameFound' -StringValues @($result.UserName) -Tag "GetDevDirectoryUserInfo", "Parse"
             } elseif ($line -match "^\s*email\s*=\s*(.+)$") {
                 $result.UserEmail = $matches[1].Trim()
-                Write-PSFMessage -Level Debug -Message "Found user.email: '$($result.UserEmail)'" -Tag "GetDevDirectoryUserInfo", "Parse"
+                Write-PSFMessage -Level Debug -String 'GetDevDirectoryUserInfo.UserEmailFound' -StringValues @($result.UserEmail) -Tag "GetDevDirectoryUserInfo", "Parse"
             }
         }
     }
 
-    Write-PSFMessage -Level Verbose -Message "User info extracted - UserName: '$($result.UserName)', UserEmail: '$($result.UserEmail)'" -Tag "GetDevDirectoryUserInfo", "Result"
+    Write-PSFMessage -Level Verbose -String 'GetDevDirectoryUserInfo.Result' -StringValues @($result.UserName, $result.UserEmail) -Tag "GetDevDirectoryUserInfo", "Result"
     return $result
 }

@@ -41,17 +41,17 @@
         $Path
     )
 
-    Write-PSFMessage -Level Debug -Message "Normalizing relative path: '$($Path)'" -Tag "ConvertToNormalizedRelativePath", "Start"
+    Write-PSFMessage -Level Debug -String 'ConvertToNormalizedRelativePath.Start' -StringValues @($Path) -Tag "ConvertToNormalizedRelativePath", "Start"
 
     # Handle null, whitespace-only, or "." inputs uniformly as "." (current directory marker)
     if ([string]::IsNullOrWhiteSpace($Path) -or $Path -eq ".") {
-        Write-PSFMessage -Level Verbose -Message "Path is empty, whitespace, or '.', returning '.'" -Tag "ConvertToNormalizedRelativePath", "Result"
+        Write-PSFMessage -Level Verbose -String 'ConvertToNormalizedRelativePath.EmptyPath' -Tag "ConvertToNormalizedRelativePath", "Result"
         return "."
     }
 
     # Start normalization by trimming leading and trailing whitespace
     $cleaned = $Path.Trim()
-    Write-PSFMessage -Level Debug -Message "After trim: '$($cleaned)'" -Tag "ConvertToNormalizedRelativePath", "Normalization"
+    Write-PSFMessage -Level Debug -String 'ConvertToNormalizedRelativePath.AfterTrim' -StringValues @($cleaned) -Tag "ConvertToNormalizedRelativePath", "Normalization"
 
     # Replace consecutive backslashes with a single forward slash (simplifies next steps)
     $cleaned = $cleaned -replace "\\\\", "/"
@@ -62,17 +62,17 @@
     # Remove any trailing forward slashes (relative paths should not end with /)
     $cleaned = $cleaned -replace "/+$", ""
 
-    Write-PSFMessage -Level Debug -Message "After slash cleanup: '$($cleaned)'" -Tag "ConvertToNormalizedRelativePath", "Normalization"
+    Write-PSFMessage -Level Debug -String 'ConvertToNormalizedRelativePath.AfterCleanup' -StringValues @($cleaned) -Tag "ConvertToNormalizedRelativePath", "Normalization"
 
     # After cleaning, if the string is now empty or whitespace, treat it as "."
     if ([string]::IsNullOrWhiteSpace($cleaned)) {
-        Write-PSFMessage -Level Verbose -Message "Path became empty after normalization, returning '.'" -Tag "ConvertToNormalizedRelativePath", "Result"
+        Write-PSFMessage -Level Verbose -String 'ConvertToNormalizedRelativePath.BecameEmpty' -Tag "ConvertToNormalizedRelativePath", "Result"
         return "."
     }
 
     # Finally, convert all forward slashes to backslashes for Windows-style paths
     # This ensures consistency when working with Join-Path and file system operations
     $normalized = ($cleaned -replace "/", "\\")
-    Write-PSFMessage -Level Verbose -Message "Path normalized: '$($Path)' -> '$($normalized)'" -Tag "ConvertToNormalizedRelativePath", "Result"
+    Write-PSFMessage -Level Verbose -String 'ConvertToNormalizedRelativePath.Result' -StringValues @($Path, $normalized) -Tag "ConvertToNormalizedRelativePath", "Result"
     return $normalized
 }
