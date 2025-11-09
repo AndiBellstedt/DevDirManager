@@ -52,9 +52,9 @@
         Streams repository metadata directly from the pipeline and publishes it to a public gist.
 
     .NOTES
-        Version   : 1.1.2
+        Version   : 1.1.3
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
+        Date      : 2025-01-24
         Keywords  : Git, Gist, Publish
 
     .LINK
@@ -156,22 +156,21 @@
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 6
             } else {
                 $resolvedPath = Resolve-Path -LiteralPath $Path -ErrorAction Stop
-                $extension = [System.IO.Path]::GetExtension($resolvedPath).ToLower()
 
-                # Determine if we need to convert the file format to JSON
-                switch -Regex ($extension) {
-                    "^\.json$" {
+                # Determine the file format to decide how to read the content
+                # Since Publish always outputs JSON, we need to convert non-JSON formats
+                $fileFormat = Resolve-RepositoryListFormat -Path $resolvedPath -ErrorContext "PublishDevDirectoryList"
+
+                # Read or convert file content to JSON based on format
+                switch ($fileFormat) {
+                    "JSON" {
                         # File is already JSON, read it directly
                         $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
                     }
-                    "^\.csv$|^\.xml$" {
-                        # Import the file using Import-DevDirectoryList and convert to JSON
+                    default {
+                        # CSV or XML: Import the file using Import-DevDirectoryList and convert to JSON
                         $importedData = Import-DevDirectoryList -Path $resolvedPath
                         $jsonContent = $importedData | ConvertTo-Json -Depth 6
-                    }
-                    default {
-                        # Assume it's JSON if extension is unknown
-                        $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
                     }
                 }
             }

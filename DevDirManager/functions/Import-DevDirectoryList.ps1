@@ -20,9 +20,9 @@
         Reads repository metadata from the JSON file and returns it to the pipeline.
 
     .NOTES
-        Version   : 1.1.1
+        Version   : 1.2.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
+        Date      : 2025-01-24
         Keywords  : Git, Import, Serialization
 
     .LINK
@@ -67,28 +67,17 @@
         }
 
         # Determine the import format: use explicit Format parameter or infer from file extension
-        $resolvedFormat = $Format
-        if (-not $resolvedFormat) {
-            $extension = [System.IO.Path]::GetExtension($Path).ToLower()
-            switch -Regex ($extension) {
-                "^\.csv$" { $resolvedFormat = "CSV" }
-                "^\.json$" { $resolvedFormat = "JSON" }
-                "^\.xml$" { $resolvedFormat = "XML" }
-                default {
-                    # Use the configured default format if file extension doesn't match
-                    if ($defaultFormat) {
-                        $resolvedFormat = $defaultFormat
-                        Write-PSFMessage -Level Verbose -String 'RepositoryList.UsingDefaultFormat' -StringValues @($resolvedFormat, $Path)
-                    } else {
-                        $messageValues = @($Path)
-                        $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'ImportDevDirectoryList.InferFormatFailed'
-                        $message = $messageTemplate -f $messageValues
-                        Stop-PSFFunction -String 'ImportDevDirectoryList.InferFormatFailed' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet
-                        throw $message
-                    }
-                }
-            }
+        $resolveFormatParams = @{
+            Path         = $Path
+            ErrorContext = "ImportDevDirectoryList"
         }
+        if ($PSBoundParameters.ContainsKey('Format')) {
+            $resolveFormatParams['Format'] = $Format
+        }
+        if ($defaultFormat) {
+            $resolveFormatParams['DefaultFormat'] = $defaultFormat
+        }
+        $resolvedFormat = Resolve-RepositoryListFormat @resolveFormatParams
 
         # Deserialize the repository list from the specified format
         switch ($resolvedFormat) {
@@ -96,11 +85,20 @@
                 # Import CSV with UTF8 encoding
                 $importedObjects = Import-Csv -LiteralPath $Path -Encoding UTF8
 
-                # Add the DevDirManager.Repository type to each imported object
+                # Add the DevDirManager.Repository type to each imported object and handle type conversion
                 foreach ($obj in $importedObjects) {
-                    $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
-                    # Output each object to the pipeline
-                    $obj
+                    # Convert StatusDate from string to DateTime if present
+                    if ($obj.PSObject.Properties.Match('StatusDate') -and -not [string]::IsNullOrWhiteSpace($obj.StatusDate)) {
+                        try {
+                            $obj.StatusDate = [datetime]::Parse($obj.StatusDate, [System.Globalization.CultureInfo]::InvariantCulture)
+                        } catch {
+                            # If parsing fails, leave as string or set to null
+                            Write-PSFMessage -Level Verbose -Message "Unable to parse StatusDate '{0}' as DateTime: {1}" -StringValues $obj.StatusDate, $_.Exception.Message
+                        }
+                    }
+
+                    # Add type name and output to pipeline
+                    $obj | Add-RepositoryTypeName
                 }
             }
             "JSON" {
@@ -121,22 +119,14 @@
                 $importedObjects = ConvertFrom-Json @convertParams
 
                 # Add the DevDirManager.Repository type to each imported object
-                foreach ($obj in $importedObjects) {
-                    $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
-                    # Output each object to the pipeline
-                    $obj
-                }
+                $importedObjects | Add-RepositoryTypeName
             }
             "XML" {
                 # Import-Clixml automatically handles deserialization and type reconstruction
                 $importedObjects = Import-Clixml -Path $Path
 
                 # Add the DevDirManager.Repository type to each imported object
-                foreach ($obj in $importedObjects) {
-                    $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
-                    # Output each object to the pipeline
-                    $obj
-                }
+                $importedObjects | Add-RepositoryTypeName
             }
         }
     }

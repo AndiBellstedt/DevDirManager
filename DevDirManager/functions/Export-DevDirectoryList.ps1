@@ -32,9 +32,9 @@
         Exports the repository list to repos.json in JSON format.
 
     .NOTES
-        Version   : 1.1.1
+        Version   : 1.2.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
+        Date      : 2025-01-24
         Keywords  : Git, Export, Serialization
 
     .LINK
@@ -93,28 +93,17 @@
         }
 
         # Determine the output format: use explicit Format parameter or infer from file extension
-        $resolvedFormat = $Format
-        if (-not $resolvedFormat) {
-            $extension = [System.IO.Path]::GetExtension($Path).ToLower()
-            switch -Regex ($extension) {
-                "^\.csv$" { $resolvedFormat = "CSV" }
-                "^\.json$" { $resolvedFormat = "JSON" }
-                "^\.xml$" { $resolvedFormat = "XML" }
-                default {
-                    # Use the configured default format if file extension doesn't match
-                    if ($defaultFormat) {
-                        $resolvedFormat = $defaultFormat
-                        Write-PSFMessage -Level Verbose -String 'RepositoryList.UsingDefaultFormat' -StringValues @($resolvedFormat, $Path)
-                    } else {
-                        $messageValues = @($Path)
-                        $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'ExportDevDirectoryList.InferFormatFailed'
-                        $message = $messageTemplate -f $messageValues
-                        Stop-PSFFunction -String 'ExportDevDirectoryList.InferFormatFailed' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet
-                        throw $message
-                    }
-                }
-            }
+        $resolveFormatParams = @{
+            Path         = $Path
+            ErrorContext = "ExportDevDirectoryList"
         }
+        if ($PSBoundParameters.ContainsKey('Format')) {
+            $resolveFormatParams['Format'] = $Format
+        }
+        if ($defaultFormat) {
+            $resolveFormatParams['DefaultFormat'] = $defaultFormat
+        }
+        $resolvedFormat = Resolve-RepositoryListFormat @resolveFormatParams
 
         # Extract the output directory path and resolve relative paths to current location
         $outputDirectory = Split-Path -Path $Path
@@ -124,7 +113,7 @@
 
         # Ensure the output directory exists before attempting to write the file
         if (-not [string]::IsNullOrEmpty($outputDirectory) -and -not (Test-Path -LiteralPath $outputDirectory -PathType Container)) {
-            New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
+            New-DirectoryIfNeeded -Path $outputDirectory
         }
 
         # Check for WhatIf/Confirm before performing the write operation

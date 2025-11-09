@@ -21,6 +21,15 @@
     .PARAMETER RootDirectory
         The absolute root directory path. Used to compute the full path for each repository.
 
+    .PARAMETER UserName
+        The repository-local git user.name value. May be null if not configured.
+
+    .PARAMETER UserEmail
+        The repository-local git user.email value. May be null if not configured.
+
+    .PARAMETER StatusDate
+        The most recent commit or modification date. May be null if not available.
+
     .OUTPUTS
         [pscustomobject] A repository sync record with properties:
             - RootPath: the base directory path
@@ -28,6 +37,9 @@
             - FullPath: the absolute path to the repository
             - RemoteName: the Git remote name
             - RemoteUrl: the Git remote URL
+            - UserName: the repository-local git user.name
+            - UserEmail: the repository-local git user.email
+            - StatusDate: the most recent activity date
 
     .EXAMPLE
         PS C:\> New-DevDirectorySyncRecord -RelativePath "MyProject" -RemoteUrl "https://github.com/user/repo.git" -RemoteName "origin" -RootDirectory "C:\Repos"
@@ -36,8 +48,8 @@
 
     .NOTES
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-26
-        Version   : 1.0.0
+        Date      : 2025-10-31
+        Version   : 1.1.0
         Keywords  : Internal, Helper, Sync
 
     #>
@@ -63,7 +75,22 @@
         [Parameter(Mandatory = $true)]
         [ValidateNotNullOrEmpty()]
         [string]
-        $RootDirectory
+        $RootDirectory,
+
+        [Parameter()]
+        [AllowNull()]
+        [string]
+        $UserName,
+
+        [Parameter()]
+        [AllowNull()]
+        [string]
+        $UserEmail,
+
+        [Parameter()]
+        [AllowNull()]
+        [datetime]
+        $StatusDate
     )
 
     # Normalize the relative path: empty strings are treated as "." (repository at root)
@@ -86,5 +113,8 @@
         FullPath     = $fullPath             # Computed absolute path
         RemoteName   = $RemoteName           # Git remote name (e.g., "origin")
         RemoteUrl    = $RemoteUrl            # Git remote URL (may be null/empty)
+        UserName     = $UserName             # Repository-local git user.name
+        UserEmail    = $UserEmail            # Repository-local git user.email
+        StatusDate   = $StatusDate           # Most recent commit or modification date
     }
 }

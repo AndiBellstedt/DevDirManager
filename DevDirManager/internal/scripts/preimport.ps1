@@ -10,5 +10,8 @@ After building the module, this file will be completely ignored, adding anything
 
 $moduleRoot = Split-Path (Split-Path $PSScriptRoot)
 
+# Load module-wide constants
+"$moduleRoot\internal\scripts\constants.ps1"
+
 # Load the strings used in messages
 "$moduleRoot\internal\scripts\strings.ps1"

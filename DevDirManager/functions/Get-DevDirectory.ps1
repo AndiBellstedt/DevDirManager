@@ -6,8 +6,9 @@
     .DESCRIPTION
         Performs a breadth-first traversal that stops descending once a Git repository root is discovered.
         For every repository, the function resolves the remote URL for the specified remote name and
-        returns objects that capture the relative location and remote details. The relative path enables
-        restoring the identical directory layout on another system.
+        returns objects that capture the relative location, remote details, repository-local user
+        configuration (user.name and user.email), and the most recent activity date. The relative path
+        enables restoring the identical directory layout on another system.
 
     .PARAMETER RootPath
         The directory that serves as the traversal root. The default is the current location.
@@ -18,9 +19,9 @@
         Lists all repositories under C:\Projects and includes the configured remote URL for each entry.
 
     .NOTES
-        Version   : 1.1.1
+        Version   : 1.2.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
+        Date      : 2025-11-09
         Keywords  : Git, Inventory, Repository
 
     .LINK
@@ -47,23 +48,17 @@
     }
 
     process {
-        # Resolve the root path to its canonical absolute form
+        # Resolve the root path to its canonical absolute form with trailing backslash
         # This ensures consistent path comparison and relative path calculation
-        $resolvedRoot = Resolve-Path -LiteralPath $RootPath -ErrorAction Stop
-        $rootDirectory = $resolvedRoot.ProviderPath
-        $normalizedRoot = [System.IO.Path]::GetFullPath($rootDirectory)
-
-        # Ensure the normalized root ends with a backslash for consistent URI-based path operations
-        if (-not $normalizedRoot.EndsWith("\", [System.StringComparison]::Ordinal)) {
-            $normalizedRoot = "$($normalizedRoot)\"
-        }
+        $normalizedRoot = Resolve-NormalizedPath -Path $RootPath -EnsureTrailingBackslash
 
         # Use breadth-first search (BFS) with a queue instead of recursion to avoid stack overflow
         # when scanning deeply nested directory structures. BFS also allows us to stop descending
         # at repository boundaries, which is more efficient than depth-first approaches.
         $rootUri = [System.Uri]::new($normalizedRoot)
         $pendingDirectoryQueue = [System.Collections.Generic.Queue[string]]::new()
-        $pendingDirectoryQueue.Enqueue($rootDirectory)
+        # Enqueue the root directory without trailing backslash for directory enumeration
+        $pendingDirectoryQueue.Enqueue($normalizedRoot.TrimEnd("\"))
 
         while ($pendingDirectoryQueue.Count -gt 0) {
             # Dequeue the next directory to process
@@ -74,6 +69,12 @@
             if (Test-Path -LiteralPath $gitFolderPath -PathType Container) {
                 # Found a repository; extract remote URL using the internal helper function
                 $remoteUrl = Get-DevDirectoryRemoteUrl -RepositoryPath $currentDirectory -RemoteName $remoteName
+
+                # Extract repository-local user information (user.name and user.email)
+                $userInfo = Get-DevDirectoryUserInfo -RepositoryPath $currentDirectory
+
+                # Retrieve the most recent commit or modification date
+                $statusDate = Get-DevDirectoryStatusDate -RepositoryPath $currentDirectory
 
                 # Calculate the relative path from the scan root to this repository
                 # URI-based relative path calculation handles special characters and encodings correctly
@@ -103,6 +104,9 @@
                         FullPath     = $resolvedCurrent.TrimEnd("\\")
                         RemoteName   = $remoteName
                         RemoteUrl    = $remoteUrl
+                        UserName     = $userInfo.UserName
+                        UserEmail    = $userInfo.UserEmail
+                        StatusDate   = $statusDate
                     })
 
                 # Do NOT descend into subdirectories of a repository (treat repo as a leaf node)

@@ -32,6 +32,8 @@
 
     'GetDevDirectory.DirectoryEnumerationFailed'     = 'Skipping directory {0} due to {1}.'
     'GetDevDirectoryRemoteUrl.ConfigMissing'         = 'No .git\\config file found at {0}.'
+    'GetDevDirectoryUserInfo.ConfigMissing'          = 'No .git\\config file found at {0}.'
+    'GetDevDirectoryStatusDate.GitFolderMissing'     = 'No .git folder found at {0}.'
 
     'PublishDevDirectoryList.TokenEmpty'             = 'The provided access token is empty after conversion.'
     'PublishDevDirectoryList.NoPipelineData'         = 'No repository metadata was received from the pipeline.'

@@ -5,8 +5,10 @@
 
     .DESCRIPTION
         Iterates over repository metadata entries, recreates the directory hierarchy relative to the
-        target destination, and runs git clone for each entry. Existing directories can be skipped or
-        replaced. The function supports WhatIf/Confirm semantics for safe execution.
+        target destination, and runs git clone for each entry. If the repository metadata includes
+        user.name and user.email values, these are configured in the cloned repository's local .git/config.
+        Existing directories can be skipped or replaced. The function supports WhatIf/Confirm semantics
+        for safe execution.
 
     .PARAMETER InputObject
         Repository metadata objects, typically produced by Get-DevDirectory or Import-DevDirectoryList.
@@ -34,9 +36,9 @@
         Restores the repositories under C:\Repos using the layout described in repos.json.
 
     .NOTES
-        Version   : 1.1.1
+        Version   : 1.2.1
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
+        Date      : 2025-11-09
         Keywords  : Git, Restore, Clone
 
     .LINK
@@ -88,15 +90,11 @@
 
         # Normalize the destination path to an absolute form with trailing backslash
         # This ensures consistent path operations and prevents relative path ambiguities
-        $destinationRoot = Resolve-Path -LiteralPath $DestinationPath -ErrorAction Stop
-        $normalizedDestination = [System.IO.Path]::GetFullPath($destinationRoot.ProviderPath)
-        if (-not $normalizedDestination.EndsWith("\", [System.StringComparison]::Ordinal)) {
-            $normalizedDestination = "$($normalizedDestination)\"
-        }
+        $normalizedDestination = Resolve-NormalizedPath -Path $DestinationPath -EnsureTrailingBackslash
 
-        # Define regex pattern to reject unsafe relative paths that could escape the destination
-        # Matches: absolute paths (starts with \), drive letters (contains :), or path traversal (..)
-        $invalidRelativePattern = [regex]::new("(^\\|:|\.\.)")
+        # Use the module-wide unsafe path pattern for security validation
+        # This pattern rejects paths with: absolute paths (starts with \), drive letters (contains :), or path traversal (..)
+        $invalidRelativePattern = $script:UnsafeRelativePathPattern
 
         $cloneActionTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'RestoreDevDirectory.ActionClone'
     }
@@ -149,7 +147,7 @@
             }
 
             if (-not (Test-Path -LiteralPath $targetParent -PathType Container)) {
-                New-Item -ItemType Directory -Path $targetParent -Force | Out-Null
+                New-DirectoryIfNeeded -Path $targetParent
             }
 
             # Handle existing target directories according to SkipExisting/Force switch settings
@@ -182,6 +180,32 @@
             if ($cloneProcess.ExitCode -ne 0) {
                 Write-PSFMessage -Level Error -String 'RestoreDevDirectory.CloneFailed' -StringValues @($remoteUrl, $cloneProcess.ExitCode)
                 continue
+            }
+
+            # Configure repository-local user.name and user.email if provided in metadata
+            # This ensures that commits in the restored repository use the correct identity
+            $userName = if ($repository.PSObject.Properties.Match("UserName")) { [string]$repository.UserName } else { $null }
+            $userEmail = if ($repository.PSObject.Properties.Match("UserEmail")) { [string]$repository.UserEmail } else { $null }
+
+            if (-not [string]::IsNullOrWhiteSpace($userName) -or -not [string]::IsNullOrWhiteSpace($userEmail)) {
+                $gitConfigPath = Join-Path -Path $targetPath -ChildPath ".git\config"
+                if (Test-Path -LiteralPath $gitConfigPath -PathType Leaf) {
+                    # Use git config --local to set repository-specific user identity
+                    if (-not [string]::IsNullOrWhiteSpace($userName)) {
+                        $configArgs = @("config", "--local", "user.name", $userName)
+                        $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru
+                        if ($configProcess.ExitCode -ne 0) {
+                            Write-PSFMessage -Level Error -String 'RestoreDevDirectory.ConfigFailed' -StringValues @("user.name", $userName, $targetPath, $configProcess.ExitCode)
+                        }
+                    }
+                    if (-not [string]::IsNullOrWhiteSpace($userEmail)) {
+                        $configArgs = @("config", "--local", "user.email", $userEmail)
+                        $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru
+                        if ($configProcess.ExitCode -ne 0) {
+                            Write-PSFMessage -Level Error -String 'RestoreDevDirectory.ConfigFailed' -StringValues @("user.email", $userEmail, $targetPath, $configProcess.ExitCode)
+                        }
+                    }
+                }
             }
 
             # Emit a summary object to the pipeline so callers can audit what was cloned
