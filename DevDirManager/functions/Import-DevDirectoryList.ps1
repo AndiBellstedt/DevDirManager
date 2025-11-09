@@ -26,8 +26,7 @@
         Imports from CSV and filters to show only GitHub repositories.
 
     .EXAMPLE
-        PS C:\> Import-DevDirectoryList -Path "repos.xml" | 
-                Where-Object StatusDate -gt (Get-Date).AddDays(-30)
+        PS C:\> Import-DevDirectoryList -Path "repos.xml" | Where-Object StatusDate -gt (Get-Date).AddDays(-30)
 
         Imports from XML and shows only repositories modified in the last 30 days.
 

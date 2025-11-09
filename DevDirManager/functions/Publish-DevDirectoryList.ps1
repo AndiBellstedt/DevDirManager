@@ -59,8 +59,7 @@
         (automatically converted to JSON for Gist compatibility).
 
     .EXAMPLE
-        PS C:\> Get-DevDirectory | 
-                Publish-DevDirectoryList -AccessToken $token -GistId "abc123def456"
+        PS C:\> Get-DevDirectory | Publish-DevDirectoryList -AccessToken $token -GistId "abc123def456"
 
         Updates an existing gist by providing its ID instead of searching by description.
 
@@ -71,9 +70,7 @@
         XML format is automatically converted to JSON before publishing.
 
     .EXAMPLE
-        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | 
-                Where-Object RemoteUrl -like "*github.com*" |
-                Publish-DevDirectoryList -AccessToken $token -Public
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | Where-Object RemoteUrl -like "*github.com*" | Publish-DevDirectoryList -AccessToken $token -Public
 
         Publishes only GitHub repositories to a public gist, filtering before publication.
 

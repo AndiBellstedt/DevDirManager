@@ -44,8 +44,7 @@
         as it preserves all type information.
 
     .EXAMPLE
-        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | 
-                Export-DevDirectoryList -Path "repos" -WhatIf
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | Export-DevDirectoryList -Path "repos" -WhatIf
 
         Shows what would happen without actually creating the file, useful for verifying
         the operation before execution.

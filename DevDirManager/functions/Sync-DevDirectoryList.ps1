@@ -46,8 +46,7 @@
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
     .EXAMPLE
-        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Projects" -RepositoryListPath "repos.csv" -PassThru | 
-                Export-DevDirectoryList -Path "backup.json"
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Projects" -RepositoryListPath "repos.csv" -PassThru | Export-DevDirectoryList -Path "backup.json"
 
         Synchronizes and returns the merged list, then exports it to a backup file in JSON format.
 
