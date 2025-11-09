@@ -20,8 +20,12 @@
 - Added comprehensive Pester tests for remote accessibility feature
   - Created `tests\functions\RepositoryInventory\RemoteAccessibility.Tests.ps1` with 20 test cases
   - Tests cover remote checking, export/import preservation, skip logic, format display, and edge cases
+- Added comprehensive Pester tests for RelativePath formatting
+  - Created `tests\functions\RepositoryInventory\RelativePath.Tests.ps1` with 15+ test cases
+  - Tests ensure single backslashes in paths, proper path reconstruction, and format preservation through export/import
+  - Prevents regression of double backslash issues in relative paths
 - Updated function versions:
-  - Get-DevDirectory: 1.2.1 → 1.3.1
+  - Get-DevDirectory: 1.2.1 → 1.3.2
   - Restore-DevDirectory: 1.2.1 → 1.3.0
   - Sync-DevDirectoryList: 1.2.2 → 1.3.0
 
@@ -50,6 +54,12 @@
   - Fixed DateTime serialization issue in test data for Sync-DevDirectoryList tests
   - StatusDate property now explicitly cast to [DateTime] to prevent serialization issues in Windows PowerShell
   - Resolves "Cannot convert value to type System.DateTime" errors when importing test repository data
+- Fixed double backslash issue in RelativePath property
+  - Get-DevDirectory now uses `.Replace()` instead of `-replace` for path separator conversion
+  - RelativePath now correctly uses single backslashes (e.g., `Project\Repo` instead of `Project\\Repo`)
+  - Ensures paths can be properly split and reconstructed using standard PowerShell path operations
+  - Fixes display and export issues where double backslashes appeared in relative paths
+  - Updated function version: Get-DevDirectory: 1.3.1 → 1.3.2
 - Updated function versions:
   - Sync-DevDirectoryList: 1.2.1 → 1.2.2
   - Export-DevDirectoryList: 1.2.1 → 1.2.2

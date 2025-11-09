@@ -32,7 +32,7 @@
         This is faster but won't mark inaccessible repositories.
 
     .NOTES
-        Version   : 1.3.1
+        Version   : 1.3.2
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Inventory, Repository
@@ -124,7 +124,7 @@
                 }
 
                 # Convert forward slashes (from URI) to backslashes (Windows convention)
-                $relativePath = $relativePath -replace "/", "\\"
+                $relativePath = $relativePath.Replace("/", "\")
 
                 # Add the repository metadata record to the result collection
                 # This structure is compatible with Export/Import and Restore/Sync commands
