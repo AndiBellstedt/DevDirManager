@@ -19,6 +19,7 @@
     'RestoreDevDirectory.ActionClone'                = 'Clone repository from {0}'
     'RestoreDevDirectory.CloneFailed'                = "git clone for '{0}' failed with exit code {1}."
     'RestoreDevDirectory.ConfigFailed'               = "Failed to set git config {0} to '{1}' for repository at {2}. Exit code: {3}"
+    'RestoreDevDirectory.InaccessibleRemoteSkipped'  = "Skipping repository '{0}' with inaccessible remote: {1}"
 
     'SyncDevDirectoryList.ActionCreateRootDirectory' = 'Create repository root directory'
     'SyncDevDirectoryList.ActionCloneFromList'       = 'Clone {0} repository/repositories from list'
@@ -30,6 +31,7 @@
     'SyncDevDirectoryList.RemoteUrlMismatch'         = 'Remote URL mismatch for {0}. Keeping local value {1} over file value {2}.'
     'SyncDevDirectoryList.MissingRemoteUrl'          = 'Repository list entry {0} lacks a RemoteUrl and cannot be cloned.'
     'SyncDevDirectoryList.MissingRootDirectory'      = 'Repository root directory {0} does not exist; skipping clone operations.'
+    'SyncDevDirectoryList.InaccessibleRemoteSkipped' = "Skipping repository '{0}' with inaccessible remote: {1}"
 
     'GetDevDirectory.DirectoryEnumerationFailed'     = 'Skipping directory {0} due to {1}.'
     'GetDevDirectoryRemoteUrl.ConfigMissing'         = 'No .git\\config file found at {0}.'

@@ -18,6 +18,7 @@
                     <TableColumnHeader></TableColumnHeader>
                     <TableColumnHeader></TableColumnHeader>
                     <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
                 </TableHeaders>
                 <TableRowEntries>
                     <TableRowEntry>
@@ -27,6 +28,9 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>RemoteName</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>IsRemoteAccessible</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>RemoteUrl</PropertyName>
@@ -71,6 +75,10 @@
                             <ListItem>
                                 <Label>RemoteUrl</Label>
                                 <PropertyName>RemoteUrl</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>IsRemoteAccessible</Label>
+                                <PropertyName>IsRemoteAccessible</PropertyName>
                             </ListItem>
                             <ListItem>
                                 <Label>UserName</Label>

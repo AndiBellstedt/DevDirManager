@@ -2,6 +2,29 @@
 
 ## [Unreleased]
 
+### Added
+- **Remote Accessibility Tracking Feature**
+  - Added `IsRemoteAccessible` property to track whether repository remote URLs are accessible
+  - `Get-DevDirectory` now checks remote accessibility by default using `git ls-remote` with timeout
+  - New `-SkipRemoteCheck` parameter in `Get-DevDirectory` to disable remote checking for faster performance
+  - Repositories with inaccessible remotes are marked with `IsRemoteAccessible = $false`
+  - Property is preserved through export/import cycles (JSON, CSV, XML)
+  - Created internal helper function `Test-DevDirectoryRemoteAccessible` for remote validation
+- **Automatic Skipping of Inaccessible Repositories**
+  - `Restore-DevDirectory` now skips cloning repositories marked as inaccessible
+  - `Sync-DevDirectoryList` respects `IsRemoteAccessible` property and skips cloning inaccessible repos
+  - Both functions log warnings when skipping repositories with inaccessible remotes
+  - Prevents git clone failures for deleted, moved, or private repositories
+- Added `IsRemoteAccessible` column to table and list format views
+- Added localization strings for remote accessibility warnings
+- Added comprehensive Pester tests for remote accessibility feature
+  - Created `tests\functions\RepositoryInventory\RemoteAccessibility.Tests.ps1` with 20 test cases
+  - Tests cover remote checking, export/import preservation, skip logic, format display, and edge cases
+- Updated function versions:
+  - Get-DevDirectory: 1.2.1 → 1.3.1
+  - Restore-DevDirectory: 1.2.1 → 1.3.0
+  - Sync-DevDirectoryList: 1.2.2 → 1.3.0
+
 ### Fixed
 - Fixed missing localization string `RestoreDevDirectory.ConfigFailed` for git config error messages
 - Fixed CSV StatusDate type conversion issue
@@ -18,6 +41,15 @@
   - Sync-DevDirectoryList updated to use `GetUnresolvedProviderPathFromPSPath` to handle non-existent paths (which is valid as the function can create directories)
   - Export-DevDirectoryList updated to resolve PSDrive paths before processing with `Split-Path`
   - Resolves issue where paths like `GIT:\RepoRestore` would be incorrectly combined with current directory
+- Fixed remote accessibility check for repositories without remote URLs
+  - Get-DevDirectory now properly handles repositories with empty or null remote URLs
+  - Prevents validation errors when calling Test-DevDirectoryRemoteAccessible with empty RemoteUrl
+  - Repositories without remotes are marked as inaccessible (IsRemoteAccessible = $false)
+  - Updated function version: Get-DevDirectory: 1.3.0 → 1.3.1
+- Fixed Windows PowerShell 5.1 compatibility in RemoteAccessibility tests
+  - Fixed DateTime serialization issue in test data for Sync-DevDirectoryList tests
+  - StatusDate property now explicitly cast to [DateTime] to prevent serialization issues in Windows PowerShell
+  - Resolves "Cannot convert value to type System.DateTime" errors when importing test repository data
 - Updated function versions:
   - Sync-DevDirectoryList: 1.2.1 → 1.2.2
   - Export-DevDirectoryList: 1.2.1 → 1.2.2

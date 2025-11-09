@@ -42,9 +42,9 @@
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
     .NOTES
-        Version   : 1.2.2
+        Version   : 1.3.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-01-24
+        Date      : 2025-11-09
         Keywords  : Git, Sync, Repository
 
     .LINK
@@ -289,6 +289,9 @@
                 # Queue for cloning if it has a valid remote URL
                 if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
                     Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.MissingRemoteUrl' -StringValues @($relative)
+                } elseif ($info.PSObject.Properties.Match('IsRemoteAccessible') -and $info.IsRemoteAccessible -eq $false) {
+                    # Skip repositories with inaccessible remotes
+                    Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.InaccessibleRemoteSkipped' -StringValues @($relative, $remoteUrl)
                 } else {
                     # Include UserName and UserEmail in the clone object so Restore-DevDirectory can configure them
                     $repositoriesToClone.Add([pscustomobject]@{

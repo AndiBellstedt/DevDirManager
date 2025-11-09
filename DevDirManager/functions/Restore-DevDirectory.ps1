@@ -36,7 +36,7 @@
         Restores the repositories under C:\Repos using the layout described in repos.json.
 
     .NOTES
-        Version   : 1.2.1
+        Version   : 1.3.0
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Restore, Clone
@@ -115,6 +115,12 @@
             # Skip repositories missing a remote URL (cannot clone without a source)
             if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
                 Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.MissingRemoteUrl' -StringValues @($relativePath)
+                continue
+            }
+
+            # Skip repositories with inaccessible remotes (if IsRemoteAccessible property is set to false)
+            if ($repository.PSObject.Properties.Match('IsRemoteAccessible') -and $repository.IsRemoteAccessible -eq $false) {
+                Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.InaccessibleRemoteSkipped' -StringValues @($relativePath, $remoteUrl)
                 continue
             }
 

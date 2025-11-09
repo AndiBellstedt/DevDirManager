@@ -13,13 +13,26 @@
     .PARAMETER RootPath
         The directory that serves as the traversal root. The default is the current location.
 
+    .PARAMETER SkipRemoteCheck
+        If specified, skips the remote accessibility check. By default, the function tests whether
+        each repository's remote URL is accessible using `git ls-remote`. This check helps identify
+        deleted, moved, or otherwise unavailable remote repositories. Skipping the check improves
+        performance but won't mark inaccessible repositories.
+
     .EXAMPLE
         PS C:\> Get-DevDirectory -RootPath "C:\Projects"
 
-        Lists all repositories under C:\Projects and includes the configured remote URL for each entry.
+        Lists all repositories under C:\Projects, checks remote accessibility, and includes the
+        configured remote URL for each entry.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" -SkipRemoteCheck
+
+        Lists all repositories under C:\Projects without checking if remotes are accessible.
+        This is faster but won't mark inaccessible repositories.
 
     .NOTES
-        Version   : 1.2.1
+        Version   : 1.3.1
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Inventory, Repository
@@ -34,7 +47,11 @@
         [Parameter()]
         [ValidateNotNullOrEmpty()]
         [string]
-        $RootPath = (Get-Location).ProviderPath
+        $RootPath = (Get-Location).ProviderPath,
+
+        [Parameter()]
+        [switch]
+        $SkipRemoteCheck
     )
 
     begin {
@@ -76,6 +93,20 @@
                 # Retrieve the most recent commit or modification date
                 $statusDate = Get-DevDirectoryStatusDate -RepositoryPath $currentDirectory
 
+                # Check if remote URL is accessible (unless skipped for performance)
+                $isRemoteAccessible = $null
+                if (-not $SkipRemoteCheck) {
+                    # Only check if we have a valid remote URL
+                    if (-not [string]::IsNullOrWhiteSpace($remoteUrl)) {
+                        $isRemoteAccessible = Test-DevDirectoryRemoteAccessible -RemoteUrl $remoteUrl
+                        Write-PSFMessage -Level Verbose -Message "Remote accessibility check for '$relativePath': $isRemoteAccessible"
+                    } else {
+                        # No remote URL means not accessible
+                        $isRemoteAccessible = $false
+                        Write-PSFMessage -Level Verbose -Message "No remote URL found for '$relativePath', marking as inaccessible"
+                    }
+                }
+
                 # Calculate the relative path from the scan root to this repository
                 # URI-based relative path calculation handles special characters and encodings correctly
                 $resolvedCurrent = [System.IO.Path]::GetFullPath($currentDirectory)
@@ -98,15 +129,16 @@
                 # Add the repository metadata record to the result collection
                 # This structure is compatible with Export/Import and Restore/Sync commands
                 $repositoryLayoutList.Add([pscustomobject]@{
-                        PSTypeName   = 'DevDirManager.Repository'
-                        RootPath     = $normalizedRoot.TrimEnd("\\")
-                        RelativePath = $relativePath
-                        FullPath     = $resolvedCurrent.TrimEnd("\\")
-                        RemoteName   = $remoteName
-                        RemoteUrl    = $remoteUrl
-                        UserName     = $userInfo.UserName
-                        UserEmail    = $userInfo.UserEmail
-                        StatusDate   = $statusDate
+                        PSTypeName         = 'DevDirManager.Repository'
+                        RootPath           = $normalizedRoot.TrimEnd("\\")
+                        RelativePath       = $relativePath
+                        FullPath           = $resolvedCurrent.TrimEnd("\\")
+                        RemoteName         = $remoteName
+                        RemoteUrl          = $remoteUrl
+                        UserName           = $userInfo.UserName
+                        UserEmail          = $userInfo.UserEmail
+                        StatusDate         = $statusDate
+                        IsRemoteAccessible = $isRemoteAccessible
                     })
 
                 # Do NOT descend into subdirectories of a repository (treat repo as a leaf node)
