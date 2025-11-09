@@ -32,7 +32,7 @@
         Exports the repository list to repos.json in JSON format.
 
     .NOTES
-        Version   : 1.2.1
+        Version   : 1.2.2
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-01-24
         Keywords  : Git, Export, Serialization
@@ -105,8 +105,12 @@
         }
         $resolvedFormat = Resolve-RepositoryListFormat @resolveFormatParams
 
-        # Extract the output directory path and resolve relative paths to current location
-        $outputDirectory = Split-Path -Path $Path
+        # Resolve the output path to handle PSDrive paths correctly.
+        # Split-Path doesn't resolve PSDrives, so we need to get the provider path first using GetUnresolvedProviderPathFromPSPath.
+        # After resolving the PSDrive path, Split-Path is used to extract just the directory portion from the fully resolved file path.
+        $resolvedOutputPath = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
+
+        $outputDirectory = Split-Path -Path $resolvedOutputPath
         if ([string]::IsNullOrEmpty($outputDirectory) -or $outputDirectory -eq ".") {
             $outputDirectory = (Get-Location).ProviderPath
         }
@@ -127,17 +131,17 @@
             "CSV" {
                 # Export to CSV with UTF8 encoding for cross-platform compatibility
                 # Include all repository properties in a consistent order
-                $repositoryList | Export-Csv -LiteralPath $Path -NoTypeInformation -Encoding UTF8
+                $repositoryList | Export-Csv -LiteralPath $resolvedOutputPath -NoTypeInformation -Encoding UTF8
             }
             "JSON" {
                 # Use Depth 5 to ensure nested properties are fully serialized
                 # Set-Content with UTF8 ensures compatibility across systems
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 5
-                $jsonContent | Set-Content -LiteralPath $Path -Encoding UTF8
+                $jsonContent | Set-Content -LiteralPath $resolvedOutputPath -Encoding UTF8
             }
             "XML" {
                 # Export-Clixml handles depth automatically and preserves type information
-                $repositoryList | Export-Clixml -Path $Path
+                $repositoryList | Export-Clixml -Path $resolvedOutputPath
             }
         }
     }

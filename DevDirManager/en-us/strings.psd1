@@ -18,6 +18,7 @@
     'RestoreDevDirectory.TargetExistsWarning'        = 'Target directory {0} already exists. Use -Force to overwrite or -SkipExisting to ignore.'
     'RestoreDevDirectory.ActionClone'                = 'Clone repository from {0}'
     'RestoreDevDirectory.CloneFailed'                = "git clone for '{0}' failed with exit code {1}."
+    'RestoreDevDirectory.ConfigFailed'               = "Failed to set git config {0} to '{1}' for repository at {2}. Exit code: {3}"
 
     'SyncDevDirectoryList.ActionCreateRootDirectory' = 'Create repository root directory'
     'SyncDevDirectoryList.ActionCloneFromList'       = 'Clone {0} repository/repositories from list'

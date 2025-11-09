@@ -20,9 +20,9 @@
         Reads repository metadata from the JSON file and returns it to the pipeline.
 
     .NOTES
-        Version   : 1.2.1
+        Version   : 1.2.2
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-01-24
+        Date      : 2025-11-09
         Keywords  : Git, Import, Serialization
 
     .LINK
@@ -90,9 +90,11 @@
                     # Convert StatusDate from string to DateTime if present
                     if ($obj.PSObject.Properties.Match('StatusDate') -and -not [string]::IsNullOrWhiteSpace($obj.StatusDate)) {
                         try {
-                            $obj.StatusDate = [datetime]::Parse($obj.StatusDate, [System.Globalization.CultureInfo]::InvariantCulture)
+                            # Parse the date string - this will use current culture by default
+                            # which matches Export-Csv behavior
+                            $obj.StatusDate = [datetime]::Parse($obj.StatusDate)
                         } catch {
-                            # If parsing fails, leave as string or set to null
+                            # If parsing fails, leave as string and log warning
                             Write-PSFMessage -Level Verbose -Message "Unable to parse StatusDate '{0}' as DateTime: {1}" -StringValues $obj.StatusDate, $_.Exception.Message
                         }
                     }

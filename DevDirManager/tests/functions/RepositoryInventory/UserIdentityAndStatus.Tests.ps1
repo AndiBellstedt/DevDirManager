@@ -420,14 +420,14 @@ Describe 'Sync-DevDirectoryList Property Merge Logic' -Tag 'Integration' {
         It 'Should prefer local UserName over file UserName during sync' -Skip {
             # This test requires Sync-DevDirectoryList which may need git.exe
             # Skip if git.exe is not available in test environment
-            $result = Sync-DevDirectoryList -DirectoryPath $script:SyncTestRoot -RepositoryListPath $script:SyncListPath -PassThru -WhatIf
+            $result = Sync-DevDirectoryList -DirectoryPath $script:SyncTestRoot -RepositoryListPath $script:SyncListPath -PassThru -WhatIf -InformationAction SilentlyContinue
             # Verification would check that merged result has 'Local User' not 'File User'
         }
 
         It 'Should prefer local UserEmail over file UserEmail during sync' -Skip {
             # This test requires Sync-DevDirectoryList which may need git.exe
             # Skip if git.exe is not available in test environment
-            $result = Sync-DevDirectoryList -DirectoryPath $script:SyncTestRoot -RepositoryListPath $script:SyncListPath -PassThru -WhatIf
+            $result = Sync-DevDirectoryList -DirectoryPath $script:SyncTestRoot -RepositoryListPath $script:SyncListPath -PassThru -WhatIf -InformationAction SilentlyContinue
             # Verification would check that merged result has 'local@example.com' not 'file@example.com'
         }
     }

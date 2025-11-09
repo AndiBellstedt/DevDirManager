@@ -2,6 +2,32 @@
 
 ## [Unreleased]
 
+### Fixed
+- Fixed missing localization string `RestoreDevDirectory.ConfigFailed` for git config error messages
+- Fixed CSV StatusDate type conversion issue
+  - Import-DevDirectoryList now correctly parses StatusDate from CSV using try-catch with Parse() method
+  - Resolves issue where CSV imports would leave StatusDate as string instead of DateTime on systems with non-US cultures
+  - Fixed Windows PowerShell 5.1 compatibility issue with TryParse() method overloads
+  - Updated function version: Import-DevDirectoryList: 1.2.1 → 1.2.2
+- Fixed Windows PowerShell 5.1 compatibility in PSDrive tests
+  - Updated tests to wrap function results in @() to ensure array handling works correctly in PowerShell 5.1
+  - Resolves issue where .Count property returns $null for single objects in Windows PowerShell 5.1
+- Fixed PSDrive path resolution in Sync-DevDirectoryList and Export-DevDirectoryList
+  - Now properly resolves PSDrive paths (e.g., `GIT:\`, `TEMP:\`) to their actual file system paths
+  - Fixes issue where PSDrive paths would cause incorrect WhatIf output and execution failures
+  - Sync-DevDirectoryList updated to use `GetUnresolvedProviderPathFromPSPath` to handle non-existent paths (which is valid as the function can create directories)
+  - Export-DevDirectoryList updated to resolve PSDrive paths before processing with `Split-Path`
+  - Resolves issue where paths like `GIT:\RepoRestore` would be incorrectly combined with current directory
+- Updated function versions:
+  - Sync-DevDirectoryList: 1.2.1 → 1.2.2
+  - Export-DevDirectoryList: 1.2.1 → 1.2.2
+
+### Added
+- Added comprehensive Pester tests for PSDrive path support
+  - Tests cover all public functions (Get-DevDirectory, Export-DevDirectoryList, Import-DevDirectoryList, Restore-DevDirectory, Sync-DevDirectoryList, Publish-DevDirectoryList)
+  - Includes tests for WhatIf scenarios, mixed case PSDrive names, paths with subdirectories, and trailing backslashes
+  - Created `tests\functions\RepositoryInventory\PSDrive.Tests.ps1` with 15+ test cases
+
 ### Changed - Code Refactoring (Part 2)
 - Further refactored common code patterns into reusable internal components
   - Created `Resolve-RepositoryListFormat` internal function to handle file format inference from extensions (eliminates duplicate code across Export-DevDirectoryList, Import-DevDirectoryList, and Publish-DevDirectoryList)

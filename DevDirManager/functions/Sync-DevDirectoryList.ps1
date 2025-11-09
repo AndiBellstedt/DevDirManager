@@ -42,9 +42,9 @@
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
     .NOTES
-        Version   : 1.2.1
+        Version   : 1.2.2
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-09
+        Date      : 2025-01-24
         Keywords  : Git, Sync, Repository
 
     .LINK
@@ -87,10 +87,13 @@
 
         # Normalize the target directory path to a canonical absolute form with trailing backslash
         # This ensures consistent path operations and comparisons throughout the sync logic
-        $normalizedDirectory = [System.IO.Path]::GetFullPath($DirectoryPath)
+        # Using GetUnresolvedProviderPathFromPSPath ensures PSDrive paths (like GIT:\) are properly resolved
+        # even when the directory doesn't exist yet (which is valid for Sync as it can create the directory)
+        $normalizedDirectory = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($DirectoryPath)
         if (-not $normalizedDirectory.EndsWith("\", [System.StringComparison]::Ordinal)) {
             $normalizedDirectory = "$($normalizedDirectory)\"
         }
+
         # Store a trimmed version (no trailing slash) for cleaner output properties
         $trimmedDirectory = $normalizedDirectory.TrimEnd("\")
 
