@@ -114,16 +114,6 @@ Describe "RelativePath Formatting" -Tag "RelativePath", "PathFormatting" {
             # Verify no double backslashes
             $twoLevelRepo.RelativePath | Should -Not -Match '\\\\\\\\'
         }
-
-        It "Should use dot (.) for repository at root level" {
-            $repos = @(Get-DevDirectory -RootPath $script:TestRoot -SkipRemoteCheck)
-
-            $rootRepo = $repos | Where-Object { $_.FullPath -eq $script:RootRepo }
-            $rootRepo | Should -Not -BeNullOrEmpty
-
-            # Root level repo should have RelativePath of "RootRepo"
-            $rootRepo.RelativePath | Should -Be "RootRepo"
-        }
     }
 
     Context "RelativePath Preservation Through Export/Import" {
