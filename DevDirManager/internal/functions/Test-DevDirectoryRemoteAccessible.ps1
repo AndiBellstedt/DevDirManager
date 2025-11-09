@@ -61,13 +61,13 @@
 
     # Skip check for empty or null URLs
     if ([string]::IsNullOrWhiteSpace($RemoteUrl)) {
-        Write-PSFMessage -Level Verbose -Message "Remote URL is empty, marking as inaccessible"
+        Write-PSFMessage -Level Verbose -String 'TestDevDirectoryRemoteAccessible.EmptyUrl'
         return $false
     }
 
     # Attempt to execute git ls-remote with timeout
     try {
-        Write-PSFMessage -Level Debug -Message "Checking remote accessibility for: $RemoteUrl"
+        Write-PSFMessage -Level Debug -String 'TestDevDirectoryRemoteAccessible.CheckingRemote' -StringValues @($RemoteUrl)
 
         # Build the git ls-remote command
         $processInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -89,7 +89,7 @@
 
         if (-not $completed) {
             # Timeout occurred
-            Write-PSFMessage -Level Verbose -Message "Remote check timed out after $TimeoutSeconds seconds for: $RemoteUrl"
+            Write-PSFMessage -Level Verbose -String 'TestDevDirectoryRemoteAccessible.Timeout' -StringValues @($TimeoutSeconds, $RemoteUrl)
             $process.Kill()
             $process.Dispose()
             return $false
@@ -100,14 +100,14 @@
         $process.Dispose()
 
         if ($exitCode -eq 0) {
-            Write-PSFMessage -Level Debug -Message "Remote is accessible: $RemoteUrl"
+            Write-PSFMessage -Level Debug -String 'TestDevDirectoryRemoteAccessible.Accessible' -StringValues @($RemoteUrl)
             return $true
         } else {
-            Write-PSFMessage -Level Verbose -Message "Remote is not accessible (exit code $exitCode): $RemoteUrl"
+            Write-PSFMessage -Level Verbose -String 'TestDevDirectoryRemoteAccessible.NotAccessible' -StringValues @($exitCode, $RemoteUrl)
             return $false
         }
     } catch {
-        Write-PSFMessage -Level Warning -Message "Error checking remote accessibility for $RemoteUrl : $($_.Exception.Message)"
+        Write-PSFMessage -Level Warning -String 'TestDevDirectoryRemoteAccessible.Error' -StringValues @($RemoteUrl, $_.Exception.Message)
         return $false
     }
 }

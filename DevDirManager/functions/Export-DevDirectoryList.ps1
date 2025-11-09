@@ -31,8 +31,34 @@
 
         Exports the repository list to repos.json in JSON format.
 
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | Export-DevDirectoryList -Path "repos.csv"
+
+        Exports to CSV format, automatically detected from the .csv extension. CSV is ideal
+        for viewing in Excel or other spreadsheet applications.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory | Export-DevDirectoryList -Path "C:\Backup\repos.xml" -Format XML
+
+        Exports to XML format explicitly, useful for PowerShell-to-PowerShell data exchange
+        as it preserves all type information.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | 
+                Export-DevDirectoryList -Path "repos" -WhatIf
+
+        Shows what would happen without actually creating the file, useful for verifying
+        the operation before execution.
+
+    .EXAMPLE
+        PS C:\> Set-PSFConfig -FullName 'DevDirManager.DefaultOutputFormat' -Value 'JSON'
+        PS C:\> Get-DevDirectory | Export-DevDirectoryList -Path "C:\Data\repos"
+
+        Sets JSON as the default format, then exports without extension. The file will be
+        created as JSON due to the configured default.
+
     .NOTES
-        Version   : 1.2.3
+        Version   : 1.2.4
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Export, Serialization
@@ -64,12 +90,12 @@
     )
 
     begin {
-        Write-PSFMessage -Level Debug -Message "Starting Export-DevDirectoryList to path: '$($Path)', Format: '$($Format)'" -Tag "ExportDevDirectoryList", "Start"
+        Write-PSFMessage -Level Debug -String 'ExportDevDirectoryList.Start' -StringValues @($Path, $Format) -Tag "ExportDevDirectoryList", "Start"
 
         # Normalize Format parameter to uppercase if provided
         if ($PSBoundParameters.ContainsKey('Format')) {
             $Format = $Format.ToUpper()
-            Write-PSFMessage -Level System -Message "Using explicitly specified format: '$($Format)'" -Tag "ExportDevDirectoryList", "Configuration"
+            Write-PSFMessage -Level System -String 'ExportDevDirectoryList.ConfigurationFormatExplicit' -StringValues @($Format) -Tag "ExportDevDirectoryList", "Configuration"
         }
 
         # Retrieve the default output format from configuration if not explicitly specified
@@ -77,7 +103,7 @@
         if (-not $PSBoundParameters.ContainsKey('Format')) {
             $defaultFormat = Get-PSFConfigValue -FullName 'DevDirManager.DefaultOutputFormat'
             if ($defaultFormat) {
-                Write-PSFMessage -Level System -Message "Using default format from configuration: '$($defaultFormat)'" -Tag "ExportDevDirectoryList", "Configuration"
+                Write-PSFMessage -Level System -String 'ExportDevDirectoryList.ConfigurationFormatDefault' -StringValues @($defaultFormat) -Tag "ExportDevDirectoryList", "Configuration"
             }
         }
 
@@ -87,14 +113,14 @@
     }
 
     process {
-        Write-PSFMessage -Level Debug -Message "Collecting repository object into export list" -Tag "ExportDevDirectoryList", "Collect"
+        Write-PSFMessage -Level Debug -String 'ExportDevDirectoryList.CollectObject' -Tag "ExportDevDirectoryList", "Collect"
 
         # Collect each pipeline object into the repository list buffer
         $repositoryList.Add($InputObject)
     }
 
     end {
-        Write-PSFMessage -Level Verbose -Message "Processing export of $($repositoryList.Count) repository objects" -Tag "ExportDevDirectoryList", "Export"
+        Write-PSFMessage -Level Verbose -String 'ExportDevDirectoryList.ProcessExport' -StringValues @($repositoryList.Count) -Tag "ExportDevDirectoryList", "Export"
 
         # Early exit if no repositories were provided via pipeline or parameter
         if ($repositoryList.Count -eq 0) {
@@ -114,7 +140,7 @@
             $resolveFormatParams['DefaultFormat'] = $defaultFormat
         }
         $resolvedFormat = Resolve-RepositoryListFormat @resolveFormatParams
-        Write-PSFMessage -Level Verbose -Message "Resolved export format: '$($resolvedFormat)'" -Tag "ExportDevDirectoryList", "Format"
+        Write-PSFMessage -Level Verbose -String 'ExportDevDirectoryList.FormatResolved' -StringValues @($resolvedFormat) -Tag "ExportDevDirectoryList", "Format"
 
         # Resolve the output path to handle PSDrive paths correctly.
         # Split-Path doesn't resolve PSDrives, so we need to get the provider path first using GetUnresolvedProviderPathFromPSPath.
@@ -128,41 +154,41 @@
 
         # Ensure the output directory exists before attempting to write the file
         if (-not [string]::IsNullOrEmpty($outputDirectory) -and -not (Test-Path -LiteralPath $outputDirectory -PathType Container)) {
-            Write-PSFMessage -Level Verbose -Message "Creating output directory: '$($outputDirectory)'" -Tag "ExportDevDirectoryList", "FileSystem"
+            Write-PSFMessage -Level Verbose -String 'ExportDevDirectoryList.CreateOutputDirectory' -StringValues @($outputDirectory) -Tag "ExportDevDirectoryList", "FileSystem"
             New-DirectoryIfNeeded -Path $outputDirectory
         }
 
         # Check for WhatIf/Confirm before performing the write operation
         $exportActionTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'ExportDevDirectoryList.ActionExport'
         if (-not $PSCmdlet.ShouldProcess($Path, ($exportActionTemplate -f @($resolvedFormat)))) {
-            Write-PSFMessage -Level Verbose -Message "Export canceled by user (WhatIf/Confirm)" -Tag "ExportDevDirectoryList", "Abort"
+            Write-PSFMessage -Level Verbose -String 'ExportDevDirectoryList.ExportCanceled' -Tag "ExportDevDirectoryList", "Abort"
             return
         }
 
-        Write-PSFMessage -Level Verbose -Message "Serializing $($repositoryList.Count) repositories to '$($resolvedOutputPath)' in $($resolvedFormat) format" -Tag "ExportDevDirectoryList", "Serialization"
+        Write-PSFMessage -Level Verbose -String 'ExportDevDirectoryList.SerializationStart' -StringValues @($repositoryList.Count, $resolvedOutputPath, $resolvedFormat) -Tag "ExportDevDirectoryList", "Serialization"
 
         # Serialize the repository list to the specified format
         switch ($resolvedFormat) {
             "CSV" {
-                Write-PSFMessage -Level Debug -Message "Using Export-Csv for CSV serialization" -Tag "ExportDevDirectoryList", "Serialization"
+                Write-PSFMessage -Level Debug -String 'ExportDevDirectoryList.SerializationCSV' -Tag "ExportDevDirectoryList", "Serialization"
                 # Export to CSV with UTF8 encoding for cross-platform compatibility
                 # Include all repository properties in a consistent order
                 $repositoryList | Export-Csv -LiteralPath $resolvedOutputPath -NoTypeInformation -Encoding UTF8
             }
             "JSON" {
-                Write-PSFMessage -Level Debug -Message "Using ConvertTo-Json with depth 5 for JSON serialization" -Tag "ExportDevDirectoryList", "Serialization"
+                Write-PSFMessage -Level Debug -String 'ExportDevDirectoryList.SerializationJSON' -Tag "ExportDevDirectoryList", "Serialization"
                 # Use Depth 5 to ensure nested properties are fully serialized
                 # Set-Content with UTF8 ensures compatibility across systems
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 5
                 $jsonContent | Set-Content -LiteralPath $resolvedOutputPath -Encoding UTF8
             }
             "XML" {
-                Write-PSFMessage -Level Debug -Message "Using Export-Clixml for XML serialization" -Tag "ExportDevDirectoryList", "Serialization"
+                Write-PSFMessage -Level Debug -String 'ExportDevDirectoryList.SerializationXML' -Tag "ExportDevDirectoryList", "Serialization"
                 # Export-Clixml handles depth automatically and preserves type information
                 $repositoryList | Export-Clixml -Path $resolvedOutputPath
             }
         }
 
-        Write-PSFMessage -Level Verbose -Message "Successfully exported $($repositoryList.Count) repositories to '$($resolvedOutputPath)' in $($resolvedFormat) format" -Tag "ExportDevDirectoryList", "Complete"
+        Write-PSFMessage -Level Verbose -String 'ExportDevDirectoryList.Complete' -StringValues @($repositoryList.Count, $resolvedOutputPath, $resolvedFormat) -Tag "ExportDevDirectoryList", "Complete"
     }
 }

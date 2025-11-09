@@ -53,12 +53,12 @@
 
     process {
         foreach ($obj in $InputObject) {
-            Write-PSFMessage -Level Debug -Message "Adding DevDirManager.Repository type name to object" -Tag "AddRepositoryTypeName", "Start"
+            Write-PSFMessage -Level Debug -String 'AddRepositoryTypeName.Start' -Tag "AddRepositoryTypeName", "Start"
 
             # Insert the custom type name at position 0 to ensure it takes precedence
             # over any existing type names in the inheritance chain
             $obj.PSObject.TypeNames.Insert(0, 'DevDirManager.Repository')
-            Write-PSFMessage -Level Verbose -Message "Type name added to object" -Tag "AddRepositoryTypeName", "Result"
+            Write-PSFMessage -Level Verbose -String 'AddRepositoryTypeName.Result' -Tag "AddRepositoryTypeName", "Result"
 
             # Return the modified object to the pipeline
             $obj
