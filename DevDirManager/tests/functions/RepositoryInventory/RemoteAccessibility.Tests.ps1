@@ -77,7 +77,7 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
             }
         }
 
-        It "Should mark valid remote as accessible" -Skip:(-not (Test-Connection -ComputerName github.com -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+        It "Should mark valid remote as accessible" -Skip:(-not (Test-Connection -ComputerName "github.com" -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
             $repos = @(Get-DevDirectory -RootPath $script:TestRoot)
             $validRepo = $repos | Where-Object { $_.FullPath -eq $script:ValidRepoDir }
 
@@ -85,7 +85,7 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
             $validRepo.IsRemoteAccessible | Should -Be $true
         }
 
-        It "Should mark invalid remote as inaccessible" -Skip:(-not (Test-Connection -ComputerName github.com -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+        It "Should mark invalid remote as inaccessible" -Skip:(-not (Test-Connection -ComputerName "github.com" -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
             $repos = @(Get-DevDirectory -RootPath $script:TestRoot)
             $invalidRepo = $repos | Where-Object { $_.FullPath -eq $script:InvalidRepoDir }
 
@@ -98,7 +98,7 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
             $noRemoteRepo = $repos | Where-Object { $_.FullPath -eq $script:NoRemoteRepoDir }
 
             $noRemoteRepo | Should -Not -BeNullOrEmpty
-            $noRemoteRepo.IsRemoteAccessible | Should -Be $false
+            $noRemoteRepo.IsRemoteAccessible | Should -BeFalse
         }
 
         It "Should skip remote check when -SkipRemoteCheck is specified" {
