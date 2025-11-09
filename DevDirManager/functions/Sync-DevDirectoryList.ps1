@@ -24,6 +24,10 @@
     .PARAMETER SkipExisting
         Forwards to Restore-DevDirectory to skip cloning repositories whose directories already exist.
 
+    .PARAMETER ShowGitOutput
+        Forwards to Restore-DevDirectory to display git command output. By default, git output is
+        suppressed and only progress information is shown.
+
     .PARAMETER PassThru
         Returns the merged repository list after synchronization.
 
@@ -41,10 +45,39 @@
         Synchronizes the repositories beneath C:\Repos with the entries stored in repos.json, cloning any
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Projects" -RepositoryListPath "repos.csv" -PassThru | Export-DevDirectoryList -Path "backup.json"
+
+        Synchronizes and returns the merged list, then exports it to a backup file in JSON format.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Dev" -RepositoryListPath "repos.json" -SkipExisting
+
+        Synchronizes without overwriting existing repository directories, only cloning new ones
+        from the list that don't exist locally.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Repos" -RepositoryListPath "repos.xml" -ShowGitOutput -Verbose
+
+        Synchronizes with detailed verbose output and displays git command output during clone
+        operations, useful for troubleshooting.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Projects" -RepositoryListPath "repos.json" -WhatIf
+
+        Shows what changes would be made (directories created, repositories cloned, file updated)
+        without actually performing the synchronization.
+
+    .EXAMPLE
+        PS C:\> Sync-DevDirectoryList -DirectoryPath "C:\Dev" -RepositoryListPath "C:\Backup\repos.csv" -Force
+
+        Synchronizes and overwrites any existing directories when cloning repositories from the
+        list, useful for forcing a clean state.
+
     .NOTES
-        Version   : 1.1.1
+        Version   : 1.4.2
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
+        Date      : 2025-11-09
         Keywords  : Git, Sync, Repository
 
     .LINK
@@ -77,32 +110,40 @@
 
         [Parameter()]
         [switch]
+        $ShowGitOutput,
+
+        [Parameter()]
+        [switch]
         $PassThru
     )
 
     begin {
+        Write-PSFMessage -Level Debug -String 'SyncDevDirectoryList.Start' -StringValues @($DirectoryPath, $RepositoryListPath, $Force, $SkipExisting, $ShowGitOutput) -Tag "SyncDevDirectoryList", "Start"
+
         # Retrieve configuration value for Git remote name
         # This allows users to customize this setting via Set-PSFConfig
         $remoteName = Get-PSFConfigValue -FullName 'DevDirManager.Git.RemoteName'
+        Write-PSFMessage -Level System -String 'SyncDevDirectoryList.ConfigurationRemoteName' -StringValues @($remoteName) -Tag "SyncDevDirectoryList", "Configuration"
 
         # Normalize the target directory path to a canonical absolute form with trailing backslash
         # This ensures consistent path operations and comparisons throughout the sync logic
-        $normalizedDirectory = [System.IO.Path]::GetFullPath($DirectoryPath)
+        # Using GetUnresolvedProviderPathFromPSPath ensures PSDrive paths (like GIT:\) are properly resolved
+        # even when the directory doesn't exist yet (which is valid for Sync as it can create the directory)
+        $normalizedDirectory = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($DirectoryPath)
         if (-not $normalizedDirectory.EndsWith("\", [System.StringComparison]::Ordinal)) {
             $normalizedDirectory = "$($normalizedDirectory)\"
         }
+
         # Store a trimmed version (no trailing slash) for cleaner output properties
         $trimmedDirectory = $normalizedDirectory.TrimEnd("\")
+        Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.DirectoryNormalized' -StringValues @($trimmedDirectory) -Tag "SyncDevDirectoryList", "Configuration"
 
         # Extract the parent directory of the repository list file for later directory creation
         $repositoryDirectory = Split-Path -Path $RepositoryListPath -Parent
 
-        # Regex pattern to detect unsafe relative paths:
-        # - Starts with backslash (absolute path)
-        # - Contains colon (drive letter)
-        # - Contains ".." (path traversal)
-        # These patterns could allow escaping the root directory or cause security issues
-        $invalidRelativePattern = [regex]::new("(^\\|:|\.\.)")
+        # Use the module-wide unsafe path pattern for security validation
+        # This pattern detects paths with: absolute paths (starts with \), drive letters (contains :), or path traversal (..)
+        $invalidRelativePattern = $script:UnsafeRelativePathPattern
 
         # Use case-insensitive string comparison for all path-based dictionary keys
         # This matches Windows file system behavior and prevents duplicate entries
@@ -131,17 +172,20 @@
     }
 
     end {
+        Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.SyncStart' -Tag "SyncDevDirectoryList", "Sync"
+
         # Step 1: Load and normalize the repository list from the file (if it exists)
         # The format is auto-detected based on file extension or uses the configured default
         $repositoryFileExists = Test-Path -LiteralPath $RepositoryListPath -PathType Leaf
         $fileEntriesRaw = @()
         if ($repositoryFileExists) {
+            Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.ImportingFromFile' -StringValues @($RepositoryListPath) -Tag "SyncDevDirectoryList", "Import"
             try {
                 $fileEntriesRaw = Import-DevDirectoryList -Path $RepositoryListPath
             } catch {
                 $messageValues = @($RepositoryListPath, $_.Exception.Message)
-                $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'SyncDevDirectoryList.ImportFailed'
-                $message = $messageTemplate -f $messageValues
+                $message = (Get-PSFLocalizedString -Module 'DevDirManager' -Name 'SyncDevDirectoryList.ImportFailed') -f $messageValues
+
                 Stop-PSFFunction -String 'SyncDevDirectoryList.ImportFailed' -StringValues $messageValues -EnableException $true -Cmdlet $PSCmdlet -ErrorRecord $_
                 throw $message
             }
@@ -163,6 +207,9 @@
             $remoteName = if ($entry.PSObject.Properties.Match("RemoteName")) { [string]$entry.RemoteName } else { $RemoteName }
             $originalRoot = if ($entry.PSObject.Properties.Match("RootPath")) { [string]$entry.RootPath } else { $null }
             $originalFull = if ($entry.PSObject.Properties.Match("FullPath")) { [string]$entry.FullPath } else { $null }
+            $userName = if ($entry.PSObject.Properties.Match("UserName")) { [string]$entry.UserName } else { $null }
+            $userEmail = if ($entry.PSObject.Properties.Match("UserEmail")) { [string]$entry.UserEmail } else { $null }
+            $statusDate = if ($entry.PSObject.Properties.Match("StatusDate")) { $entry.StatusDate } else { $null }
 
             # Store a lightweight info object for later comparison with local repositories
             $info = [pscustomobject]@{
@@ -171,6 +218,9 @@
                 RemoteName       = $remoteName
                 OriginalRootPath = $originalRoot
                 OriginalFullPath = $originalFull
+                UserName         = $userName
+                UserEmail        = $userEmail
+                StatusDate       = $statusDate
             }
 
             $fileEntriesInfo[$relative] = $info
@@ -181,17 +231,13 @@
         if (-not $directoryExists) {
             # If the directory doesn't exist and user approves, create it
             if ($PSCmdlet.ShouldProcess($trimmedDirectory, $createRootDirectoryAction)) {
-                New-Item -ItemType Directory -Path $trimmedDirectory -Force -ErrorAction Stop | Out-Null
+                New-DirectoryIfNeeded -Path $trimmedDirectory
                 $directoryExists = $true
             }
         }
 
         # Scan for local repositories only if the directory exists
-        $localEntriesRaw = if ($directoryExists) {
-            Get-DevDirectory -RootPath $trimmedDirectory
-        } else {
-            @()
-        }
+        $localEntriesRaw = if ($directoryExists) { Get-DevDirectory -RootPath $trimmedDirectory } else { @() }
 
         # Build the local repository map and add entries to the final merged map
         foreach ($entry in $localEntriesRaw) {
@@ -199,12 +245,19 @@
 
             # Skip local repositories with unsafe relative paths
             if ($invalidRelativePattern.IsMatch($relative)) {
-                Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.UnsafeLocalEntry' -StringValues @($relative)
+                Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.UnsafeLocalEntry' -StringValues @($relative)
                 continue
             }
 
             # Create a sync record using the internal helper function
-            $record = New-DevDirectorySyncRecord -RelativePath $relative -RemoteUrl ([string]$entry.RemoteUrl) -RemoteName ([string]$entry.RemoteName) -RootDirectory $trimmedDirectory
+            $record = New-DevDirectorySyncRecord `
+                -RelativePath $relative `
+                -RemoteUrl ([string]$entry.RemoteUrl) `
+                -RemoteName ([string]$entry.RemoteName) `
+                -RootDirectory $trimmedDirectory `
+                -UserName ([string]$entry.UserName) `
+                -UserEmail ([string]$entry.UserEmail) `
+                -StatusDate $entry.StatusDate
 
             # Add to both the local map (for later comparison) and the final map
             $localMap[$relative] = $record
@@ -244,23 +297,52 @@
                     }
                 }
 
+                # Merge UserName and UserEmail: prefer local values if present, otherwise use file values
+                if ([string]::IsNullOrWhiteSpace($existing.UserName) -and -not [string]::IsNullOrWhiteSpace($info.UserName)) {
+                    $existing.UserName = $info.UserName
+                    $changesMade = $true
+                }
+                if ([string]::IsNullOrWhiteSpace($existing.UserEmail) -and -not [string]::IsNullOrWhiteSpace($info.UserEmail)) {
+                    $existing.UserEmail = $info.UserEmail
+                    $changesMade = $true
+                }
+
+                # Merge StatusDate: prefer local value (more recent) if present, otherwise use file value
+                if ($null -eq $existing.StatusDate -and $null -ne $info.StatusDate) {
+                    $existing.StatusDate = $info.StatusDate
+                    $changesMade = $true
+                }
+
                 # Detect if root/full paths changed (e.g., the repository was moved)
                 if ($info.OriginalRootPath -ne $trimmedDirectory -or $info.OriginalFullPath -ne $expectedFullPath) {
                     $changesMade = $true
                 }
             } else {
                 # Repository exists only in the file (not locally); add to final map and clone list
-                $record = New-DevDirectorySyncRecord -RelativePath $relative -RemoteUrl $remoteUrl -RemoteName $remoteName -RootDirectory $trimmedDirectory
+                $record = New-DevDirectorySyncRecord `
+                    -RelativePath $relative `
+                    -RemoteUrl $remoteUrl `
+                    -RemoteName $remoteName `
+                    -RootDirectory $trimmedDirectory `
+                    -UserName $info.UserName `
+                    -UserEmail $info.UserEmail `
+                    -StatusDate $info.StatusDate
                 $finalMap[$relative] = $record
                 $changesMade = $true
 
                 # Queue for cloning if it has a valid remote URL
                 if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
                     Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.MissingRemoteUrl' -StringValues @($relative)
+                } elseif ($info.PSObject.Properties.Match('IsRemoteAccessible') -and $info.IsRemoteAccessible -eq $false) {
+                    # Skip repositories with inaccessible remotes
+                    Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.InaccessibleRemoteSkipped' -StringValues @($relative, $remoteUrl)
                 } else {
+                    # Include UserName and UserEmail in the clone object so Restore-DevDirectory can configure them
                     $repositoriesToClone.Add([pscustomobject]@{
                             RelativePath = $relative
                             RemoteUrl    = $remoteUrl
+                            UserName     = $info.UserName
+                            UserEmail    = $info.UserEmail
                         })
                 }
 
@@ -284,6 +366,7 @@
 
                 if ($Force.IsPresent) { $restoreParameters.Force = $true }
                 if ($SkipExisting.IsPresent) { $restoreParameters.SkipExisting = $true }
+                if ($ShowGitOutput.IsPresent) { $restoreParameters.ShowGitOutput = $true }
 
                 # Invoke the restore command to clone missing repositories
                 Restore-DevDirectory @restoreParameters
@@ -298,7 +381,7 @@
             # Ensure the directory for the repository list file exists
             if (-not [string]::IsNullOrEmpty($repositoryDirectory) -and -not (Test-Path -LiteralPath $repositoryDirectory -PathType Container)) {
                 if ($PSCmdlet.ShouldProcess($repositoryDirectory, $createListDirectoryAction)) {
-                    New-Item -ItemType Directory -Path $repositoryDirectory -Force -ErrorAction Stop | Out-Null
+                    New-DirectoryIfNeeded -Path $repositoryDirectory
                 }
             }
 
@@ -316,6 +399,8 @@
         }
 
         # Step 7: Return the merged repository list if PassThru was specified
+        Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.Complete' -StringValues @($finalEntries.Count) -Tag "SyncDevDirectoryList", "Complete"
+
         if ($PassThru.IsPresent) {
             $finalEntries
         }

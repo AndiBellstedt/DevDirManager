@@ -56,12 +56,23 @@ CORE FUNCTIONS
     --------------------
     Get-DevDirectory
         Scans a directory tree to discover all Git repositories and retrieves
-        their remote URLs. Returns DevDirManager.Repository objects with:
+        their remote URLs and user configuration. Returns DevDirManager.Repository
+        objects with:
         - RootPath: Base directory that was scanned
         - RelativePath: Repository path relative to RootPath
         - FullPath: Absolute path to the repository
         - RemoteName: Name of the Git remote (e.g., 'origin')
         - RemoteUrl: URL of the remote repository
+        - UserName: Repository-local git user.name configuration
+        - UserEmail: Repository-local git user.email configuration
+        - StatusDate: Most recent commit or repository activity date
+        - IsRemoteAccessible: Boolean indicating if the remote URL is accessible
+          (null if -SkipRemoteCheck was used)
+
+        Parameters:
+        - RootPath: Directory to scan for repositories (default: current location)
+        - SkipRemoteCheck: Skips remote accessibility verification, improving
+          performance but not marking inaccessible repositories
 
     Repository List Management
     --------------------------
@@ -80,12 +91,31 @@ CORE FUNCTIONS
     Restore-DevDirectory
         Clones repositories from a repository list file, preserving the original
         directory structure. Creates necessary parent directories and supports
-        recursive submodule cloning.
+        recursive submodule cloning. If the repository metadata includes UserName
+        and UserEmail properties, these values are configured in the cloned
+        repository using 'git config --local', ensuring the cloned repository
+        maintains the same user identity as the original.
+
+        Parameters:
+        - DestinationPath: Root directory where repositories will be restored
+        - Force: Overwrites existing directories by deleting them before cloning
+        - SkipExisting: Skips repositories whose target directory already exists
+        - ShowGitOutput: Displays git command output instead of suppressing it
 
     Sync-DevDirectoryList
         Performs bi-directional synchronization between a directory structure
         and a repository list file. Can update the file with new repositories
         found in the directory, or clone missing repositories from the file.
+        When merging metadata, local repository values for UserName, UserEmail,
+        and StatusDate are preferred over file values to ensure accuracy.
+
+        Parameters:
+        - DirectoryPath: Root directory containing Git repositories
+        - RepositoryListPath: Path to the repository list file
+        - Force: Forwards to Restore-DevDirectory for overwriting existing dirs
+        - SkipExisting: Forwards to Restore-DevDirectory for skipping existing
+        - ShowGitOutput: Forwards to Restore-DevDirectory to show git output
+        - PassThru: Returns the merged repository list after synchronization
 
     GitHub Integration
     -----------------
@@ -135,8 +165,16 @@ CUSTOM TYPES
         - FullPath [string]: Complete absolute path
         - RemoteName [string]: Git remote name
         - RemoteUrl [string]: Remote repository URL
+        - UserName [string]: Repository-local git user.name (from .git/config)
+        - UserEmail [string]: Repository-local git user.email (from .git/config)
+        - StatusDate [datetime]: Most recent commit or repository activity date
 
-        Custom format view displays: RelativePath, RemoteName, RemoteUrl
+        Custom format view displays: RelativePath, RemoteName, RemoteUrl, UserName,
+        UserEmail, StatusDate
+
+        Note: UserName and UserEmail are extracted exclusively from the repository's
+        local .git/config file. Global and system git configuration values are
+        intentionally ignored to ensure accurate per-repository identity tracking.
 
     DevDirManager.CloneResult
         Represents the result of a repository clone operation. Contains:
@@ -211,6 +249,20 @@ EXAMPLES
 
         Scans for repositories and retrieves the 'upstream' remote URL instead of 'origin'.
 
+    Example 11: View repository user configuration
+        PS C:\> Get-DevDirectory -Path C:\Projects | Select-Object RelativePath, UserName, UserEmail, StatusDate
+
+        Displays repositories with their local user configuration and activity date.
+        UserName and UserEmail are extracted from the repository's .git/config file
+        (repository-local configuration only, global/system config is ignored).
+
+    Example 12: Clone repositories with user identity preservation
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.csv | Restore-DevDirectory -DestinationPath D:\Projects
+
+        Clones repositories to D:\Projects. If the repository metadata includes UserName
+        and UserEmail properties, these are automatically configured in each cloned
+        repository using 'git config --local user.name' and 'git config --local user.email'.
+
 WORKFLOW PATTERNS
     Common DevDirManager workflows:
 
@@ -261,11 +313,113 @@ TECHNICAL DETAILS
         - RelativePath (for easy identification)
         - RemoteName (to show which remote)
         - RemoteUrl (for verification)
+        - UserName (repository-local user identity)
+        - UserEmail (repository-local user email)
+        - StatusDate (most recent activity)
         Other properties are available but hidden by default in table view.
+
+    User Identity Tracking
+        DevDirManager extracts and preserves repository-local user identity:
+        - UserName and UserEmail are read from .git/config [user] section only
+        - Global and system git configuration is intentionally ignored
+        - When cloning repositories, Restore-DevDirectory automatically sets
+          user.name and user.email in the cloned repository if these values
+          are present in the repository metadata
+        - This ensures each repository maintains its intended commit identity
+        - Useful for managing repositories with different author identities
+
+    Repository Activity Date
+        The StatusDate property represents the most recent repository activity:
+        - Extracted from the commit timestamp of the current HEAD reference
+        - Reads .git/HEAD to determine the current branch reference
+        - Uses the modification time of the branch reference file as commit date
+        - Falls back to .git folder modification time if HEAD is unavailable
+        - Provides a simple way to identify recently active repositories
+
+LOGGING SYSTEM
+    DevDirManager uses the PSFramework logging system to provide comprehensive
+    diagnostic information. All logging messages support internationalization,
+    with English (en-us), French (fr-fr), and Spanish (es-es) localizations
+    available.
+
+    Logging Levels
+        The module uses PSFramework's logging levels to categorize messages:
+        - Debug: Detailed diagnostic information for troubleshooting
+        - Verbose: Informative messages about normal operations
+        - System: Configuration and system-level operations
+        - Warning: Non-critical issues that don't stop execution
+        - Error: Errors that may prevent operations from completing
+
+    Viewing Logging Messages
+        Use PowerShell's common parameters to control log visibility:
+        - -Verbose: Shows Verbose-level messages and above
+        - -Debug: Shows Debug-level messages and all other levels
+
+        Example:
+        PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose
+
+    PSFramework Logging Features
+        DevDirManager leverages PSFramework's advanced logging capabilities:
+        - Automatic log file creation for persistent diagnostics
+        - Structured logging with tags for filtering
+        - Message templates for consistent internationalization
+        - Runtime configuration of logging providers
+
+        Configure logging providers:
+        PS C:\> Set-PSFLoggingProvider -Name logfile -FilePath C:\Logs\DevDirManager.log
+        PS C:\> Set-PSFLoggingProvider -Name logfile -Enabled $true
+
+        View logged messages:
+        PS C:\> Get-PSFMessage | Where-Object ModuleName -eq 'DevDirManager'
+
+    Internationalization
+        Logging messages are automatically localized based on PowerShell's
+        current culture ($PSCulture). Supported languages:
+        - English (en-us): Default
+        - French (fr-fr): Français
+        - Spanish (es-es): Español
+
+        Override culture for testing:
+        PS C:\> [System.Threading.Thread]::CurrentThread.CurrentUICulture = 'fr-fr'
+        PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose
+
+    Common Logging Patterns
+        Repository scanning operations:
+        - GetDevDirectory.ScanStart: When directory scanning begins
+        - GetDevDirectory.RepositoryFound: Each time a repository is discovered
+        - GetDevDirectory.ScanComplete: Summary when scanning finishes
+
+        Import/Export operations:
+        - ImportDevDirectoryList.Start: Import operation begins
+        - ExportDevDirectoryList.FormatResolved: File format determined
+        - ImportDevDirectoryList.CompleteCSV/JSON/XML: Import success
+
+        Clone/Restore operations:
+        - RestoreDevDirectory.CloneFailed: git clone errors
+        - RestoreDevDirectory.Complete: Summary when restoration finishes
+
+        Synchronization operations:
+        - SyncDevDirectoryList.SyncStart: Sync process begins
+        - SyncDevDirectoryList.RemoteUrlMismatch: URL conflicts detected
+        - SyncDevDirectoryList.Complete: Final repository count
+
+    Troubleshooting with Logs
+        When encountering issues:
+        1. Re-run the command with -Verbose to see detailed progress
+        2. Use -Debug for maximum diagnostic detail
+        3. Check PSFramework logs: Get-PSFMessage | Where-Object Level -eq Error
+        4. Review specific operation tags for targeted troubleshooting
+        5. Enable file logging for persistent diagnostic records
+
+        Example troubleshooting workflow:
+        PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose -Debug
+        PS C:\> Get-PSFMessage | Where-Object Tag -contains "GetDevDirectory"
+        PS C:\> Get-PSFMessage | Where-Object Level -eq Error | Format-List *
 
 KEYWORDS
     Git, Repository, DevOps, Source Control, Directory Management, Inventory,
-    Backup, Restore, Synchronization, GitHub, Gist, PSFramework, Configuration
+    Backup, Restore, Synchronization, GitHub, Gist, PSFramework, Configuration,
+    Logging, Internationalization
 
 SEE ALSO
     Get-DevDirectory

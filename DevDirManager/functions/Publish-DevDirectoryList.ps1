@@ -51,10 +51,33 @@
 
         Streams repository metadata directly from the pipeline and publishes it to a public gist.
 
+    .EXAMPLE
+        PS C:\> $token = Read-Host -AsSecureString -Prompt "GitHub PAT"
+        PS C:\> Publish-DevDirectoryList -Path "repos.csv" -AccessToken $token
+
+        Prompts for GitHub Personal Access Token securely, then publishes the CSV file
+        (automatically converted to JSON for Gist compatibility).
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory | Publish-DevDirectoryList -AccessToken $token -GistId "abc123def456"
+
+        Updates an existing gist by providing its ID instead of searching by description.
+
+    .EXAMPLE
+        PS C:\> Publish-DevDirectoryList -Path "repos.xml" -AccessToken $token -Verbose
+
+        Publishes with verbose output showing conversion steps, API calls, and gist details.
+        XML format is automatically converted to JSON before publishing.
+
+    .EXAMPLE
+        PS C:\> Get-DevDirectory -RootPath "C:\Projects" | Where-Object RemoteUrl -like "*github.com*" | Publish-DevDirectoryList -AccessToken $token -Public
+
+        Publishes only GitHub repositories to a public gist, filtering before publication.
+
     .NOTES
-        Version   : 1.1.2
+        Version   : 1.1.5
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-10-31
+        Date      : 2025-11-09
         Keywords  : Git, Gist, Publish
 
     .LINK
@@ -106,9 +129,12 @@
     )
 
     begin {
+        Write-PSFMessage -Level Debug -String 'PublishDevDirectoryList.Start' -StringValues @($PSCmdlet.ParameterSetName, $Public, $GistId) -Tag "PublishDevDirectoryList", "Start"
+
         # Collect data so we can upload once per invocation.
         $repositoryList = [System.Collections.Generic.List[psobject]]::new()
 
+        Write-PSFMessage -Level System -String 'PublishDevDirectoryList.AuthenticationDecrypt' -Tag "PublishDevDirectoryList", "Authentication"
         $tokenPointer = [System.IntPtr]::Zero
         try {
             $tokenPointer = [System.Runtime.InteropServices.Marshal]::SecureStringToGlobalAllocUnicode($AccessToken)
@@ -120,12 +146,14 @@
         }
 
         if ([string]::IsNullOrWhiteSpace($resolvedToken)) {
+            Write-PSFMessage -Level Error -String 'PublishDevDirectoryList.TokenEmptyError' -Tag "PublishDevDirectoryList", "Authentication"
             $messageTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'PublishDevDirectoryList.TokenEmpty'
             $message = $messageTemplate
             Stop-PSFFunction -String 'PublishDevDirectoryList.TokenEmpty' -EnableException $true -Cmdlet $PSCmdlet
             throw $message
         }
 
+        Write-PSFMessage -Level System -String 'PublishDevDirectoryList.ConfigurationApiUrl' -StringValues @($ApiUrl) -Tag "PublishDevDirectoryList", "Configuration"
         $requestHeaders = @{
             Authorization = "Bearer $resolvedToken"
             "User-Agent"  = "DevDirManager"
@@ -141,6 +169,7 @@
 
     process {
         if ($PSCmdlet.ParameterSetName -eq "FromInput") {
+            Write-PSFMessage -Level Debug -String 'PublishDevDirectoryList.CollectPipelineObject' -Tag "PublishDevDirectoryList", "Collect"
             $repositoryList.Add($InputObject)
         }
     }
@@ -149,48 +178,58 @@
         try {
             if ($PSCmdlet.ParameterSetName -eq "FromInput") {
                 if ($repositoryList.Count -eq 0) {
-                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.NoPipelineData'
+                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.NoPipelineData' -Tag "PublishDevDirectoryList", "Validation"
                     return
                 }
 
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.ConvertToJson' -StringValues @($repositoryList.Count) -Tag "PublishDevDirectoryList", "Serialization"
                 $jsonContent = $repositoryList | ConvertTo-Json -Depth 6
             } else {
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.ReadFile' -StringValues @($Path) -Tag "PublishDevDirectoryList", "FileRead"
                 $resolvedPath = Resolve-Path -LiteralPath $Path -ErrorAction Stop
-                $extension = [System.IO.Path]::GetExtension($resolvedPath).ToLower()
 
-                # Determine if we need to convert the file format to JSON
-                switch -Regex ($extension) {
-                    "^\.json$" {
+                # Determine the file format to decide how to read the content
+                # Since Publish always outputs JSON, we need to convert non-JSON formats
+                $fileFormat = Resolve-RepositoryListFormat -Path $resolvedPath -ErrorContext "PublishDevDirectoryList"
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.FormatDetected' -StringValues @($fileFormat) -Tag "PublishDevDirectoryList", "Format"
+
+                # Read or convert file content to JSON based on format
+                switch ($fileFormat) {
+                    "JSON" {
+                        Write-PSFMessage -Level Debug -String 'PublishDevDirectoryList.ReadJsonDirect' -Tag "PublishDevDirectoryList", "Serialization"
                         # File is already JSON, read it directly
                         $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
                     }
-                    "^\.csv$|^\.xml$" {
-                        # Import the file using Import-DevDirectoryList and convert to JSON
+                    default {
+                        Write-PSFMessage -Level Debug -String 'PublishDevDirectoryList.ConvertFormat' -StringValues @($fileFormat) -Tag "PublishDevDirectoryList", "Serialization"
+                        # CSV or XML: Import the file using Import-DevDirectoryList and convert to JSON
                         $importedData = Import-DevDirectoryList -Path $resolvedPath
                         $jsonContent = $importedData | ConvertTo-Json -Depth 6
-                    }
-                    default {
-                        # Assume it's JSON if extension is unknown
-                        $jsonContent = Get-Content -LiteralPath $resolvedPath -Raw -Encoding UTF8
                     }
                 }
             }
 
             if ([string]::IsNullOrWhiteSpace($jsonContent)) {
-                Write-PSFMessage -Level Warning -String 'PublishDevDirectoryList.EmptyContent'
+                Write-PSFMessage -Level Warning -String 'PublishDevDirectoryList.EmptyContent' -Tag "PublishDevDirectoryList", "Validation"
                 return
             }
 
             if (-not $GistId) {
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.SearchGist' -Tag "PublishDevDirectoryList", "GistQuery"
                 try {
                     $existingGistList = Invoke-RestMethod -Method Get -Uri "$($gistEndpoint)?per_page=100" -Headers $requestHeaders -ErrorAction Stop
                     $matchingGist = $existingGistList | Where-Object description -eq "GitRepositoryList" | Select-Object -First 1
                     if ($matchingGist) {
                         $GistId = $matchingGist.id
+                        Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.GistFound' -StringValues @($GistId) -Tag "PublishDevDirectoryList", "GistQuery"
+                    } else {
+                        Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.GistNotFound' -Tag "PublishDevDirectoryList", "GistQuery"
                     }
                 } catch {
-                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.QueryGistFailed' -StringValues @($_.Exception.Message)
+                    Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.QueryGistFailed' -StringValues @($_.Exception.Message) -Tag "PublishDevDirectoryList", "GistQuery"
                 }
+            } else {
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.UsingProvidedGistId' -StringValues @($GistId) -Tag "PublishDevDirectoryList", "Configuration"
             }
 
             $payload = @{
@@ -203,14 +242,19 @@
 
             $targetLabel = if ($GistId) { $targetLabelUpdateTemplate -f @($GistId) } else { $targetLabelCreate }
             if (-not $PSCmdlet.ShouldProcess($targetLabel, $publishAction)) {
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.PublishCanceled' -Tag "PublishDevDirectoryList", "Abort"
                 return
             }
 
             if ($GistId) {
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.UpdatingGist' -StringValues @($GistId) -Tag "PublishDevDirectoryList", "GistUpdate"
                 $response = Invoke-RestMethod -Method Patch -Uri "$($gistEndpoint)/$GistId" -Headers $requestHeaders -Body $payload -ContentType "application/json"
             } else {
+                Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.CreatingGist' -Tag "PublishDevDirectoryList", "GistCreate"
                 $response = Invoke-RestMethod -Method Post -Uri $gistEndpoint -Headers $requestHeaders -Body $payload -ContentType "application/json"
             }
+
+            Write-PSFMessage -Level Verbose -String 'PublishDevDirectoryList.Complete' -StringValues @($response.id, $response.html_url) -Tag "PublishDevDirectoryList", "Complete"
 
             # Return summary details so callers have the gist identifier for follow-up automation.
             [pscustomobject]@{
@@ -222,6 +266,7 @@
                 Files       = $response.files.Keys
             }
         } finally {
+            Write-PSFMessage -Level System -String 'PublishDevDirectoryList.CleanupTokens' -Tag "PublishDevDirectoryList", "Cleanup"
             if ($null -ne $requestHeaders -and $requestHeaders.ContainsKey("Authorization")) {
                 $requestHeaders["Authorization"] = $null
             }

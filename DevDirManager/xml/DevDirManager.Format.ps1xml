@@ -15,6 +15,10 @@
                     <TableColumnHeader></TableColumnHeader>
                     <TableColumnHeader></TableColumnHeader>
                     <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
+                    <TableColumnHeader></TableColumnHeader>
                 </TableHeaders>
                 <TableRowEntries>
                     <TableRowEntry>
@@ -26,7 +30,19 @@
                                 <PropertyName>RemoteName</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
+                                <PropertyName>IsRemoteAccessible</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
                                 <PropertyName>RemoteUrl</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>UserName</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>UserEmail</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>StatusDate</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>RootPath</PropertyName>
@@ -59,6 +75,22 @@
                             <ListItem>
                                 <Label>RemoteUrl</Label>
                                 <PropertyName>RemoteUrl</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>IsRemoteAccessible</Label>
+                                <PropertyName>IsRemoteAccessible</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>UserName</Label>
+                                <PropertyName>UserName</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>UserEmail</Label>
+                                <PropertyName>UserEmail</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>StatusDate</Label>
+                                <PropertyName>StatusDate</PropertyName>
                             </ListItem>
                             <ListItem>
                                 <Label>RootPath</Label>
