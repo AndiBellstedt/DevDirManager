@@ -2,7 +2,23 @@
 
 ## [Unreleased]
 
+### Changed
+- **Improved Logging for Existing Target Directories**
+  - Changed "target directory already exists" message level from Warning to VeryVerbose in `Restore-DevDirectory`
+  - This is expected behavior when directories exist without `-Force` or `-SkipExisting`, not an actionable warning
+  - Reduces noise in standard output while information remains available with `-Verbose`
+  - Updated function version: Restore-DevDirectory: 1.4.0 → 1.4.1
+
 ### Added
+- **Improved Git Clone with Progress Tracking and Output Control**
+  - `Restore-DevDirectory` now suppresses git command output by default (follows PowerShell best practice: no console output unless something goes wrong)
+  - Added `-ShowGitOutput` parameter to `Restore-DevDirectory` to explicitly display git clone output for troubleshooting
+  - Implemented progress bar with `Write-Progress` showing current operation, repository count, and percentage complete
+  - Progress tracking provides better user experience during long clone operations
+  - `Sync-DevDirectoryList` forwards `-ShowGitOutput` parameter to `Restore-DevDirectory`
+  - Updated function versions:
+    - Restore-DevDirectory: 1.3.0 → 1.4.0
+    - Sync-DevDirectoryList: 1.3.0 → 1.4.0
 - **Remote Accessibility Tracking Feature**
   - Added `IsRemoteAccessible` property to track whether repository remote URLs are accessible
   - `Get-DevDirectory` now checks remote accessibility by default using `git ls-remote` with timeout
@@ -26,8 +42,8 @@
   - Prevents regression of double backslash issues in relative paths
 - Updated function versions:
   - Get-DevDirectory: 1.2.1 → 1.3.2
-  - Restore-DevDirectory: 1.2.1 → 1.3.0
-  - Sync-DevDirectoryList: 1.2.2 → 1.3.0
+  - Restore-DevDirectory: 1.2.1 → 1.4.0
+  - Sync-DevDirectoryList: 1.2.2 → 1.4.0
 
 ### Fixed
 - Fixed missing localization string `RestoreDevDirectory.ConfigFailed` for git config error messages

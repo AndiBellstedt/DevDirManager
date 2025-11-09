@@ -24,6 +24,10 @@
     .PARAMETER SkipExisting
         Forwards to Restore-DevDirectory to skip cloning repositories whose directories already exist.
 
+    .PARAMETER ShowGitOutput
+        Forwards to Restore-DevDirectory to display git command output. By default, git output is
+        suppressed and only progress information is shown.
+
     .PARAMETER PassThru
         Returns the merged repository list after synchronization.
 
@@ -42,7 +46,7 @@
         repositories that exist only in the file and adding locally discovered repositories to the file.
 
     .NOTES
-        Version   : 1.3.0
+        Version   : 1.4.0
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Sync, Repository
@@ -74,6 +78,10 @@
         [Parameter()]
         [switch]
         $SkipExisting,
+
+        [Parameter()]
+        [switch]
+        $ShowGitOutput,
 
         [Parameter()]
         [switch]
@@ -322,6 +330,7 @@
 
                 if ($Force.IsPresent) { $restoreParameters.Force = $true }
                 if ($SkipExisting.IsPresent) { $restoreParameters.SkipExisting = $true }
+                if ($ShowGitOutput.IsPresent) { $restoreParameters.ShowGitOutput = $true }
 
                 # Invoke the restore command to clone missing repositories
                 Restore-DevDirectory @restoreParameters

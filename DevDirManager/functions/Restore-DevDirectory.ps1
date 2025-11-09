@@ -30,13 +30,23 @@
     .PARAMETER SkipExisting
         Skips repositories whose target directory already exists instead of throwing an error.
 
+    .PARAMETER ShowGitOutput
+        Displays git command output to the console. By default, git output is suppressed and only
+        progress information is shown. Use this parameter for detailed git clone output or troubleshooting.
+
     .EXAMPLE
         PS C:\> Import-DevDirectoryList -Path "repos.json" | Restore-DevDirectory -DestinationPath "C:\Repos"
 
         Restores the repositories under C:\Repos using the layout described in repos.json.
+        Shows progress bar and suppresses git output.
+
+    .EXAMPLE
+        PS C:\> Import-DevDirectoryList -Path "repos.json" | Restore-DevDirectory -DestinationPath "C:\Repos" -ShowGitOutput
+
+        Restores the repositories and displays detailed git clone output to the console.
 
     .NOTES
-        Version   : 1.3.0
+        Version   : 1.4.1
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Keywords  : Git, Restore, Clone
@@ -67,7 +77,11 @@
 
         [Parameter()]
         [switch]
-        $SkipExisting
+        $SkipExisting,
+
+        [Parameter()]
+        [switch]
+        $ShowGitOutput
     )
 
     begin {
@@ -97,12 +111,29 @@
         $invalidRelativePattern = $script:UnsafeRelativePathPattern
 
         $cloneActionTemplate = Get-PSFLocalizedString -Module 'DevDirManager' -Name 'RestoreDevDirectory.ActionClone'
+
+        # Collect all repositories for progress tracking
+        $repositoryQueue = [System.Collections.Generic.List[psobject]]::new()
     }
 
     process {
-        # Process each repository entry from the pipeline or InputObject array
-        # Each iteration attempts to clone one repository to its target path
+        # Collect repositories from pipeline
         foreach ($repository in $InputObject) {
+            if ($repository) {
+                $repositoryQueue.Add($repository)
+            }
+        }
+    }
+
+    end {
+        # Get total count for progress tracking
+        $totalCount = $repositoryQueue.Count
+        $currentIndex = 0
+
+        Write-PSFMessage -Level Verbose -Message "Processing $totalCount repositories for restore"
+
+        # Process each repository entry
+        foreach ($repository in $repositoryQueue) {
             # Skip null entries (can occur when pipeline sends empty objects)
             if (-not $repository) {
                 continue
@@ -115,24 +146,28 @@
             # Skip repositories missing a remote URL (cannot clone without a source)
             if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
                 Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.MissingRemoteUrl' -StringValues @($relativePath)
+                $currentIndex++
                 continue
             }
 
             # Skip repositories with inaccessible remotes (if IsRemoteAccessible property is set to false)
             if ($repository.PSObject.Properties.Match('IsRemoteAccessible') -and $repository.IsRemoteAccessible -eq $false) {
                 Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.InaccessibleRemoteSkipped' -StringValues @($relativePath, $remoteUrl)
+                $currentIndex++
                 continue
             }
 
             # Skip repositories missing a relative path (cannot determine target directory)
             if ([string]::IsNullOrWhiteSpace($relativePath)) {
                 Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.MissingRelativePath' -StringValues @($remoteUrl)
+                $currentIndex++
                 continue
             }
 
             # Reject paths that could escape the destination root (security check)
             if ($invalidRelativePattern.IsMatch($relativePath)) {
                 Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.UnsafeRelativePath' -StringValues @($relativePath)
+                $currentIndex++
                 continue
             }
 
@@ -143,6 +178,7 @@
             # Verify that the resolved target path is still within the destination root (defense-in-depth check)
             if (-not $targetPath.StartsWith($normalizedDestination, [System.StringComparison]::OrdinalIgnoreCase)) {
                 Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.OutOfScopePath' -StringValues @($relativePath)
+                $currentIndex++
                 continue
             }
 
@@ -160,11 +196,13 @@
             if (Test-Path -LiteralPath $targetPath -PathType Container) {
                 if ($SkipExisting.IsPresent) {
                     Write-PSFMessage -Level Verbose -String 'RestoreDevDirectory.ExistingTargetVerbose' -StringValues @($targetPath)
+                    $currentIndex++
                     continue
                 }
 
                 if (-not $Force.IsPresent) {
-                    Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.TargetExistsWarning' -StringValues @($targetPath)
+                    Write-PSFMessage -Level VeryVerbose -String 'RestoreDevDirectory.TargetExistsWarning' -StringValues @($targetPath)
+                    $currentIndex++
                     continue
                 }
 
@@ -174,13 +212,34 @@
 
             # Check for WhatIf/Confirm before performing the clone operation
             if (-not $PSCmdlet.ShouldProcess($targetPath, ($cloneActionTemplate -f @($remoteUrl)))) {
+                $currentIndex++
                 continue
             }
+
+            # Update progress bar
+            $currentIndex++
+            $percentComplete = [int](($currentIndex / $totalCount) * 100)
+            $progressParams = @{
+                Activity         = "Cloning repositories"
+                Status           = "Processing repository $currentIndex of $totalCount"
+                CurrentOperation = "Cloning: $relativePath"
+                PercentComplete  = $percentComplete
+            }
+            Write-Progress @progressParams
+
+            Write-PSFMessage -Level Verbose -Message "Cloning repository $currentIndex/$totalCount`: $remoteUrl -> $targetPath"
 
             # Build the git clone command with --recurse-submodules to include nested repositories
             # Use -- separator to prevent URLs starting with - from being interpreted as options
             $argumentList = @("clone", "--recurse-submodules", "--", $remoteUrl, $targetPath)
-            $cloneProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $argumentList -NoNewWindow -Wait -PassThru
+
+            if ($ShowGitOutput) {
+                # Show git output to console when explicitly requested
+                $cloneProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $argumentList -NoNewWindow -Wait -PassThru
+            } else {
+                # Suppress git output by default (redirect to null)
+                $cloneProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $argumentList -NoNewWindow -Wait -PassThru -RedirectStandardOutput ([System.IO.Path]::GetTempFileName()) -RedirectStandardError ([System.IO.Path]::GetTempFileName())
+            }
 
             # Check the git clone exit code and log errors for failed clones
             if ($cloneProcess.ExitCode -ne 0) {
@@ -199,14 +258,22 @@
                     # Use git config --local to set repository-specific user identity
                     if (-not [string]::IsNullOrWhiteSpace($userName)) {
                         $configArgs = @("config", "--local", "user.name", $userName)
-                        $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru
+                        if ($ShowGitOutput) {
+                            $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru
+                        } else {
+                            $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru -RedirectStandardOutput ([System.IO.Path]::GetTempFileName()) -RedirectStandardError ([System.IO.Path]::GetTempFileName())
+                        }
                         if ($configProcess.ExitCode -ne 0) {
                             Write-PSFMessage -Level Error -String 'RestoreDevDirectory.ConfigFailed' -StringValues @("user.name", $userName, $targetPath, $configProcess.ExitCode)
                         }
                     }
                     if (-not [string]::IsNullOrWhiteSpace($userEmail)) {
                         $configArgs = @("config", "--local", "user.email", $userEmail)
-                        $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru
+                        if ($ShowGitOutput) {
+                            $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru
+                        } else {
+                            $configProcess = Start-Process -FilePath $resolvedGitPath -ArgumentList $configArgs -WorkingDirectory $targetPath -NoNewWindow -Wait -PassThru -RedirectStandardOutput ([System.IO.Path]::GetTempFileName()) -RedirectStandardError ([System.IO.Path]::GetTempFileName())
+                        }
                         if ($configProcess.ExitCode -ne 0) {
                             Write-PSFMessage -Level Error -String 'RestoreDevDirectory.ConfigFailed' -StringValues @("user.email", $userEmail, $targetPath, $configProcess.ExitCode)
                         }
@@ -222,5 +289,8 @@
                 Status     = "Cloned"
             }
         }
+
+        # Complete the progress bar
+        Write-Progress -Activity "Cloning repositories" -Completed
     }
 }
