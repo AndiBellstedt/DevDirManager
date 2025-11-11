@@ -36,9 +36,9 @@
         Creates the directory with explicit error handling, ensuring any failures are caught.
 
     .NOTES
-        Version   : 1.0.1
         Author    : Copilot, Andi Bellstedt
         Date      : 2025-11-09
+        Version   : 1.0.1
         Keywords  : directory, folder, creation, filesystem, path
 
     .LINK

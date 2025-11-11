@@ -40,7 +40,6 @@
         Author    : Andi Bellstedt, Copilot
         Date      : 2025-11-09
         Version   : 1.0.1
-        Version   : 1.0.0
         Keywords  : Path, Internal, Helper, Normalization
 
     #>

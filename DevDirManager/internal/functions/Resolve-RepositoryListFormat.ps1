@@ -48,9 +48,9 @@
         Returns "JSON" since explicit format parameter overrides extension inference.
 
     .NOTES
-        Version   : 1.0.1
         Author    : Copilot, Andi Bellstedt
         Date      : 2025-01-09
+        Version   : 1.0.1
         Keywords  : format, inference, extension, repository, list
     #>
     [CmdletBinding()]
