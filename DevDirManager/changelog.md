@@ -1,5 +1,15 @@
 ﻿# Changelog
 
+## [Unreleased]
+
+### Added
+- Introduced `Show-DevDirectoryDashboard`, a localized WPF dashboard that unifies discover, export, import, restore, and sync workflows in a single window.
+- Added English, Spanish, and French localization entries for the new dashboard experience.
+- Created `Show-DevDirectoryDashboard.Tests.ps1` to verify automation-friendly PassThru usage and control discovery when WPF is available.
+
+### Changed
+- Exposed dashboard PassThru control and state maps as strongly-typed PSCustomObject instances for easier scripting.
+
 ## [1.3.0] - 2025-11-09
 
 ### Added

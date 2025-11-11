@@ -48,6 +48,7 @@
         'Import-DevDirectoryList'
         'Publish-DevDirectoryList'
         'Restore-DevDirectory'
+        'Show-DevDirectoryDashboard'
         'Sync-DevDirectoryList'
     )
 
