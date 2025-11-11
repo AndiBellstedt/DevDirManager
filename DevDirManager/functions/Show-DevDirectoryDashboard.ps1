@@ -165,12 +165,12 @@ function Show-DevDirectoryDashboard {
                     $accentColor = $accentBrush.Color
                     $luminance = (0.2126 * ($accentColor.R / 255.0)) + (0.7152 * ($accentColor.G / 255.0)) + (0.0722 * ($accentColor.B / 255.0))
                     $foregroundHex = if ($luminance -gt 0.65) { '#FF0F172A' } else { '#FFFFFFFF' }
-                    $w.Resources['Brush.ButtonText'] = $createBrush.Invoke($foregroundHex)
+                    $w.Resources['Brush.ButtonText'] = $createBrush.Invoke($foregroundHex)[0]
                 }
             }
         }
 
-        $applyTheme.Invoke($window)
+        $applyTheme.Invoke($window)[0]
 
         $controls = [ordered]@{
             HeaderText                       = $window.FindName('HeaderText')
@@ -283,7 +283,7 @@ function Show-DevDirectoryDashboard {
                 [object[]]$values
             )
 
-            $template = $getLocalized.Invoke($name)
+            $template = $getLocalized.Invoke($name)[0]
             if ($null -ne $values -and $values.Count -gt 0) {
                 return [string]::Format($template, $values)
             }
@@ -297,7 +297,7 @@ function Show-DevDirectoryDashboard {
                 [object[]]$values
             )
 
-            $statusText = $formatLocalized.Invoke($name, $values)
+            $statusText = $formatLocalized.Invoke($name, $values)[0]
             $controls.StatusText.Text = $statusText
         }
 
@@ -317,7 +317,7 @@ function Show-DevDirectoryDashboard {
 
         $addFormatOption = {
             param([string]$valueKey)
-            $display = $getLocalized.Invoke("ShowDevDirectoryDashboard.Format.$($valueKey)")
+            $display = $getLocalized.Invoke("ShowDevDirectoryDashboard.Format.$($valueKey)")[0]
             $state.ExportFormatOptions.Add([pscustomobject]@{
                     Display = $display
                     Value   = $valueKey
@@ -325,78 +325,78 @@ function Show-DevDirectoryDashboard {
         }
 
         foreach ($formatValue in 'JSON', 'CSV', 'XML') {
-            $addFormatOption.Invoke($formatValue)
+            $addFormatOption.Invoke($formatValue)[0]
         }
 
         $controls.ExportFormatCombo.SelectedValue = 'JSON'
 
-        $window.Title = $getLocalized.Invoke('ShowDevDirectoryDashboard.WindowTitle')
-        $controls.HeaderText.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Header')
-        $controls.SubHeaderText.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SubHeader')
-        $controls.DiscoverTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverTabHeader')
-        $controls.DiscoverPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverPathLabel')
-        $controls.DiscoverBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')
-        $controls.DiscoverScanButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ScanButton')
-        $controls.DiscoverRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')
-        $controls.DiscoverRemoteNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteName')
-        $controls.DiscoverRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')
-        $controls.DiscoverIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')
-        $controls.DiscoverUserNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserName')
-        $controls.DiscoverUserEmailColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserEmail')
-        $controls.DiscoverStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')
-        $controls.ExportTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportTabHeader')
-        $controls.ExportFormatLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportFormatLabel')
-        $controls.ExportPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportPathLabel')
-        $controls.ExportBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')
-        $controls.ExportRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportRunButton')
-        $controls.ExportRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')
-        $controls.ExportRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')
-        $controls.ExportIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')
-        $controls.ExportStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')
-        $controls.ImportTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportTabHeader')
-        $controls.ImportPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportPathLabel')
-        $controls.ImportBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')
-        $controls.ImportLoadButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportLoadButton')
-        $controls.ImportRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')
-        $controls.ImportRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')
-        $controls.ImportIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')
-        $controls.ImportUserNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserName')
-        $controls.ImportUserEmailColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserEmail')
-        $controls.RestoreTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreTabHeader')
-        $controls.RestoreListPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreListPathLabel')
-        $controls.RestoreListBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')
-        $controls.RestoreDestinationLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreDestinationLabel')
-        $controls.RestoreDestinationBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')
-        $controls.RestoreRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreRunButton')
-        $controls.RestoreForceCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreForce')
-        $controls.RestoreSkipExistingCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSkipExisting')
-        $controls.RestoreShowGitOutputCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreShowGitOutput')
-        $controls.RestoreWhatIfCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreWhatIf')
-        $controls.RestoreRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')
-        $controls.RestoreRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')
-        $controls.RestoreIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')
-        $controls.RestoreStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')
-        $controls.SyncTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncTabHeader')
-        $controls.SyncDirectoryLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncDirectoryLabel')
-        $controls.SyncDirectoryBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')
-        $controls.SyncListPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncListPathLabel')
-        $controls.SyncListBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')
-        $controls.SyncRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncRunButton')
-        $controls.SyncForceCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncForce')
-        $controls.SyncSkipExistingCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncSkipExisting')
-        $controls.SyncShowGitOutputCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncShowGitOutput')
-        $controls.SyncWhatIfCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncWhatIf')
-        $controls.SyncRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')
-        $controls.SyncRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')
-        $controls.SyncIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')
-        $controls.SyncStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')
+        $window.Title = $getLocalized.Invoke('ShowDevDirectoryDashboard.WindowTitle')[0]
+        $controls.HeaderText.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Header')[0]
+        $controls.SubHeaderText.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SubHeader')[0]
+        $controls.DiscoverTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverTabHeader')[0]
+        $controls.DiscoverPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverPathLabel')[0]
+        $controls.DiscoverBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.DiscoverScanButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ScanButton')[0]
+        $controls.DiscoverRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.DiscoverRemoteNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteName')[0]
+        $controls.DiscoverRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
+        $controls.DiscoverIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
+        $controls.DiscoverUserNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserName')[0]
+        $controls.DiscoverUserEmailColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserEmail')[0]
+        $controls.DiscoverStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
+        $controls.ExportTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportTabHeader')[0]
+        $controls.ExportFormatLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportFormatLabel')[0]
+        $controls.ExportPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportPathLabel')[0]
+        $controls.ExportBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.ExportRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportRunButton')[0]
+        $controls.ExportRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.ExportRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
+        $controls.ExportIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
+        $controls.ExportStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
+        $controls.ImportTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportTabHeader')[0]
+        $controls.ImportPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportPathLabel')[0]
+        $controls.ImportBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.ImportLoadButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportLoadButton')[0]
+        $controls.ImportRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.ImportRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
+        $controls.ImportIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
+        $controls.ImportUserNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserName')[0]
+        $controls.ImportUserEmailColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserEmail')[0]
+        $controls.RestoreTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreTabHeader')[0]
+        $controls.RestoreListPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreListPathLabel')[0]
+        $controls.RestoreListBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.RestoreDestinationLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreDestinationLabel')[0]
+        $controls.RestoreDestinationBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.RestoreRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreRunButton')[0]
+        $controls.RestoreForceCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreForce')[0]
+        $controls.RestoreSkipExistingCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSkipExisting')[0]
+        $controls.RestoreShowGitOutputCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreShowGitOutput')[0]
+        $controls.RestoreWhatIfCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreWhatIf')[0]
+        $controls.RestoreRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.RestoreRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
+        $controls.RestoreIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
+        $controls.RestoreStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
+        $controls.SyncTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncTabHeader')[0]
+        $controls.SyncDirectoryLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncDirectoryLabel')[0]
+        $controls.SyncDirectoryBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.SyncListPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncListPathLabel')[0]
+        $controls.SyncListBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.SyncRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncRunButton')[0]
+        $controls.SyncForceCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncForce')[0]
+        $controls.SyncSkipExistingCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncSkipExisting')[0]
+        $controls.SyncShowGitOutputCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncShowGitOutput')[0]
+        $controls.SyncWhatIfCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncWhatIf')[0]
+        $controls.SyncRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.SyncRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
+        $controls.SyncIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
+        $controls.SyncStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
 
-        $setStatus.Invoke('ShowDevDirectoryDashboard.Status.Ready', @())
-        $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @(0))
-        $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @(0))
-        $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @(0))
-        $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @(0))
-        $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @(0))
+        $setStatus.Invoke('ShowDevDirectoryDashboard.Status.Ready', @()[0])
+        $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @(0)[0])
+        $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @(0)[0])
+        $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @(0)[0])
+        $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @(0)[0])
+        $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @(0)[0])
 
         if ($RootPath) {
             $controls.DiscoverPathBox.Text = $RootPath
@@ -460,7 +460,7 @@ function Show-DevDirectoryDashboard {
         }
 
         $controls.DiscoverBrowseButton.Add_Click({
-                $selected = $pickFolder.Invoke($controls.DiscoverPathBox.Text)
+                $selected = $pickFolder.Invoke($controls.DiscoverPathBox.Text)[0]
                 if ($selected) {
                     $controls.DiscoverPathBox.Text = $selected
                 }
@@ -473,19 +473,19 @@ function Show-DevDirectoryDashboard {
                 }
 
                 try {
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ScanStarted', @($targetPath))
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ScanStarted', @($targetPath)[0])
                     $window.Cursor = [System.Windows.Input.Cursors]::Wait
                     $repositories = Get-DevDirectory -RootPath $targetPath
-                    $populateCollection.Invoke($state.DiscoverItems, $repositories)
-                    $populateCollection.Invoke($state.ExportPreviewItems, $repositories)
-                    $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @($state.DiscoverItems.Count))
-                    $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @($state.ExportPreviewItems.Count))
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ScanComplete', @($state.DiscoverItems.Count))
+                    $populateCollection.Invoke($state.DiscoverItems, $repositories)[0]
+                    $populateCollection.Invoke($state.ExportPreviewItems, $repositories)[0]
+                    $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @($state.DiscoverItems.Count)[0])
+                    $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @($state.ExportPreviewItems.Count)[0])
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ScanComplete', @($state.DiscoverItems.Count)[0])
                     Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.ScanCompleted' -StringValues @($targetPath, $state.DiscoverItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Discover'
                 } catch {
                     Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Discover'
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message))
-                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
                 } finally {
                     $window.Cursor = [System.Windows.Input.Cursors]::Arrow
                 }
@@ -493,7 +493,7 @@ function Show-DevDirectoryDashboard {
 
         $controls.ExportBrowseButton.Add_Click({
                 $formatValue = [string]$controls.ExportFormatCombo.SelectedValue
-                $targetPath = $pickSaveFile.Invoke($controls.ExportPathBox.Text, $formatValue)
+                $targetPath = $pickSaveFile.Invoke($controls.ExportPathBox.Text, $formatValue)[0]
                 if ($targetPath) {
                     $controls.ExportPathBox.Text = $targetPath
                 }
@@ -504,17 +504,17 @@ function Show-DevDirectoryDashboard {
                 $outputPath = $controls.ExportPathBox.Text
 
                 if ($state.ExportPreviewItems.Count -eq 0) {
-                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.NoRepositories'), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information) | Out-Null
+                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.NoRepositories')[0], $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information) | Out-Null
                     return
                 }
 
                 if ([string]::IsNullOrWhiteSpace($outputPath)) {
-                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.ExportPathMissing'), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
+                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.ExportPathMissing')[0], $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
                     return
                 }
 
                 try {
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ExportStarted', @($outputPath))
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ExportStarted', @($outputPath)[0])
                     $window.Cursor = [System.Windows.Input.Cursors]::Wait
 
                     $exportParams = @{
@@ -525,21 +525,21 @@ function Show-DevDirectoryDashboard {
 
                     $state.ExportPreviewItems | Export-DevDirectoryList @exportParams
 
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ExportComplete', @($outputPath))
-                    $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @($state.ExportPreviewItems.Count))
-                    [System.Windows.MessageBox]::Show($window, $formatLocalized.Invoke('ShowDevDirectoryDashboard.Message.ExportSuccess', @($outputPath)), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information) | Out-Null
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ExportComplete', @($outputPath)[0])
+                    $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @($state.ExportPreviewItems.Count)[0])
+                    [System.Windows.MessageBox]::Show($window, $formatLocalized.Invoke('ShowDevDirectoryDashboard.Message.ExportSuccess', @($outputPath)[0]), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information) | Out-Null
                     Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.ExportCompleted' -StringValues @($outputPath, $formatValue, $state.ExportPreviewItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Export'
                 } catch {
                     Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Export'
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message))
-                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
                 } finally {
                     $window.Cursor = [System.Windows.Input.Cursors]::Arrow
                 }
             })
 
         $controls.ImportBrowseButton.Add_Click({
-                $selected = $pickOpenFile.Invoke($controls.ImportPathBox.Text)
+                $selected = $pickOpenFile.Invoke($controls.ImportPathBox.Text)[0]
                 if ($selected) {
                     $controls.ImportPathBox.Text = $selected
                 }
@@ -548,33 +548,33 @@ function Show-DevDirectoryDashboard {
         $controls.ImportLoadButton.Add_Click({
                 $path = $controls.ImportPathBox.Text
                 if ([string]::IsNullOrWhiteSpace($path)) {
-                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.ImportPathMissing'), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
+                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.ImportPathMissing')[0], $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
                     return
                 }
 
                 try {
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ImportStarted', @($path))
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ImportStarted', @($path)[0])
                     $window.Cursor = [System.Windows.Input.Cursors]::Wait
                     $imported = Import-DevDirectoryList -Path $path -ErrorAction Stop
-                    $populateCollection.Invoke($state.ImportItems, $imported)
-                    $populateCollection.Invoke($state.RestoreItems, $imported)
-                    $populateCollection.Invoke($state.SyncItems, $imported)
-                    $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @($state.ImportItems.Count))
-                    $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @($state.RestoreItems.Count))
-                    $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count))
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ImportComplete', @($state.ImportItems.Count))
+                    $populateCollection.Invoke($state.ImportItems, $imported)[0]
+                    $populateCollection.Invoke($state.RestoreItems, $imported)[0]
+                    $populateCollection.Invoke($state.SyncItems, $imported)[0]
+                    $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @($state.ImportItems.Count)[0])
+                    $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @($state.RestoreItems.Count)[0])
+                    $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count)[0])
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ImportComplete', @($state.ImportItems.Count)[0])
                     Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.ImportCompleted' -StringValues @($path, $state.ImportItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Import'
                 } catch {
                     Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Import'
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message))
-                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
                 } finally {
                     $window.Cursor = [System.Windows.Input.Cursors]::Arrow
                 }
             })
 
         $controls.RestoreListBrowseButton.Add_Click({
-                $selected = $pickOpenFile.Invoke($controls.RestoreListPathBox.Text)
+                $selected = $pickOpenFile.Invoke($controls.RestoreListPathBox.Text)[0]
                 if ($selected) {
                     $controls.RestoreListPathBox.Text = $selected
                     $controls.ImportPathBox.Text = $selected
@@ -583,7 +583,7 @@ function Show-DevDirectoryDashboard {
             })
 
         $controls.RestoreDestinationBrowseButton.Add_Click({
-                $selected = $pickFolder.Invoke($controls.RestoreDestinationBox.Text)
+                $selected = $pickFolder.Invoke($controls.RestoreDestinationBox.Text)[0]
                 if ($selected) {
                     $controls.RestoreDestinationBox.Text = $selected
                 }
@@ -594,17 +594,17 @@ function Show-DevDirectoryDashboard {
                 $destination = $controls.RestoreDestinationBox.Text
 
                 if ($state.RestoreItems.Count -eq 0) {
-                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.NoRepositories'), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information) | Out-Null
+                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.NoRepositories')[0], $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information) | Out-Null
                     return
                 }
 
                 if ([string]::IsNullOrWhiteSpace($destination)) {
-                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.RestorePathsMissing'), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
+                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.RestorePathsMissing')[0], $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
                     return
                 }
 
                 try {
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.RestoreStarted', @($destination))
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.RestoreStarted', @($destination)[0])
                     $window.Cursor = [System.Windows.Input.Cursors]::Wait
 
                     $restoreParams = @{
@@ -619,26 +619,26 @@ function Show-DevDirectoryDashboard {
 
                     $state.RestoreItems | Restore-DevDirectory @restoreParams
 
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.RestoreComplete', @($destination))
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.RestoreComplete', @($destination)[0])
                     Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.RestoreCompleted' -StringValues @($destination, $state.RestoreItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Restore'
                 } catch {
                     Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Restore'
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message))
-                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
                 } finally {
                     $window.Cursor = [System.Windows.Input.Cursors]::Arrow
                 }
             })
 
         $controls.SyncDirectoryBrowseButton.Add_Click({
-                $selected = $pickFolder.Invoke($controls.SyncDirectoryBox.Text)
+                $selected = $pickFolder.Invoke($controls.SyncDirectoryBox.Text)[0]
                 if ($selected) {
                     $controls.SyncDirectoryBox.Text = $selected
                 }
             })
 
         $controls.SyncListBrowseButton.Add_Click({
-                $selected = $pickOpenFile.Invoke($controls.SyncListPathBox.Text)
+                $selected = $pickOpenFile.Invoke($controls.SyncListPathBox.Text)[0]
                 if ($selected) {
                     $controls.SyncListPathBox.Text = $selected
                     $controls.ImportPathBox.Text = $selected
@@ -651,12 +651,12 @@ function Show-DevDirectoryDashboard {
                 $listPath = $controls.SyncListPathBox.Text
 
                 if ([string]::IsNullOrWhiteSpace($directory) -or [string]::IsNullOrWhiteSpace($listPath)) {
-                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.SyncPathsMissing'), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
+                    [System.Windows.MessageBox]::Show($window, $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.SyncPathsMissing')[0], $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning) | Out-Null
                     return
                 }
 
                 try {
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncStarted', @($directory, $listPath))
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncStarted', @($directory, $listPath)[0])
                     $window.Cursor = [System.Windows.Input.Cursors]::Wait
 
                     $syncParams = @{
@@ -672,14 +672,14 @@ function Show-DevDirectoryDashboard {
                     if ($controls.SyncWhatIfCheckBox.IsChecked) { $syncParams.WhatIf = $true }
 
                     $syncResult = Sync-DevDirectoryList @syncParams
-                    $populateCollection.Invoke($state.SyncItems, $syncResult)
-                    $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count))
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncComplete', @($state.SyncItems.Count))
+                    $populateCollection.Invoke($state.SyncItems, $syncResult)[0]
+                    $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count)[0])
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncComplete', @($state.SyncItems.Count)[0])
                     Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.SyncCompleted' -StringValues @($directory, $listPath, $state.SyncItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Sync'
                 } catch {
                     Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Sync'
-                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message))
-                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle'), [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                    $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                    [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
                 } finally {
                     $window.Cursor = [System.Windows.Input.Cursors]::Arrow
                 }
