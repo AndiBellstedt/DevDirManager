@@ -45,6 +45,7 @@
     - basic parameter validation (no content validation)
     - comment-based help sections for all functions
 - Ensure that you do not build duplicate tests for already existing tests. Like basic coding compliance items from the template (within the general folder)
+- It must be ensured, that no tests-file contains Import-Module or Remove-Module statements. The module is already imported in the pester.ps1 file and importing it again within the tests-files can lead to unexpected behavior.
 - When adding new functions, ensure that you add pester tests for the new functions, covering at least:
     - extended parameter validation (content validation as well, as long, as applicable)
     - functional tests to ensure the function works as expected
