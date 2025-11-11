@@ -191,19 +191,12 @@ function Show-DevDirectoryDashboard {
             DiscoverUserEmailColumn          = $window.FindName('DiscoverUserEmailColumn')
             DiscoverStatusDateColumn         = $window.FindName('DiscoverStatusDateColumn')
             DiscoverSummaryText              = $window.FindName('DiscoverSummaryText')
-            ExportTabHeader                  = $window.FindName('ExportTabHeader')
             ExportFormatLabel                = $window.FindName('ExportFormatLabel')
             ExportFormatCombo                = $window.FindName('ExportFormatCombo')
             ExportPathLabel                  = $window.FindName('ExportPathLabel')
             ExportPathBox                    = $window.FindName('ExportPathBox')
             ExportBrowseButton               = $window.FindName('ExportBrowseButton')
             ExportRunButton                  = $window.FindName('ExportRunButton')
-            ExportPreviewGrid                = $window.FindName('ExportPreviewGrid')
-            ExportRelativePathColumn         = $window.FindName('ExportRelativePathColumn')
-            ExportRemoteUrlColumn            = $window.FindName('ExportRemoteUrlColumn')
-            ExportIsRemoteAccessibleColumn   = $window.FindName('ExportIsRemoteAccessibleColumn')
-            ExportStatusDateColumn           = $window.FindName('ExportStatusDateColumn')
-            ExportStatusText                 = $window.FindName('ExportStatusText')
             ImportTabHeader                  = $window.FindName('ImportTabHeader')
             ImportPathLabel                  = $window.FindName('ImportPathLabel')
             ImportPathBox                    = $window.FindName('ImportPathBox')
@@ -264,7 +257,6 @@ function Show-DevDirectoryDashboard {
         }
 
         $controls.DiscoverGrid.ItemsSource = $state.DiscoverItems
-        $controls.ExportPreviewGrid.ItemsSource = $state.ExportPreviewItems
         $controls.ImportGrid.ItemsSource = $state.ImportItems
         $controls.RestoreGrid.ItemsSource = $state.RestoreItems
         $controls.SyncGrid.ItemsSource = $state.SyncItems
@@ -304,13 +296,19 @@ function Show-DevDirectoryDashboard {
         $populateCollection = {
             param(
                 [System.Collections.ObjectModel.ObservableCollection[psobject]]$collection,
-                [System.Collections.IEnumerable]$items
+                $items
             )
 
             $collection.Clear()
             if ($null -ne $items) {
-                foreach ($item in $items) {
-                    $collection.Add($item)
+                # Handle both single objects and collections
+                if ($items -is [System.Collections.IEnumerable] -and $items -isnot [string]) {
+                    foreach ($item in $items) {
+                        $collection.Add($item)
+                    }
+                } else {
+                    # Single object
+                    $collection.Add($items)
                 }
             }
         }
@@ -344,15 +342,10 @@ function Show-DevDirectoryDashboard {
         $controls.DiscoverUserNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserName')[0]
         $controls.DiscoverUserEmailColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserEmail')[0]
         $controls.DiscoverStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
-        $controls.ExportTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportTabHeader')[0]
         $controls.ExportFormatLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportFormatLabel')[0]
         $controls.ExportPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportPathLabel')[0]
         $controls.ExportBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
         $controls.ExportRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ExportRunButton')[0]
-        $controls.ExportRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
-        $controls.ExportRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
-        $controls.ExportIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
-        $controls.ExportStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
         $controls.ImportTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportTabHeader')[0]
         $controls.ImportPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportPathLabel')[0]
         $controls.ImportBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
@@ -393,7 +386,6 @@ function Show-DevDirectoryDashboard {
 
         $setStatus.Invoke('ShowDevDirectoryDashboard.Status.Ready', @()[0])
         $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @(0)[0])
-        $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @(0)[0])
         $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @(0)[0])
         $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @(0)[0])
         $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @(0)[0])
@@ -507,10 +499,9 @@ function Show-DevDirectoryDashboard {
                         try {
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ScanStarted', @($targetPath)[0])
                             $repositories = Get-DevDirectory -RootPath $targetPath
-                            $populateCollection.Invoke($state.DiscoverItems, $repositories)[0]
-                            $populateCollection.Invoke($state.ExportPreviewItems, $repositories)[0]
+                            $populateCollection.Invoke($state.DiscoverItems, $repositories)
+                            $populateCollection.Invoke($state.ExportPreviewItems, $repositories)
                             $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @($state.DiscoverItems.Count)[0])
-                            $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @($state.ExportPreviewItems.Count)[0])
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ScanComplete', @($state.DiscoverItems.Count)[0])
                             Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.ScanCompleted' -StringValues @($targetPath, $state.DiscoverItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Discover'
                         } catch {
@@ -556,7 +547,6 @@ function Show-DevDirectoryDashboard {
                             $state.ExportPreviewItems | Export-DevDirectoryList @exportParams
 
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ExportComplete', @($outputPath)[0])
-                            $controls.ExportStatusText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ExportSummaryTemplate', @($state.ExportPreviewItems.Count)[0])
                             [System.Windows.MessageBox]::Show($window, $formatLocalized.Invoke('ShowDevDirectoryDashboard.Message.ExportSuccess', @($outputPath)[0]), $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information) | Out-Null
                             Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.ExportCompleted' -StringValues @($outputPath, $formatValue, $state.ExportPreviewItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Export'
                         } catch {
@@ -585,9 +575,9 @@ function Show-DevDirectoryDashboard {
                         try {
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ImportStarted', @($path)[0])
                             $imported = Import-DevDirectoryList -Path $path -ErrorAction Stop
-                            $populateCollection.Invoke($state.ImportItems, $imported)[0]
-                            $populateCollection.Invoke($state.RestoreItems, $imported)[0]
-                            $populateCollection.Invoke($state.SyncItems, $imported)[0]
+                            $populateCollection.Invoke($state.ImportItems, $imported)
+                            $populateCollection.Invoke($state.RestoreItems, $imported)
+                            $populateCollection.Invoke($state.SyncItems, $imported)
                             $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @($state.ImportItems.Count)[0])
                             $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @($state.RestoreItems.Count)[0])
                             $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count)[0])
@@ -699,7 +689,7 @@ function Show-DevDirectoryDashboard {
                             if ($controls.SyncWhatIfCheckBox.IsChecked) { $syncParams.WhatIf = $true }
 
                             $syncResult = Sync-DevDirectoryList @syncParams
-                            $populateCollection.Invoke($state.SyncItems, $syncResult)[0]
+                            $populateCollection.Invoke($state.SyncItems, $syncResult)
                             $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count)[0])
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncComplete', @($state.SyncItems.Count)[0])
                             Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.SyncCompleted' -StringValues @($directory, $listPath, $state.SyncItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Sync'

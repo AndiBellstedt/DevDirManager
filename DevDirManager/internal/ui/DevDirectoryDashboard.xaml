@@ -170,16 +170,46 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="DataGridColumnHeader">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center">
-                                <ContentPresenter.Resources>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
-                                        <Setter Property="FontWeight" Value="SemiBold" />
+                        <Grid>
+                            <Border x:Name="BackgroundBorder" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center">
+                                    <ContentPresenter.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                        </Style>
+                                    </ContentPresenter.Resources>
+                                </ContentPresenter>
+                            </Border>
+                            <Thumb x:Name="PART_LeftHeaderGripper" HorizontalAlignment="Left" Width="8" Cursor="SizeWE">
+                                <Thumb.Style>
+                                    <Style TargetType="Thumb">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Thumb">
+                                                    <Border Background="{TemplateBinding Background}" />
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
                                     </Style>
-                                </ContentPresenter.Resources>
-                            </ContentPresenter>
-                        </Border>
+                                </Thumb.Style>
+                            </Thumb>
+                            <Thumb x:Name="PART_RightHeaderGripper" HorizontalAlignment="Right" Width="8" Cursor="SizeWE">
+                                <Thumb.Style>
+                                    <Style TargetType="Thumb">
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Thumb">
+                                                    <Border Background="{TemplateBinding Background}" />
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </Thumb.Style>
+                            </Thumb>
+                        </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
@@ -254,31 +284,11 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
-                                <DataGrid x:Name="DiscoverGrid" GridLinesVisibility="None">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn x:Name="DiscoverRelativePathColumn" Binding="{Binding RelativePath}" Width="220" />
-                                        <DataGridTextColumn x:Name="DiscoverRemoteNameColumn" Binding="{Binding RemoteName}" Width="140" />
-                                        <DataGridTextColumn x:Name="DiscoverRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="260" />
-                                        <DataGridTextColumn x:Name="DiscoverIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="140" />
-                                        <DataGridTextColumn x:Name="DiscoverUserNameColumn" Binding="{Binding UserName}" Width="180" />
-                                        <DataGridTextColumn x:Name="DiscoverUserEmailColumn" Binding="{Binding UserEmail}" Width="220" />
-                                        <DataGridTextColumn x:Name="DiscoverStatusDateColumn" Binding="{Binding StatusDate}" Width="160" />
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </Border>
-
                             <TextBlock x:Name="DiscoverSummaryText" Margin="0,12,0,0" Foreground="{StaticResource Brush.SecondaryText}" />
-                        </StackPanel>
-                    </ScrollViewer>
-                </TabItem>
 
-                <TabItem>
-                    <TabItem.Header>
-                        <TextBlock x:Name="ExportTabHeader" />
-                    </TabItem.Header>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="28,24">
+                            <!-- Export Controls Section -->
+                            <Separator Margin="0,32,0,24" Background="{StaticResource Brush.Border}" />
+
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
@@ -303,18 +313,20 @@
                                 </StackPanel>
                             </Grid>
 
+                            <!-- DataGrid moved below export controls -->
                             <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
-                                <DataGrid x:Name="ExportPreviewGrid" GridLinesVisibility="None">
+                                <DataGrid x:Name="DiscoverGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True" ColumnHeaderHeight="34">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn x:Name="ExportRelativePathColumn" Binding="{Binding RelativePath}" Width="220" />
-                                        <DataGridTextColumn x:Name="ExportRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="260" />
-                                        <DataGridTextColumn x:Name="ExportIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="160" />
-                                        <DataGridTextColumn x:Name="ExportStatusDateColumn" Binding="{Binding StatusDate}" Width="160" />
+                                        <DataGridTextColumn x:Name="DiscoverRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="DiscoverRemoteNameColumn" Binding="{Binding RemoteName}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="DiscoverRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
+                                        <DataGridTextColumn x:Name="DiscoverIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="DiscoverUserNameColumn" Binding="{Binding UserName}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="DiscoverUserEmailColumn" Binding="{Binding UserEmail}" Width="Auto" MinWidth="150" />
+                                        <DataGridTextColumn x:Name="DiscoverStatusDateColumn" Binding="{Binding StatusDate}" Width="Auto" MinWidth="140" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
-
-                            <TextBlock x:Name="ExportStatusText" Margin="0,12,0,0" Foreground="{StaticResource Brush.SecondaryText}" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
@@ -340,13 +352,13 @@
                             </Grid>
 
                             <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
-                                <DataGrid x:Name="ImportGrid" GridLinesVisibility="None">
+                                <DataGrid x:Name="ImportGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn x:Name="ImportRelativePathColumn" Binding="{Binding RelativePath}" Width="220" />
-                                        <DataGridTextColumn x:Name="ImportRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="260" />
-                                        <DataGridTextColumn x:Name="ImportIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="160" />
-                                        <DataGridTextColumn x:Name="ImportUserNameColumn" Binding="{Binding UserName}" Width="180" />
-                                        <DataGridTextColumn x:Name="ImportUserEmailColumn" Binding="{Binding UserEmail}" Width="220" />
+                                        <DataGridTextColumn x:Name="ImportRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="ImportRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
+                                        <DataGridTextColumn x:Name="ImportIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="ImportUserNameColumn" Binding="{Binding UserName}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="ImportUserEmailColumn" Binding="{Binding UserEmail}" Width="Auto" MinWidth="150" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
@@ -397,12 +409,12 @@
                             </WrapPanel>
 
                             <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
-                                <DataGrid x:Name="RestoreGrid" GridLinesVisibility="None">
+                                <DataGrid x:Name="RestoreGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn x:Name="RestoreRelativePathColumn" Binding="{Binding RelativePath}" Width="220" />
-                                        <DataGridTextColumn x:Name="RestoreRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="260" />
-                                        <DataGridTextColumn x:Name="RestoreIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="160" />
-                                        <DataGridTextColumn x:Name="RestoreStatusDateColumn" Binding="{Binding StatusDate}" Width="160" />
+                                        <DataGridTextColumn x:Name="RestoreRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="RestoreRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
+                                        <DataGridTextColumn x:Name="RestoreIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="RestoreStatusDateColumn" Binding="{Binding StatusDate}" Width="Auto" MinWidth="140" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
@@ -453,12 +465,12 @@
                             </WrapPanel>
 
                             <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
-                                <DataGrid x:Name="SyncGrid" GridLinesVisibility="None">
+                                <DataGrid x:Name="SyncGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn x:Name="SyncRelativePathColumn" Binding="{Binding RelativePath}" Width="220" />
-                                        <DataGridTextColumn x:Name="SyncRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="260" />
-                                        <DataGridTextColumn x:Name="SyncIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="160" />
-                                        <DataGridTextColumn x:Name="SyncStatusDateColumn" Binding="{Binding StatusDate}" Width="160" />
+                                        <DataGridTextColumn x:Name="SyncRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="SyncRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
+                                        <DataGridTextColumn x:Name="SyncIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="SyncStatusDateColumn" Binding="{Binding StatusDate}" Width="Auto" MinWidth="140" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
