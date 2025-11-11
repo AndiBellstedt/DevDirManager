@@ -1,16 +1,4 @@
-﻿BeforeAll {
-    # Import the module
-    $moduleName = 'DevDirManager'
-    $moduleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-
-    # Remove module if already loaded to ensure clean state
-    Remove-Module $moduleName -Force -ErrorAction SilentlyContinue
-
-    # Import the module
-    Import-Module "$moduleRoot\$moduleName.psd1" -Force
-}
-
-Describe "PSDrive Path Support" -Tag "PSDrive", "PathResolution" {
+﻿Describe "PSDrive Path Support" -Tag "PSDrive", "PathResolution" {
     BeforeAll {
         # Create a temporary directory for testing
         $script:TestRoot = Join-Path -Path $env:TEMP -ChildPath ([System.Guid]::NewGuid().ToString())

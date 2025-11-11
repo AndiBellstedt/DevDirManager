@@ -1,16 +1,4 @@
-﻿BeforeAll {
-    # Import the module
-    $moduleName = 'DevDirManager'
-    $moduleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-
-    # Remove module if already loaded to ensure clean state
-    Remove-Module $moduleName -Force -ErrorAction SilentlyContinue
-
-    # Import the module
-    Import-Module "$moduleRoot\$moduleName.psd1" -Force
-}
-
-Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDependent" {
+﻿Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDependent" {
     BeforeAll {
         # Create a temporary directory for testing
         $script:TestRoot = Join-Path -Path $env:TEMP -ChildPath ([System.Guid]::NewGuid().ToString())
@@ -60,6 +48,26 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
         Set-Content -Path (Join-Path $noRemoteGitDir "config") -Value $noRemoteConfigContent -Force
     }
 
+    BeforeEach {
+        Mock -CommandName Test-DevDirectoryRemoteAccessible -ModuleName DevDirManager -MockWith {
+            param(
+                [string]$RemoteUrl,
+                [string]$GitExecutable,
+                [int]$TimeoutSeconds
+            )
+
+            if ([string]::IsNullOrWhiteSpace($RemoteUrl)) {
+                return $false
+            }
+
+            if ($RemoteUrl -like 'https://github.com/nonexistent-user-12345/nonexistent-repo-67890.git') {
+                return $false
+            }
+
+            return $true
+        }
+    }
+
     AfterAll {
         # Cleanup
         if (Test-Path $script:TestRoot) {
@@ -75,6 +83,9 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
             foreach ($repo in $repos) {
                 $repo.PSObject.Properties.Match('IsRemoteAccessible').Count | Should -Be 1
             }
+
+            $expectedCalls = ($repos | Where-Object { $_.RemoteUrl }) .Count
+            Assert-MockCalled -CommandName Test-DevDirectoryRemoteAccessible -ModuleName DevDirManager -Times $expectedCalls
         }
 
         It "Should mark valid remote as accessible" -Skip:(-not (Test-Connection -ComputerName "github.com" -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
@@ -82,10 +93,10 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
             $validRepo = $repos | Where-Object { $_.FullPath -eq $script:ValidRepoDir }
 
             $validRepo | Should -Not -BeNullOrEmpty
-            $validRepo.IsRemoteAccessible | Should -Be $true
+            $validRepo.IsRemoteAccessible | Should -BeTrue
         }
 
-        It "Should mark invalid remote as inaccessible" -Skip:(-not (Test-Connection -ComputerName "github.com" -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+        It "Should mark invalid remote as inaccessible" {
             $repos = @(Get-DevDirectory -RootPath $script:TestRoot )
             $invalidRepo = $repos | Where-Object { $_.FullPath -eq $script:InvalidRepoDir }
 
@@ -93,7 +104,7 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
             $invalidRepo.IsRemoteAccessible | Should -Be $false
         }
 
-        It "Should mark repository with no remote as inaccessible" -Skip:(-not (Test-Connection -ComputerName "github.com" -Count 1 -Quiet -ErrorAction SilentlyContinue)) {
+        It "Should mark repository with no remote as inaccessible" {
             $repos = @(Get-DevDirectory -RootPath $script:TestRoot)
             $noRemoteRepo = $repos | Where-Object { $_.FullPath -eq $script:NoRemoteRepoDir }
 
@@ -108,18 +119,16 @@ Describe "Remote Accessibility Feature" -Tag "RemoteAccessibility", "NetworkDepe
             foreach ($repo in $repos) {
                 $repo.IsRemoteAccessible | Should -BeNullOrEmpty
             }
+
+            Assert-MockCalled -CommandName Test-DevDirectoryRemoteAccessible -ModuleName DevDirManager -Times 0
         }
 
-        It "Should complete faster with -SkipRemoteCheck" {
-            $withCheckTime = Measure-Command {
-                Get-DevDirectory -RootPath $script:TestRoot | Out-Null
-            }
+        It "Should invoke remote accessibility check when not skipping" {
+            $repos = @(Get-DevDirectory -RootPath $script:TestRoot)
+            $repos.Count | Should -BeGreaterThan 0
 
-            $withoutCheckTime = Measure-Command {
-                Get-DevDirectory -RootPath $script:TestRoot -SkipRemoteCheck | Out-Null
-            }
-
-            $withoutCheckTime.TotalSeconds | Should -BeLessThan $withCheckTime.TotalSeconds
+            $expectedCalls = ($repos | Where-Object { $_.RemoteUrl }) .Count
+            Assert-MockCalled -CommandName Test-DevDirectoryRemoteAccessible -ModuleName DevDirManager -Times $expectedCalls
         }
     }
 

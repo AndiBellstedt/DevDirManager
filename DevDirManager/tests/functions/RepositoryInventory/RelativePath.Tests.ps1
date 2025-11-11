@@ -1,16 +1,4 @@
-﻿BeforeAll {
-    # Import the module
-    $moduleName = 'DevDirManager'
-    $moduleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-
-    # Remove module if already loaded to ensure clean state
-    Remove-Module $moduleName -Force -ErrorAction SilentlyContinue
-
-    # Import the module
-    Import-Module "$moduleRoot\$moduleName.psd1" -Force
-}
-
-Describe "RelativePath Formatting" -Tag "RelativePath", "PathFormatting" {
+﻿Describe "RelativePath Formatting" -Tag "RelativePath", "PathFormatting" {
     BeforeAll {
         # Create a temporary directory structure for testing
         $script:TestRoot = Join-Path -Path $env:TEMP -ChildPath ([System.Guid]::NewGuid().ToString())
@@ -226,7 +214,7 @@ Describe "RelativePath Formatting" -Tag "RelativePath", "PathFormatting" {
         It "Should display RelativePath with single backslashes in table format" {
             $repos = @(Get-DevDirectory -RootPath $script:TestRoot -SkipRemoteCheck)
 
-            $tableOutput = $repos | Format-Table | Out-String
+            $tableOutput = $repos | Format-Table | Out-String -Width 400
 
             # Table output should not contain escaped or double backslashes
             # Verify that the output contains the RelativePath values
