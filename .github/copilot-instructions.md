@@ -35,14 +35,20 @@
 
 
 # Pester / unit tests
+- the project considers two places for tests, general onces and function specific onces, read about in /tests/readme.md file
+- pester excution is done via pester.ps1 in the tests folder
+    - the pester.ps1 has various parameters
+    - if you need to test a specific test use -Include parameter on pester.ps1 to specify what should be tested explicitly. This safes time and computing power while testing specific things.
+    - When using -Include parameter, you need to specifiy the full name of the tests-file including the file extention.
 - Within the project there are already some pester tests existing. The existing tests already cover basic coding compliance:
     - Standard PSScriptAnalyzer rules (proper verb usage, ...)
     - basic parameter validation (no content validation)
     - comment-based help sections for all functions
-- Ensure that you do not build duplicate tests for these, already existing tests, basic coding compliance items from the template
+- Ensure that you do not build duplicate tests for already existing tests. Like basic coding compliance items from the template (within the general folder)
 - When adding new functions, ensure that you add pester tests for the new functions, covering at least:
     - extended parameter validation (content validation as well, as long, as applicable)
     - functional tests to ensure the function works as expected
+- ensure that function specific tests are placed in a file that is named like to function to have clear separation of tests. That eases the readablity and maintainability of the tests. Do not build large monolithic files that try to covers "anything"
 - When modifying existing functions, ensure that you add pester tests for the modified functionality, to ensure the modified functionality works as expected
 - If module manifest specifies a minimum PSVersion, ensure that the pester tests are run with that powershell version
 
