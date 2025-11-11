@@ -256,10 +256,17 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Background="{StaticResource Brush.Surface}" Padding="28,22" BorderThickness="0">
-            <StackPanel>
-                <TextBlock x:Name="HeaderText" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource Brush.PrimaryText}" />
-                <TextBlock x:Name="SubHeaderText" Margin="0,6,0,0" FontSize="13" Foreground="{StaticResource Brush.SecondaryText}" />
-            </StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock x:Name="HeaderText" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource Brush.PrimaryText}" />
+                    <TextBlock x:Name="SubHeaderText" Margin="0,6,0,0" FontSize="13" Foreground="{StaticResource Brush.SecondaryText}" />
+                </StackPanel>
+                <Image x:Name="HeaderLogo" Grid.Column="1" Width="64" Height="64" Margin="16,0,0,0" Stretch="Uniform" HorizontalAlignment="Right" />
+            </Grid>
         </Border>
 
         <Border Grid.Row="1" Margin="0" Background="{StaticResource Brush.WindowBackground}">

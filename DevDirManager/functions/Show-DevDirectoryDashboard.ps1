@@ -1,4 +1,4 @@
-function Show-DevDirectoryDashboard {
+﻿function Show-DevDirectoryDashboard {
     <#
     .SYNOPSIS
         Launches the DevDirManager dashboard UI.
@@ -81,6 +81,31 @@ function Show-DevDirectoryDashboard {
         if (-not (Test-Path -Path $xamlPath -PathType Leaf)) {
             Stop-PSFFunction -String 'ShowDevDirectoryDashboard.XamlMissing' -StringValues @($xamlPath) -EnableException $true -Cmdlet $PSCmdlet
             return
+        }
+
+        # Ensure the logo exists in the UI folder as DevDirManager.png by copying from assets if available
+        try {
+            $repoRoot = Split-Path -Path $moduleRoot -Parent
+            $assetSource = Join-Path -Path $repoRoot -ChildPath 'assets\DevDirManager_500x500.png'
+            $uiFolder = Join-Path -Path $moduleRoot -ChildPath 'internal\ui'
+            $logoTarget = Join-Path -Path $uiFolder -ChildPath 'DevDirManager.png'
+
+            if ((Test-Path -Path $assetSource -PathType Leaf)) {
+                $shouldCopy = $true
+                if (Test-Path -Path $logoTarget -PathType Leaf) {
+                    $srcTime = (Get-Item -LiteralPath $assetSource).LastWriteTimeUtc
+                    $dstTime = (Get-Item -LiteralPath $logoTarget).LastWriteTimeUtc
+                    $shouldCopy = ($srcTime -gt $dstTime)
+                }
+
+                if ($shouldCopy) {
+                    Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.CopyLogo' -StringValues @($assetSource, $logoTarget) -Tag 'Asset', 'Logo'
+                    Copy-Item -LiteralPath $assetSource -Destination $logoTarget -Force -ErrorAction Stop
+                }
+            }
+        } catch {
+            # Log but do not fail the UI if the logo copy fails
+            Write-PSFMessage -Level Warning -Message "Failed to prepare UI logo: $($_.Exception.Message)" -Tag 'Asset', 'Logo' -PScmdlet $PSCmdlet
         }
 
         $xamlContent = Get-Content -Path $xamlPath -Raw -ErrorAction Stop
@@ -175,6 +200,7 @@ function Show-DevDirectoryDashboard {
         $controls = [ordered]@{
             HeaderText                       = $window.FindName('HeaderText')
             SubHeaderText                    = $window.FindName('SubHeaderText')
+            HeaderLogo                       = $window.FindName('HeaderLogo')
             StatusText                       = $window.FindName('StatusText')
             MainTabControl                   = $window.FindName('MainTabControl')
             DiscoverTabHeader                = $window.FindName('DiscoverTabHeader')
@@ -254,6 +280,8 @@ function Show-DevDirectoryDashboard {
             RestoreItems        = [System.Collections.ObjectModel.ObservableCollection[psobject]]::new()
             SyncItems           = [System.Collections.ObjectModel.ObservableCollection[psobject]]::new()
             ExportFormatOptions = [System.Collections.ObjectModel.ObservableCollection[psobject]]::new()
+            SharedDataFilePath  = ''
+            IsSyncingDataPath   = $false
         }
 
         $controls.DiscoverGrid.ItemsSource = $state.DiscoverItems
@@ -390,6 +418,24 @@ function Show-DevDirectoryDashboard {
         $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @(0)[0])
         $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @(0)[0])
 
+        # Bind the logo image in the banner and set the Window icon if the file exists
+        try {
+            $logoPath = Join-Path -Path $moduleRoot -ChildPath 'internal\ui\DevDirManager.png'
+            if (Test-Path -LiteralPath $logoPath -PathType Leaf) {
+                $bitmap = [System.Windows.Media.Imaging.BitmapImage]::new()
+                $bitmap.BeginInit()
+                $bitmap.CacheOption = [System.Windows.Media.Imaging.BitmapCacheOption]::OnLoad
+                $bitmap.UriSource = [Uri]::new($logoPath)
+                $bitmap.EndInit()
+                if ($bitmap.CanFreeze -and -not $bitmap.IsFrozen) { $bitmap.Freeze() }
+
+                if ($controls.HeaderLogo) { $controls.HeaderLogo.Source = $bitmap }
+                $window.Icon = $bitmap
+            }
+        } catch {
+            Write-PSFMessage -Level Warning -Message "Failed to load UI logo/icon: $($_.Exception.Message)" -Tag 'Asset', 'Logo' -PScmdlet $PSCmdlet
+        }
+
         if ($RootPath) {
             $controls.DiscoverPathBox.Text = $RootPath
         }
@@ -450,6 +496,41 @@ function Show-DevDirectoryDashboard {
 
             return $null
         }
+
+        #region -- Data File Path Synchronization
+        # Synchronize the repository list data file path across Import / Restore / Sync tabs.
+        # When user selects or edits path in one tab, update all others unless already syncing.
+        $syncDataPath = {
+            param(
+                [string]$newPath,
+                [System.Windows.Controls.TextBox]$sourceBox
+            )
+
+            if ($state.IsSyncingDataPath) { return }
+            if ([string]::IsNullOrWhiteSpace($newPath)) { return }
+
+            $state.IsSyncingDataPath = $true
+            try {
+                $state.SharedDataFilePath = $newPath
+                foreach ($tb in @($controls.ImportPathBox, $controls.RestoreListPathBox, $controls.SyncListPathBox)) {
+                    if ($tb -ne $sourceBox -and $tb.Text -ne $newPath) {
+                        $tb.Text = $newPath
+                    }
+                }
+            } finally { $state.IsSyncingDataPath = $false }
+        }
+
+        # Attach TextChanged handlers to propagate manual edits
+        foreach ($pair in @(
+                @{ Box = $controls.ImportPathBox },
+                @{ Box = $controls.RestoreListPathBox },
+                @{ Box = $controls.SyncListPathBox }
+            )) {
+            $null = $pair.Box.Add_TextChanged({
+                    $syncDataPath.Invoke($pair.Box.Text, $pair.Box)[0]
+                })
+        }
+        #endregion -- Data File Path Synchronization
 
         # Helper to run operations with visual feedback
         $runAsync = {
@@ -561,6 +642,7 @@ function Show-DevDirectoryDashboard {
                 $selected = $pickOpenFile.Invoke($controls.ImportPathBox.Text)[0]
                 if ($selected) {
                     $controls.ImportPathBox.Text = $selected
+                    $syncDataPath.Invoke($selected, $controls.ImportPathBox)[0]
                 }
             })
 
@@ -595,7 +677,8 @@ function Show-DevDirectoryDashboard {
                 $selected = $pickOpenFile.Invoke($controls.RestoreListPathBox.Text)[0]
                 if ($selected) {
                     $controls.RestoreListPathBox.Text = $selected
-                    $controls.ImportPathBox.Text = $selected
+                    $syncDataPath.Invoke($selected, $controls.RestoreListPathBox)[0]
+                    # Trigger import load when new list chosen
                     $controls.ImportLoadButton.RaiseEvent([System.Windows.RoutedEventArgs]::new([System.Windows.Controls.Button]::ClickEvent))
                 }
             })
@@ -609,6 +692,7 @@ function Show-DevDirectoryDashboard {
 
         $controls.RestoreRunButton.Add_Click({
                 $listPath = $controls.RestoreListPathBox.Text
+                $listPath | Out-Null
                 $destination = $controls.RestoreDestinationBox.Text
 
                 if ($state.RestoreItems.Count -eq 0) {
@@ -658,7 +742,7 @@ function Show-DevDirectoryDashboard {
                 $selected = $pickOpenFile.Invoke($controls.SyncListPathBox.Text)[0]
                 if ($selected) {
                     $controls.SyncListPathBox.Text = $selected
-                    $controls.ImportPathBox.Text = $selected
+                    $syncDataPath.Invoke($selected, $controls.SyncListPathBox)[0]
                     $controls.ImportLoadButton.RaiseEvent([System.Windows.RoutedEventArgs]::new([System.Windows.Controls.Button]::ClickEvent))
                 }
             })
