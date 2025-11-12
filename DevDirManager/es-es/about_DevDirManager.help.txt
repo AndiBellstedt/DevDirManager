@@ -68,7 +68,7 @@ FUNCIONES PRINCIPALES
         panel presenta:
 
         - IU con reconocimiento de tema (modo claro/oscuro automático)
-        - Interfaz con pestañas con operaciones de Descubrir, Importar, Restaurar y Sincronizar
+        - Interfaz con pestañas con operaciones de Explorar & Exportar, Importar & Restaurar y Sincronizar
         - Retroalimentación visual en tiempo real durante operaciones de larga duración
         - Columnas de cuadrícula de datos redimensionables y reordenables
         - Sincronización automática de rutas de lista de repositorios entre pestañas
@@ -152,7 +152,6 @@ FUNCIONES PRINCIPALES
         - RepositoryListPath: Ruta al archivo de lista de repositorios
         - Force: Reenvía a Restore-DevDirectory para sobrescribir directorios existentes
         - SkipExisting: Reenvía a Restore-DevDirectory para omitir existentes
-        - ShowGitOutput: Reenvía a Restore-DevDirectory para mostrar salida de git
         - PassThru: Devuelve la lista de repositorios fusionada después de la sincronización
 
     Integración con GitHub

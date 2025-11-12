@@ -68,7 +68,7 @@ FONCTIONS PRINCIPALES
         tableau de bord présente :
 
         - Interface utilisateur consciente du thème (mode clair/sombre automatique)
-        - Interface à onglets avec opérations Découvrir, Importer, Restaurer et Synchroniser
+        - Interface à onglets avec opérations Découvrir & Exporter, Importer & Restaurer et Synchroniser
         - Retour visuel en temps réel pendant les opérations de longue durée
         - Colonnes de grille de données redimensionnables et réorganisables
         - Synchronisation automatique des chemins de liste de dépôts entre les onglets
@@ -152,7 +152,6 @@ FONCTIONS PRINCIPALES
         - RepositoryListPath : Chemin vers le fichier de liste de dépôts
         - Force : Transmet à Restore-DevDirectory pour écraser les répertoires existants
         - SkipExisting : Transmet à Restore-DevDirectory pour ignorer les existants
-        - ShowGitOutput : Transmet à Restore-DevDirectory pour afficher la sortie de git
         - PassThru : Retourne la liste de dépôts fusionnée après la synchronisation
 
     Intégration GitHub

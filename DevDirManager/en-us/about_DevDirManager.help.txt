@@ -64,7 +64,7 @@ CORE FUNCTIONS
         features:
 
         - Theme-aware UI (automatic light/dark mode)
-        - Tabbed interface with Discover, Import, Restore, and Sync operations
+        - Tabbed interface with Discover & Export, Import & Restore, and Sync operations
         - Real-time visual feedback during long-running operations
         - Resizable and reorderable data grid columns
         - Automatic synchronization of repository list paths across tabs
@@ -147,7 +147,6 @@ CORE FUNCTIONS
         - RepositoryListPath: Path to the repository list file
         - Force: Forwards to Restore-DevDirectory for overwriting existing dirs
         - SkipExisting: Forwards to Restore-DevDirectory for skipping existing
-        - ShowGitOutput: Forwards to Restore-DevDirectory to show git output
         - PassThru: Returns the merged repository list after synchronization
 
     GitHub Integration
