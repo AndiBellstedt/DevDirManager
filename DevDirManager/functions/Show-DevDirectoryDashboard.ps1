@@ -1,40 +1,68 @@
 ﻿function Show-DevDirectoryDashboard {
     <#
-    .SYNOPSIS
-        Launches the DevDirManager dashboard UI.
+        .SYNOPSIS
+            Launches the DevDirManager dashboard UI.
 
-    .DESCRIPTION
-        Builds the WPF dashboard for discovering, exporting, importing, restoring, and syncing repositories managed by DevDirManager.
+        .DESCRIPTION
+            Builds and displays a comprehensive WPF-based graphical user interface for managing Git repositories with DevDirManager.
 
-    .PARAMETER RootPath
-        Optional path that seeds the discovery tab when the dashboard loads.
+            The dashboard provides a modern, theme-aware interface with automatic light/dark mode detection based on Windows system settings.
+            It features three main operational tabs that consolidate all DevDirManager functionality:
 
-    .PARAMETER ShowWindow
-        Controls whether the dashboard window is displayed. Defaults to $true. Set to $false with PassThru to build the UI for automation.
+            - Discover & Export: Scan directories to discover Git repositories and export their metadata to JSON, CSV, or XML files
+            - Import & Restore: Load repository lists from files and restore (clone) repositories to a target destination
+            - Sync: Synchronize a directory's repositories with a reference list, creating missing repositories and validating existing ones
 
-    .PARAMETER PassThru
-        Returns the window, control references, and state collections for automation without blocking on the UI.
+            The dashboard includes real-time visual feedback during long-running operations, automatic path synchronization between tabs,
+            and comprehensive localization support for English, Spanish, French, and German languages.
 
-    .EXAMPLE
-        Show-DevDirectoryDashboard
+            All operations execute asynchronously to maintain UI responsiveness, and the dashboard provides detailed status messages
+            and error handling throughout the workflow.
 
-        Launch the dashboard interactively using default settings.
+        .PARAMETER RootPath
+            Optional path that pre-populates the source folder field in the Discover & Export tab when the dashboard launches.
+            If specified, users can immediately scan this directory without manually browsing for it.
 
-    .EXAMPLE
-        Show-DevDirectoryDashboard -RootPath 'C:\\Repositories'
+        .PARAMETER ShowWindow
+            Controls whether the dashboard window is displayed immediately. Defaults to $true.
+            Set to $false in combination with -PassThru to build the UI structure for automation scenarios without showing the window.
+            This allows programmatic control of the dashboard elements through the returned object.
 
-        Open the dashboard with the discovery tab seeded to the provided path.
+        .PARAMETER PassThru
+            Returns an object containing the window, control references, and state collections for automation purposes.
+            The returned object includes:
+            - Window: The WPF Window object
+            - Controls: A collection of all named UI controls for programmatic access
+            - State: Observable collections containing the data displayed in grids
 
-    .EXAMPLE
-        Show-DevDirectoryDashboard -ShowWindow:$false -PassThru
+            When used without -ShowWindow:$false, the cmdlet blocks on the UI thread until the window closes before returning the object.
 
-        Construct the dashboard without showing it and return window/control references for automation.
+        .EXAMPLE
+            PS C:\> Show-DevDirectoryDashboard
 
-    .NOTES
-        Version   : 1.2.0
-        Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-12
-        Keywords  : Dashboard, UI, WPF
+            Launches the dashboard interactively with default settings, allowing users to discover, export, import, restore, and sync repositories through the graphical interface.
+
+        .EXAMPLE
+            PS C:\> Show-DevDirectoryDashboard -RootPath "C:\Projects"
+
+            Opens the dashboard with the Discover & Export tab pre-populated with "C:\Projects" as the source folder, ready for immediate scanning.
+
+        .EXAMPLE
+            PS C:\> $dashboard = Show-DevDirectoryDashboard -ShowWindow:$false -PassThru
+            PS C:\> $dashboard.Controls.DiscoverPathBox.Text = "C:\Development"
+            PS C:\> $dashboard.Controls.DiscoverScanButton.RaiseEvent([System.Windows.RoutedEventArgs]::new([System.Windows.Controls.Button]::ClickEvent))
+            PS C:\> $dashboard.Window.ShowDialog()
+
+            Constructs the dashboard without displaying it, programmatically sets the source path to "C:\Development", triggers the scan operation, and then displays the window with results already loaded.
+
+        .NOTES
+            Version   : 1.2.0
+            Author    : Andi Bellstedt, Copilot
+            Date      : 2025-11-12
+            Keywords  : Dashboard, UI, WPF, Repository, Management
+
+        .LINK
+            https://github.com/AndiBellstedt/DevDirManager
     #>
     [CmdletBinding()]
     param(
@@ -253,25 +281,14 @@
             ImportIsRemoteAccessibleColumn   = $window.FindName('ImportIsRemoteAccessibleColumn')
             ImportUserNameColumn             = $window.FindName('ImportUserNameColumn')
             ImportUserEmailColumn            = $window.FindName('ImportUserEmailColumn')
+            ImportStatusDateColumn           = $window.FindName('ImportStatusDateColumn')
             ImportSummaryText                = $window.FindName('ImportSummaryText')
-            RestoreTabHeader                 = $window.FindName('RestoreTabHeader')
-            RestoreListPathLabel             = $window.FindName('RestoreListPathLabel')
-            RestoreListPathBox               = $window.FindName('RestoreListPathBox')
-            RestoreListBrowseButton          = $window.FindName('RestoreListBrowseButton')
             RestoreDestinationLabel          = $window.FindName('RestoreDestinationLabel')
             RestoreDestinationBox            = $window.FindName('RestoreDestinationBox')
             RestoreDestinationBrowseButton   = $window.FindName('RestoreDestinationBrowseButton')
             RestoreRunButton                 = $window.FindName('RestoreRunButton')
             RestoreForceCheckBox             = $window.FindName('RestoreForceCheckBox')
             RestoreSkipExistingCheckBox      = $window.FindName('RestoreSkipExistingCheckBox')
-            RestoreShowGitOutputCheckBox     = $window.FindName('RestoreShowGitOutputCheckBox')
-            RestoreWhatIfCheckBox            = $window.FindName('RestoreWhatIfCheckBox')
-            RestoreGrid                      = $window.FindName('RestoreGrid')
-            RestoreRelativePathColumn        = $window.FindName('RestoreRelativePathColumn')
-            RestoreRemoteUrlColumn           = $window.FindName('RestoreRemoteUrlColumn')
-            RestoreIsRemoteAccessibleColumn  = $window.FindName('RestoreIsRemoteAccessibleColumn')
-            RestoreStatusDateColumn          = $window.FindName('RestoreStatusDateColumn')
-            RestoreSummaryText               = $window.FindName('RestoreSummaryText')
             SyncTabHeader                    = $window.FindName('SyncTabHeader')
             SyncDirectoryLabel               = $window.FindName('SyncDirectoryLabel')
             SyncDirectoryBox                 = $window.FindName('SyncDirectoryBox')
@@ -305,7 +322,6 @@
 
         $controls.DiscoverGrid.ItemsSource = $state.DiscoverItems
         $controls.ImportGrid.ItemsSource = $state.ImportItems
-        $controls.RestoreGrid.ItemsSource = $state.RestoreItems
         $controls.SyncGrid.ItemsSource = $state.SyncItems
         $controls.ExportFormatCombo.ItemsSource = $state.ExportFormatOptions
         $controls.ExportFormatCombo.DisplayMemberPath = 'Display'
@@ -402,20 +418,12 @@
         $controls.ImportIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
         $controls.ImportUserNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserName')[0]
         $controls.ImportUserEmailColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserEmail')[0]
-        $controls.RestoreTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreTabHeader')[0]
-        $controls.RestoreListPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreListPathLabel')[0]
-        $controls.RestoreListBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.ImportStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
         $controls.RestoreDestinationLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreDestinationLabel')[0]
         $controls.RestoreDestinationBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
         $controls.RestoreRunButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreRunButton')[0]
         $controls.RestoreForceCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreForce')[0]
         $controls.RestoreSkipExistingCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSkipExisting')[0]
-        $controls.RestoreShowGitOutputCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreShowGitOutput')[0]
-        $controls.RestoreWhatIfCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.RestoreWhatIf')[0]
-        $controls.RestoreRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
-        $controls.RestoreRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
-        $controls.RestoreIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
-        $controls.RestoreStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
         $controls.SyncTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncTabHeader')[0]
         $controls.SyncDirectoryLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncDirectoryLabel')[0]
         $controls.SyncDirectoryBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
@@ -434,7 +442,6 @@
         $setStatus.Invoke('ShowDevDirectoryDashboard.Status.Ready', @()[0])
         $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @(0)[0])
         $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @(0)[0])
-        $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @(0)[0])
         $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @(0)[0])
 
         # Bind the logo image in the banner and set the Window icon if the file exists
@@ -517,7 +524,7 @@
         }
 
         #region -- Data File Path Synchronization
-        # Synchronize the repository list data file path across Import / Restore / Sync tabs.
+        # Synchronize the repository list data file path across Import & Restore / Sync tabs.
         # When user selects or edits path in one tab, update all others unless already syncing.
         $syncDataPath = {
             param(
@@ -531,7 +538,7 @@
             $state.IsSyncingDataPath = $true
             try {
                 $state.SharedDataFilePath = $newPath
-                foreach ($tb in @($controls.ImportPathBox, $controls.RestoreListPathBox, $controls.SyncListPathBox)) {
+                foreach ($tb in @($controls.ImportPathBox, $controls.SyncListPathBox)) {
                     if ($tb -ne $sourceBox -and $tb.Text -ne $newPath) {
                         $tb.Text = $newPath
                     }
@@ -542,7 +549,6 @@
         # Attach TextChanged handlers to propagate manual edits
         foreach ($pair in @(
                 @{ Box = $controls.ImportPathBox },
-                @{ Box = $controls.RestoreListPathBox },
                 @{ Box = $controls.SyncListPathBox }
             )) {
             $null = $pair.Box.Add_TextChanged({
@@ -680,7 +686,6 @@
                             $populateCollection.Invoke($state.RestoreItems, $imported)
                             $populateCollection.Invoke($state.SyncItems, $imported)
                             $controls.ImportSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.ImportSummaryTemplate', @($state.ImportItems.Count)[0])
-                            $controls.RestoreSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.RestoreSummaryTemplate', @($state.RestoreItems.Count)[0])
                             $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count)[0])
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ImportComplete', @($state.ImportItems.Count)[0])
                             Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.ImportCompleted' -StringValues @($path, $state.ImportItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Import'
@@ -690,16 +695,6 @@
                             [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
                         }
                     })[0]
-            })
-
-        $controls.RestoreListBrowseButton.Add_Click({
-                $selected = $pickOpenFile.Invoke($controls.RestoreListPathBox.Text)[0]
-                if ($selected) {
-                    $controls.RestoreListPathBox.Text = $selected
-                    $syncDataPath.Invoke($selected, $controls.RestoreListPathBox)[0]
-                    # Trigger import load when new list chosen
-                    $controls.ImportLoadButton.RaiseEvent([System.Windows.RoutedEventArgs]::new([System.Windows.Controls.Button]::ClickEvent))
-                }
             })
 
         $controls.RestoreDestinationBrowseButton.Add_Click({
@@ -735,8 +730,6 @@
 
                             if ($controls.RestoreForceCheckBox.IsChecked) { $restoreParams.Force = $true }
                             if ($controls.RestoreSkipExistingCheckBox.IsChecked) { $restoreParams.SkipExisting = $true }
-                            if ($controls.RestoreShowGitOutputCheckBox.IsChecked) { $restoreParams.ShowGitOutput = $true }
-                            if ($controls.RestoreWhatIfCheckBox.IsChecked) { $restoreParams.WhatIf = $true }
 
                             $state.RestoreItems | Restore-DevDirectory @restoreParams
 

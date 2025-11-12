@@ -359,43 +359,12 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
-                                <DataGrid x:Name="ImportGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn x:Name="ImportRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
-                                        <DataGridTextColumn x:Name="ImportRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
-                                        <DataGridTextColumn x:Name="ImportIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
-                                        <DataGridTextColumn x:Name="ImportUserNameColumn" Binding="{Binding UserName}" Width="Auto" MinWidth="120" />
-                                        <DataGridTextColumn x:Name="ImportUserEmailColumn" Binding="{Binding UserEmail}" Width="Auto" MinWidth="150" />
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </Border>
-
                             <TextBlock x:Name="ImportSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
-                        </StackPanel>
-                    </ScrollViewer>
-                </TabItem>
 
-                <TabItem>
-                    <TabItem.Header>
-                        <TextBlock x:Name="RestoreTabHeader" />
-                    </TabItem.Header>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="28,24">
+                            <!-- Restore Controls Section -->
+                            <Separator Margin="0,32,0,24" Background="{DynamicResource Brush.Border}" />
+
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="RestoreListPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
-                                <TextBox x:Name="RestoreListPathBox" Grid.Column="1" MinWidth="320" />
-                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <Button x:Name="RestoreListBrowseButton" Margin="0,0,0,0" />
-                                </StackPanel>
-                            </Grid>
-
-                            <Grid Margin="0,16,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -412,22 +381,21 @@
                             <WrapPanel Margin="0,20,0,0" HorizontalAlignment="Left">
                                 <CheckBox x:Name="RestoreForceCheckBox" />
                                 <CheckBox x:Name="RestoreSkipExistingCheckBox" />
-                                <CheckBox x:Name="RestoreShowGitOutputCheckBox" />
-                                <CheckBox x:Name="RestoreWhatIfCheckBox" />
                             </WrapPanel>
 
+                            <!-- DataGrid moved below restore controls -->
                             <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
-                                <DataGrid x:Name="RestoreGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
+                                <DataGrid x:Name="ImportGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn x:Name="RestoreRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
-                                        <DataGridTextColumn x:Name="RestoreRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
-                                        <DataGridTextColumn x:Name="RestoreIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
-                                        <DataGridTextColumn x:Name="RestoreStatusDateColumn" Binding="{Binding StatusDate}" Width="Auto" MinWidth="140" />
+                                        <DataGridTextColumn x:Name="ImportRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="ImportRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
+                                        <DataGridTextColumn x:Name="ImportIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="ImportUserNameColumn" Binding="{Binding UserName}" Width="Auto" MinWidth="120" />
+                                        <DataGridTextColumn x:Name="ImportUserEmailColumn" Binding="{Binding UserEmail}" Width="Auto" MinWidth="150" />
+                                        <DataGridTextColumn x:Name="ImportStatusDateColumn" Binding="{Binding StatusDate}" Width="Auto" MinWidth="140" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
-
-                            <TextBlock x:Name="RestoreSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
