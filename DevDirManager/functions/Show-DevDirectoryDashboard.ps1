@@ -31,9 +31,9 @@
         Construct the dashboard without showing it and return window/control references for automation.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 1.2.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-11
+        Date      : 2025-11-12
         Keywords  : Dashboard, UI, WPF
     #>
     [CmdletBinding()]
@@ -122,6 +122,7 @@
             }
         }
 
+        # Apply system theme (Light/Dark) by mutating existing brushes so StaticResource bindings update
         $applyTheme = {
             param([System.Windows.Window]$w)
 
@@ -143,59 +144,77 @@
                     'Brush.SecondaryText'    = '#FFA5ACBC'
                     'Brush.GridLines'        = '#FF141B2B'
                     'Brush.ButtonText'       = '#FFFFFFFF'
+                    'Brush.AccentText'       = '#FFFFFFFF'
                 }
                 Light = @{
-                    'Brush.WindowBackground' = '#FFF3F4F6'
+                    'Brush.WindowBackground' = '#FFF7F8FA'
                     'Brush.Surface'          = '#FFFFFFFF'
-                    'Brush.SurfaceAlt'       = '#FFE8ECF3'
-                    'Brush.Border'           = '#FFD1D5DB'
-                    'Brush.PrimaryText'      = '#FF1F2937'
-                    'Brush.SecondaryText'    = '#FF4B5563'
+                    'Brush.SurfaceAlt'       = '#FFD1D5DB'
+                    'Brush.Border'           = '#FFE5E7EB'
+                    'Brush.PrimaryText'      = '#FF111827'
+                    'Brush.SecondaryText'    = '#FF6B7280'
                     'Brush.GridLines'        = '#FFE5E7EB'
                     'Brush.ButtonText'       = '#FFFFFFFF'
+                    'Brush.AccentText'       = '#FFFFFFFF'
                 }
             }
 
             $paletteKey = if ($isLightTheme) { 'Light' } else { 'Dark' }
             $selectedPalette = $palettes[$paletteKey]
 
-            $createBrush = {
-                param([string]$hex)
-                $color = [System.Windows.Media.ColorConverter]::ConvertFromString($hex)
-                $brush = [System.Windows.Media.SolidColorBrush]::new($color)
-                if (-not $brush.IsFrozen) {
-                    $brush.Freeze()
+            foreach ($kvp in $selectedPalette.GetEnumerator()) {
+                if ($w.Resources.Contains($kvp.Key)) {
+                    $brush = $w.Resources[$kvp.Key] -as [System.Windows.Media.SolidColorBrush]
+                    if ($brush) {
+                        $color = [System.Windows.Media.ColorConverter]::ConvertFromString($kvp.Value)
+                        # If brush is frozen, create an unfrozen clone and replace references
+                        if ($brush.IsFrozen) {
+                            $newBrush = [System.Windows.Media.SolidColorBrush]::new($color)
+                            $w.Resources[$kvp.Key] = $newBrush
+                        } else {
+                            $brush.Color = $color
+                        }
+                    }
                 }
-                return $brush
             }
 
-            foreach ($entry in $selectedPalette.GetEnumerator()) {
-                if ($w.Resources.Contains($entry.Key)) {
-                    $w.Resources[$entry.Key] = & $createBrush $entry.Value
-                }
-            }
-
+            # Accent brush based on system color for both themes
             if ($w.Resources.Contains('Brush.Accent')) {
                 $accentColor = [System.Windows.SystemParameters]::WindowGlassColor
-                $accentBrush = [System.Windows.Media.SolidColorBrush]::new($accentColor)
-                if (-not $accentBrush.IsFrozen) {
-                    $accentBrush.Freeze()
+                $accentBrush = $w.Resources['Brush.Accent'] -as [System.Windows.Media.SolidColorBrush]
+                if ($accentBrush) {
+                    if ($accentBrush.IsFrozen) {
+                        $w.Resources['Brush.Accent'] = [System.Windows.Media.SolidColorBrush]::new($accentColor)
+                    } else {
+                        $accentBrush.Color = $accentColor
+                    }
                 }
-                $w.Resources['Brush.Accent'] = $accentBrush
             }
 
-            if ($w.Resources.Contains('Brush.ButtonText')) {
-                $accentBrush = $w.Resources['Brush.Accent']
-                if ($accentBrush -is [System.Windows.Media.SolidColorBrush]) {
-                    $accentColor = $accentBrush.Color
-                    $luminance = (0.2126 * ($accentColor.R / 255.0)) + (0.7152 * ($accentColor.G / 255.0)) + (0.0722 * ($accentColor.B / 255.0))
-                    $foregroundHex = if ($luminance -gt 0.65) { '#FF0F172A' } else { '#FFFFFFFF' }
-                    $w.Resources['Brush.ButtonText'] = $createBrush.Invoke($foregroundHex)[0]
+            # Ensure accent foreground brushes have sufficient contrast
+            if ($w.Resources.Contains('Brush.Accent')) {
+                $accentBrush = $w.Resources['Brush.Accent'] -as [System.Windows.Media.SolidColorBrush]
+                if ($accentBrush) {
+                    $c = $accentBrush.Color
+                    $luminance = (0.2126 * ($c.R / 255.0)) + (0.7152 * ($c.G / 255.0)) + (0.0722 * ($c.B / 255.0))
+                    $desired = if ($luminance -gt 0.65) { [System.Windows.Media.Colors]::Black } else { [System.Windows.Media.Colors]::White }
+                    foreach ($fgKey in 'Brush.ButtonText', 'Brush.AccentText') {
+                        if ($w.Resources.Contains($fgKey)) {
+                            $fgBrush = $w.Resources[$fgKey] -as [System.Windows.Media.SolidColorBrush]
+                            if ($fgBrush) {
+                                if ($fgBrush.IsFrozen) {
+                                    $w.Resources[$fgKey] = [System.Windows.Media.SolidColorBrush]::new($desired)
+                                } else {
+                                    $fgBrush.Color = $desired
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        $applyTheme.Invoke($window)[0]
+        $applyTheme.Invoke($window) | Out-Null
 
         $controls = [ordered]@{
             HeaderText                       = $window.FindName('HeaderText')

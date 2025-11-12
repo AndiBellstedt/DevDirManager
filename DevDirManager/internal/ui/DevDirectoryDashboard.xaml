@@ -9,27 +9,28 @@
         <SolidColorBrush x:Key="Brush.SecondaryText" Color="#FFA5ACBC" />
         <SolidColorBrush x:Key="Brush.ButtonText" Color="#FFFFFFFF" />
         <SolidColorBrush x:Key="Brush.Accent" Color="#FF2F6BFF" />
+        <SolidColorBrush x:Key="Brush.AccentText" Color="#FFFFFFFF" />
         <SolidColorBrush x:Key="Brush.GridLines" Color="#FF141B2B" />
 
         <Style TargetType="TabControl">
-            <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="Margin" Value="0" />
         </Style>
 
         <Style TargetType="TabItem">
-            <Setter Property="Foreground" Value="{StaticResource Brush.ButtonText}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.ButtonText}" />
             <Setter Property="Padding" Value="20,10" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="Border" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="8,8,0,0" Padding="0" Margin="0,0,8,0">
+                        <Border x:Name="Border" Background="{DynamicResource Brush.SurfaceAlt}" CornerRadius="8,8,0,0" Padding="0" Margin="0,0,8,0">
                             <ContentPresenter ContentSource="Header" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16,6" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{StaticResource Brush.Accent}" />
-                                <Setter Property="Foreground" Value="White" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.AccentText}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Border" Property="Opacity" Value="0.6" />
@@ -41,8 +42,8 @@
         </Style>
 
         <Style TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
-            <Setter Property="Background" Value="{StaticResource Brush.Accent}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.ButtonText}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="14,6" />
@@ -52,9 +53,9 @@
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
-            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8" />
             <Setter Property="Margin" Value="0,0,12,0" />
@@ -63,9 +64,9 @@
         </Style>
 
         <Style TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
-            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="6" />
             <Setter Property="Margin" Value="0,0,12,0" />
@@ -83,16 +84,16 @@
                                     <ContentPresenter x:Name="ContentSite" Grid.Column="0" Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,3,23,3" IsHitTestVisible="False">
                                         <ContentPresenter.Resources>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
                                             </Style>
                                         </ContentPresenter.Resources>
                                     </ContentPresenter>
-                                    <Path x:Name="Arrow" Grid.Column="1" Fill="{StaticResource Brush.PrimaryText}" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                    <Path x:Name="Arrow" Grid.Column="1" Fill="{DynamicResource Brush.PrimaryText}" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0 Z"/>
                                 </Grid>
                             </ToggleButton>
                             <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
                                 <Grid x:Name="DropDown" SnapsToDevicePixels="True" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="{TemplateBinding MaxDropDownHeight}">
-                                    <Border x:Name="DropDownBorder" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                                    <Border x:Name="DropDownBorder" Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1">
                                         <ScrollViewer Margin="4,6,4,6" SnapsToDevicePixels="True">
                                             <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained" />
                                         </ScrollViewer>
@@ -106,7 +107,7 @@
             <Setter Property="ItemContainerStyle">
                 <Setter.Value>
                     <Style TargetType="ComboBoxItem">
-                        <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
                         <Setter Property="Background" Value="Transparent" />
                         <Setter Property="Padding" Value="8,6" />
                         <Setter Property="Template">
@@ -123,12 +124,12 @@
                                     </Border>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsHighlighted" Value="True">
-                                            <Setter TargetName="Border" Property="Background" Value="{StaticResource Brush.Accent}" />
-                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.AccentText}" />
                                         </Trigger>
                                         <Trigger Property="IsSelected" Value="True">
-                                            <Setter TargetName="Border" Property="Background" Value="{StaticResource Brush.Accent}" />
-                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter TargetName="Border" Property="Background" Value="{DynamicResource Brush.Accent}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.AccentText}" />
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -140,18 +141,18 @@
         </Style>
 
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
             <Setter Property="Margin" Value="0,8,16,0" />
         </Style>
 
         <Style TargetType="DataGrid">
-            <Setter Property="Background" Value="{StaticResource Brush.Surface}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="RowBackground" Value="{StaticResource Brush.Surface}" />
-            <Setter Property="AlternatingRowBackground" Value="{StaticResource Brush.SurfaceAlt}" />
-            <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource Brush.GridLines}" />
-            <Setter Property="VerticalGridLinesBrush" Value="{StaticResource Brush.GridLines}" />
+            <Setter Property="RowBackground" Value="{DynamicResource Brush.Surface}" />
+            <Setter Property="AlternatingRowBackground" Value="{DynamicResource Brush.SurfaceAlt}" />
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Brush.GridLines}" />
+            <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource Brush.GridLines}" />
             <Setter Property="ColumnHeaderHeight" Value="34" />
             <Setter Property="AutoGenerateColumns" Value="False" />
             <Setter Property="CanUserAddRows" Value="False" />
@@ -160,9 +161,9 @@
         </Style>
 
         <Style TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
-            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
+            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceAlt}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
             <Setter Property="BorderThickness" Value="0,0,1,1" />
             <Setter Property="Padding" Value="10,8" />
             <Setter Property="FontWeight" Value="SemiBold" />
@@ -175,7 +176,7 @@
                                 <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center">
                                     <ContentPresenter.Resources>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
                                             <Setter Property="FontWeight" Value="SemiBold" />
                                         </Style>
                                     </ContentPresenter.Resources>
@@ -217,7 +218,7 @@
 
         <Style TargetType="DataGridCell">
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryText}" />
+            <Setter Property="Foreground" Value="{DynamicResource Brush.PrimaryText}" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="10,6" />
             <Setter Property="Template">
@@ -234,8 +235,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter Property="Background" Value="{StaticResource Brush.Accent}" />
-                                <Setter Property="Foreground" Value="White" />
+                                <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Brush.AccentText}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -255,21 +256,21 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{StaticResource Brush.Surface}" Padding="28,22" BorderThickness="0">
+        <Border Grid.Row="0" Background="{DynamicResource Brush.Surface}" Padding="28,22" BorderThickness="0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock x:Name="HeaderText" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource Brush.PrimaryText}" />
-                    <TextBlock x:Name="SubHeaderText" Margin="0,6,0,0" FontSize="13" Foreground="{StaticResource Brush.SecondaryText}" />
+                    <TextBlock x:Name="HeaderText" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource Brush.PrimaryText}" />
+                    <TextBlock x:Name="SubHeaderText" Margin="0,6,0,0" FontSize="13" Foreground="{DynamicResource Brush.SecondaryText}" />
                 </StackPanel>
                 <Image x:Name="HeaderLogo" Grid.Column="1" Width="64" Height="64" Margin="16,0,0,0" Stretch="Uniform" HorizontalAlignment="Right" />
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Margin="0" Background="{StaticResource Brush.WindowBackground}">
+        <Border Grid.Row="1" Margin="0" Background="{DynamicResource Brush.WindowBackground}">
             <TabControl x:Name="MainTabControl" Margin="0">
                 <TabItem>
                     <TabItem.Header>
@@ -283,7 +284,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="DiscoverPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="DiscoverPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <TextBox x:Name="DiscoverPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="DiscoverBrowseButton" Margin="0,0,0,0" />
@@ -291,10 +292,10 @@
                                 </StackPanel>
                             </Grid>
 
-                            <TextBlock x:Name="DiscoverSummaryText" Margin="0,12,0,0" Foreground="{StaticResource Brush.SecondaryText}" />
+                            <TextBlock x:Name="DiscoverSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
 
                             <!-- Export Controls Section -->
-                            <Separator Margin="0,32,0,24" Background="{StaticResource Brush.Border}" />
+                            <Separator Margin="0,32,0,24" Background="{DynamicResource Brush.Border}" />
 
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -302,7 +303,7 @@
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ExportFormatLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="ExportFormatLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <ComboBox x:Name="ExportFormatCombo" Grid.Column="1" />
                             </Grid>
 
@@ -312,7 +313,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ExportPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="ExportPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <TextBox x:Name="ExportPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="ExportBrowseButton" Margin="0,0,0,0" />
@@ -321,7 +322,7 @@
                             </Grid>
 
                             <!-- DataGrid moved below export controls -->
-                            <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
+                            <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
                                 <DataGrid x:Name="DiscoverGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True" ColumnHeaderHeight="34">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn x:Name="DiscoverRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
@@ -350,7 +351,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ImportPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="ImportPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <TextBox x:Name="ImportPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="ImportBrowseButton" Margin="0,0,0,0" />
@@ -358,7 +359,7 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
+                            <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
                                 <DataGrid x:Name="ImportGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn x:Name="ImportRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
@@ -370,7 +371,7 @@
                                 </DataGrid>
                             </Border>
 
-                            <TextBlock x:Name="ImportSummaryText" Margin="0,12,0,0" Foreground="{StaticResource Brush.SecondaryText}" />
+                            <TextBlock x:Name="ImportSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
@@ -387,7 +388,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="RestoreListPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="RestoreListPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <TextBox x:Name="RestoreListPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="RestoreListBrowseButton" Margin="0,0,0,0" />
@@ -400,7 +401,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="RestoreDestinationLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="RestoreDestinationLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <TextBox x:Name="RestoreDestinationBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="RestoreDestinationBrowseButton" Margin="0,0,0,0" />
@@ -415,7 +416,7 @@
                                 <CheckBox x:Name="RestoreWhatIfCheckBox" />
                             </WrapPanel>
 
-                            <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
+                            <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
                                 <DataGrid x:Name="RestoreGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn x:Name="RestoreRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
@@ -426,7 +427,7 @@
                                 </DataGrid>
                             </Border>
 
-                            <TextBlock x:Name="RestoreSummaryText" Margin="0,12,0,0" Foreground="{StaticResource Brush.SecondaryText}" />
+                            <TextBlock x:Name="RestoreSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
@@ -443,7 +444,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SyncDirectoryLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="SyncDirectoryLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <TextBox x:Name="SyncDirectoryBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="SyncDirectoryBrowseButton" Margin="0,0,0,0" />
@@ -456,7 +457,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SyncListPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{StaticResource Brush.PrimaryText}" />
+                                <TextBlock x:Name="SyncListPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <TextBox x:Name="SyncListPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="SyncListBrowseButton" Margin="0,0,0,0" />
@@ -471,7 +472,7 @@
                                 <CheckBox x:Name="SyncWhatIfCheckBox" />
                             </WrapPanel>
 
-                            <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
+                            <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
                                 <DataGrid x:Name="SyncGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn x:Name="SyncRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
@@ -482,14 +483,14 @@
                                 </DataGrid>
                             </Border>
 
-                            <TextBlock x:Name="SyncSummaryText" Margin="0,12,0,0" Foreground="{StaticResource Brush.SecondaryText}" />
+                            <TextBlock x:Name="SyncSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
             </TabControl>
         </Border>
 
-        <StatusBar Grid.Row="2" Background="{StaticResource Brush.Surface}" Foreground="{StaticResource Brush.PrimaryText}" Padding="24,6">
+        <StatusBar Grid.Row="2" Background="{DynamicResource Brush.Surface}" Foreground="{DynamicResource Brush.PrimaryText}" Padding="24,6">
             <StatusBarItem>
                 <TextBlock x:Name="StatusText" />
             </StatusBarItem>
