@@ -1,158 +1,191 @@
 ﻿SUJET
     about_DevDirManager
 
-DESCRIPTION COURTE
-    DevDirManager est un module PowerShell pour gérer et organiser les répertoires
-    de développement contenant des référentiels Git. Il fournit des outils pour
-    analyser les structures de répertoires, maintenir des inventaires de référentiels
-    et automatiser les opérations de clonage de référentiels.
+DESCRIPTION BREVE
+    DevDirManager est un module PowerShell pour gérer et organiser des répertoires
+    de développement contenant des dépôts Git. Il fournit des outils pour scanner
+    les structures de répertoires, maintenir des inventaires de dépôts et
+    automatiser les opérations de clonage de dépôts.
 
 DESCRIPTION LONGUE
-    Le module DevDirManager aide les développeurs à gérer de grandes collections de
-    référentiels Git à travers plusieurs structures de répertoires. Il offre des
+    Le module DevDirManager aide les développeurs à gérer de grandes collections
+    de dépôts Git à travers plusieurs structures de répertoires. Il offre des
     fonctionnalités pour :
 
-    * Analyser les arborescences de répertoires pour découvrir les référentiels Git
-    * Exporter les inventaires de référentiels vers plusieurs formats de fichiers (CSV, JSON, XML)
-    * Importer et restaurer les collections de référentiels en préservant les dispositions des dossiers
-    * Synchroniser les listes de référentiels avec le contenu réel des répertoires
-    * Publier les inventaires de référentiels sur GitHub Gists
+    * Scanner les arborescences de répertoires pour découvrir les dépôts Git
+    * Exporter des inventaires de dépôts vers plusieurs formats de fichiers (CSV, JSON, XML)
+    * Importer et restaurer des collections de dépôts en préservant les dispositions de dossiers
+    * Synchroniser les listes de dépôts avec le contenu réel des répertoires
+    * Publier des inventaires de dépôts sur des Gists GitHub
     * Configurer le comportement via le système de configuration PSFramework
+    * Gérer les dépôts via une interface graphique de tableau de bord WPF
 
-    Le module utilise un algorithme de recherche en largeur pour analyser efficacement
-    les grandes structures de répertoires et prend en charge les formats de sortie
-    personnalisés pour les données de référentiels.
+    Le module utilise un algorithme de recherche en largeur pour scanner efficacement
+    de grandes structures de répertoires et prend en charge les formats de sortie
+    personnalisés pour les données de dépôts.
+
+    Pour les utilisateurs qui préfèrent les interfaces graphiques, le module inclut
+    un tableau de bord WPF complet qui fournit un accès pointer-cliquer à toute la
+    fonctionnalité principale.
 
 SYSTÈME DE CONFIGURATION
-    DevDirManager exploite le système de configuration PSFramework pour fournir des
-    paramètres flexibles et personnalisables par l'utilisateur. Les valeurs de
-    configuration peuvent être définies à l'aide de la cmdlet Set-PSFConfig et
+    DevDirManager exploite le système de configuration PSFramework pour fournir
+    des paramètres flexibles et personnalisables par l''utilisateur. Les valeurs de
+    configuration peuvent être définies en utilisant la cmdlet Set-PSFConfig et
     persistent entre les sessions PowerShell.
 
-    Paramètres de configuration disponibles :
+    Configurations Disponibles :
 
     DevDirManager.Git.Executable
-        Chemin vers l'exécutable git utilisé pour les opérations de clonage.
-        Valeur par défaut : git.exe
-        Exemple : Set-PSFConfig -FullName 'DevDirManager.Git.Executable' -Value 'C:\Program Files\Git\cmd\git.exe'
+        Chemin vers l''exécutable git utilisé pour les opérations de clonage.
+        Valeur Par Défaut : git.exe
+        Exemple : Set-PSFConfig -FullName ''DevDirManager.Git.Executable'' -Value ''C:\Program Files\Git\cmd\git.exe''
 
     DevDirManager.Git.RemoteName
-        Nom du distant Git par défaut à interroger lors de l'analyse des référentiels.
-        Valeur par défaut : origin
-        Exemple : Set-PSFConfig -FullName 'DevDirManager.Git.RemoteName' -Value 'upstream'
+        Nom du distant Git par défaut à interroger lors du scan des dépôts.
+        Valeur Par Défaut : origin
+        Exemple : Set-PSFConfig -FullName ''DevDirManager.Git.RemoteName'' -Value ''upstream''
 
     DevDirManager.DefaultOutputFormat
-        Format de fichier par défaut pour l'exportation/importation des listes de référentiels.
-        Valeurs valides : CSV, JSON, XML
-        Valeur par défaut : CSV
-        Exemple : Set-PSFConfig -FullName 'DevDirManager.DefaultOutputFormat' -Value 'JSON'
+        Format de fichier par défaut pour l''exportation/importation de listes de dépôts.
+        Valeurs Valides : CSV, JSON, XML
+        Valeur Par Défaut : CSV
+        Exemple : Set-PSFConfig -FullName ''DevDirManager.DefaultOutputFormat'' -Value ''JSON''
 
-    Pour afficher les valeurs de configuration actuelles :
+    Pour voir les valeurs de configuration actuelles :
         Get-PSFConfig -Module DevDirManager
 
-    Les valeurs de configuration sont automatiquement récupérées par les fonctions du
-    module et n'ont pas besoin d'être spécifiées en tant que paramètres sauf si vous
-    souhaitez remplacer les valeurs par défaut configurées pour une opération spécifique.
+    Les valeurs de configuration sont récupérées automatiquement par les fonctions
+    du module et n''ont pas besoin d''être spécifiées en tant que paramètres sauf si
+    vous souhaitez remplacer les valeurs par défaut configurées pour une opération spécifique.
 
 FONCTIONS PRINCIPALES
-    Découverte de référentiels
-    --------------------------
+    Tableau de Bord Graphique
+    -------------------------
+    Show-DevDirectoryDashboard
+        Lance une interface utilisateur graphique complète basée sur WPF qui fournit
+        un accès pointer-cliquer à toute la fonctionnalité de DevDirManager. Le
+        tableau de bord présente :
+
+        - Interface utilisateur consciente du thème (mode clair/sombre automatique)
+        - Interface à onglets avec opérations Découvrir & Exporter, Importer & Restaurer et Synchroniser
+        - Retour visuel en temps réel pendant les opérations de longue durée
+        - Colonnes de grille de données redimensionnables et réorganisables
+        - Synchronisation automatique des chemins de liste de dépôts entre les onglets
+        - Affichage du logo d''en-tête avec gestion automatique des actifs
+        - Localisation complète (anglais, espagnol, français)
+
+        Paramètres :
+        - RootPath : Chemin optionnel pour préremplir l''onglet Découvrir
+        - ShowWindow : Contrôle l''affichage de la fenêtre (par défaut : $true)
+        - PassThru : Retourne les objets fenêtre, contrôles et état pour l''automatisation
+
+        Exemple :
+        PS C:\> Show-DevDirectoryDashboard -RootPath C:\Projects
+
+        Le tableau de bord est idéal pour :
+        - Découverte et gestion interactives de dépôts
+        - Opérations d''exportation/importation rapides sans syntaxe de ligne de commande
+        - Vérification visuelle des collections de dépôts
+        - Utilisateurs préférant les interfaces graphiques aux commandes PowerShell
+
+    Découverte de Dépôts
+    --------------------
     Get-DevDirectory
-        Analyse une arborescence de répertoires pour découvrir tous les référentiels Git
-        et récupère leurs URLs distantes et leur configuration utilisateur. Renvoie des
+        Scanne une arborescence de répertoires pour découvrir tous les dépôts Git
+        et récupère leurs URLs distantes et configuration utilisateur. Retourne des
         objets DevDirManager.Repository avec :
-        - RootPath : Répertoire de base qui a été analysé
-        - RelativePath : Chemin du référentiel relatif à RootPath
-        - FullPath : Chemin absolu vers le référentiel
-        - RemoteName : Nom du distant Git (par ex., 'origin')
-        - RemoteUrl : URL du référentiel distant
-        - UserName : Configuration git user.name locale au référentiel
-        - UserEmail : Configuration git user.email locale au référentiel
-        - StatusDate : Date du commit le plus récent ou de l'activité du référentiel
-        - IsRemoteAccessible : Booléen indiquant si l'URL distante est accessible
+        - RootPath : Répertoire de base qui a été scanné
+        - RelativePath : Chemin du dépôt relatif à RootPath
+        - FullPath : Chemin absolu vers le dépôt
+        - RemoteName : Nom du distant Git (ex., ''origin'')
+        - RemoteUrl : URL du dépôt distant
+        - UserName : Configuration git user.name locale du dépôt
+        - UserEmail : Configuration git user.email locale du dépôt
+        - StatusDate : Date du commit le plus récent ou date d''activité du dépôt
+        - IsRemoteAccessible : Booléen indiquant si l''URL distante est accessible
           (null si -SkipRemoteCheck a été utilisé)
 
         Paramètres :
-        - RootPath : Répertoire à analyser pour les référentiels (par défaut : emplacement actuel)
-        - SkipRemoteCheck : Ignore la vérification de l'accessibilité distante, améliorant
-          les performances mais ne marquant pas les référentiels inaccessibles
+        - RootPath : Répertoire à scanner pour les dépôts (par défaut : emplacement actuel)
+        - SkipRemoteCheck : Ignore la vérification d''accessibilité distante, améliorant
+          les performances mais sans marquer les dépôts inaccessibles
 
-    Gestion des listes de référentiels
-    -----------------------------------
+    Gestion de Liste de Dépôts
+    ---------------------------
     Export-DevDirectoryList
-        Exporte une collection d'objets référentiels vers un fichier au format CSV, JSON ou
-        XML. Détecte automatiquement le format à partir de l'extension de fichier ou utilise
-        le format par défaut configuré.
+        Exporte une collection d''objets de dépôt vers un fichier au format
+        CSV, JSON ou XML. Détecte automatiquement le format depuis l''extension
+        du fichier ou utilise le format par défaut configuré.
 
     Import-DevDirectoryList
-        Importe des listes de référentiels depuis des fichiers CSV, JSON ou XML. Préserve
-        les informations de type DevDirManager.Repository pour une intégration transparente
-        avec d'autres fonctions du module.
+        Importe des listes de dépôts depuis des fichiers CSV, JSON ou XML. Préserve
+        les informations de type DevDirManager.Repository pour une intégration
+        transparente avec d''autres fonctions du module.
 
-    Opérations sur les référentiels
-    --------------------------------
+    Opérations de Dépôt
+    --------------------
     Restore-DevDirectory
-        Clone les référentiels à partir d'un fichier de liste de référentiels, en préservant
-        la structure de répertoires d'origine. Crée les répertoires parents nécessaires et
-        prend en charge le clonage récursif des sous-modules. Si les métadonnées du référentiel
-        incluent les propriétés UserName et UserEmail, ces valeurs sont configurées dans le
-        référentiel cloné à l'aide de 'git config --local', garantissant que le référentiel
-        cloné conserve la même identité utilisateur que l'original.
+        Clone des dépôts depuis un fichier de liste de dépôts, en préservant
+        la structure de répertoires d''origine. Crée les répertoires parents nécessaires
+        et prend en charge le clonage récursif de sous-modules. Si les métadonnées du
+        dépôt incluent les propriétés UserName et UserEmail, ces valeurs sont configurées
+        dans le dépôt cloné en utilisant ''git config --local'', garantissant que le
+        dépôt cloné maintient la même identité utilisateur que l''original.
 
         Paramètres :
-        - DestinationPath : Répertoire racine où les référentiels seront restaurés
-        - Force : Écrase les répertoires existants en les supprimant avant le clonage
-        - SkipExisting : Ignore les référentiels dont le répertoire cible existe déjà
-        - ShowGitOutput : Affiche la sortie des commandes git au lieu de la supprimer
+        - DestinationPath : Répertoire racine où les dépôts seront restaurés
+        - Force : Écrase les répertoires existants en les supprimant avant de cloner
+        - SkipExisting : Ignore les dépôts dont le répertoire de destination existe déjà
+        - ShowGitOutput : Affiche la sortie de la commande git au lieu de la supprimer
 
     Sync-DevDirectoryList
         Effectue une synchronisation bidirectionnelle entre une structure de répertoires
-        et un fichier de liste de référentiels. Peut mettre à jour le fichier avec de nouveaux
-        référentiels trouvés dans le répertoire, ou cloner les référentiels manquants depuis
-        le fichier. Lors de la fusion des métadonnées, les valeurs de référentiel locales pour
-        UserName, UserEmail et StatusDate sont privilégiées par rapport aux valeurs du fichier
-        pour garantir l'exactitude.
+        et un fichier de liste de dépôts. Peut mettre à jour le fichier avec de
+        nouveaux dépôts trouvés dans le répertoire, ou cloner des dépôts manquants
+        du fichier. Lors de la fusion des métadonnées, les valeurs du dépôt local
+        pour UserName, UserEmail et StatusDate sont préférées aux valeurs du fichier
+        pour garantir l''exactitude.
 
         Paramètres :
-        - DirectoryPath : Répertoire racine contenant les référentiels Git
-        - RepositoryListPath : Chemin vers le fichier de liste de référentiels
+        - DirectoryPath : Répertoire racine contenant des dépôts Git
+        - RepositoryListPath : Chemin vers le fichier de liste de dépôts
         - Force : Transmet à Restore-DevDirectory pour écraser les répertoires existants
         - SkipExisting : Transmet à Restore-DevDirectory pour ignorer les existants
-        - ShowGitOutput : Transmet à Restore-DevDirectory pour afficher la sortie git
-        - PassThru : Renvoie la liste de référentiels fusionnée après la synchronisation
+        - PassThru : Retourne la liste de dépôts fusionnée après la synchronisation
 
     Intégration GitHub
     ------------------
     Publish-DevDirectoryList
-        Publie une liste de référentiels sur GitHub en tant que Gist public ou privé.
+        Publie une liste de dépôts sur GitHub en tant que Gist public ou privé.
         Convertit automatiquement les fichiers CSV et XML en JSON pour la compatibilité
-        Gist. Nécessite un jeton d'accès personnel GitHub avec la portée gist.
+        Gist. Nécessite un Token d''Accès Personnel GitHub avec portée gist.
 
-PRISE EN CHARGE DES FORMATS DE FICHIERS
-    DevDirManager prend en charge trois formats de fichiers pour les inventaires de référentiels :
+SUPPORT DE FORMAT DE FICHIER
+    DevDirManager prend en charge trois formats de fichier pour les inventaires de dépôts :
 
-    CSV (Valeurs séparées par des virgules)
-        - Format tabulaire lisible par l'homme
-        - Encodage UTF8 pour la prise en charge des caractères internationaux
-        - Idéal pour la visualisation dans les applications de tableur
-        - Les informations de type sont ajoutées lors de l'importation
+    CSV (Valeurs Séparées par des Virgules)
+        - Format tabulaire lisible par l''homme
+        - Encodage UTF8 pour le support de caractères internationaux
+        - Meilleur pour visualiser dans les applications de feuille de calcul
+        - Les informations de type sont ajoutées lors de l''importation
 
     JSON (JavaScript Object Notation)
-        - Format de données structuré
+        - Format de données structurées
         - Encodage UTF8
-        - Idéal pour les applications web et les API
+        - Meilleur pour les applications web et les API
         - Sérialisation de profondeur 5 pour les propriétés imbriquées
-        - Les informations de type sont ajoutées lors de l'importation
+        - Les informations de type sont ajoutées lors de l''importation
 
     XML (PowerShell CLIXML)
         - Format de sérialisation natif PowerShell
         - Préserve automatiquement les informations de type
-        - Idéal pour l'échange de données PowerShell-à-PowerShell
-        - Gère les structures d'objets complexes
+        - Meilleur pour l''échange de données PowerShell à PowerShell
+        - Gère les structures d''objets complexes
 
-    Détection automatique du format
-        Lorsqu'aucun format explicite n'est spécifié, DevDirManager détermine le format
-        en utilisant cette priorité :
+    Détection Automatique de Format
+        Lorsqu''aucun format explicite n''est spécifié, DevDirManager détermine le
+        format en utilisant cette précédence :
         1. Valeur explicite du paramètre -Format
         2. Extension de fichier (.csv, .json, .xml)
         3. Format par défaut configuré (DevDirManager.DefaultOutputFormat)
@@ -163,28 +196,29 @@ PRISE EN CHARGE DES FORMATS DE FICHIERS
 
 TYPES PERSONNALISÉS
     DevDirManager.Repository
-        Représente un référentiel Git découvert lors d'une analyse de répertoire. Contient :
-        - RootPath [string] : Répertoire de base qui a été analysé
+        Représente un dépôt Git découvert lors d''un scan de répertoire. Contient :
+        - RootPath [string] : Répertoire de base qui a été scanné
         - RelativePath [string] : Chemin relatif à RootPath
         - FullPath [string] : Chemin absolu complet
         - RemoteName [string] : Nom du distant Git
-        - RemoteUrl [string] : URL du référentiel distant
-        - UserName [string] : git user.name local au référentiel (depuis .git/config)
-        - UserEmail [string] : git user.email local au référentiel (depuis .git/config)
-        - StatusDate [datetime] : Date du commit le plus récent ou de l'activité du référentiel
+        - RemoteUrl [string] : URL du dépôt distant
+        - UserName [string] : git user.name local du dépôt (depuis .git/config)
+        - UserEmail [string] : git user.email local du dépôt (depuis .git/config)
+        - StatusDate [datetime] : Date du commit le plus récent ou date d''activité du dépôt
 
-        La vue de format personnalisée affiche : RelativePath, RemoteName, RemoteUrl, UserName,
-        UserEmail, StatusDate
+        La vue de format personnalisée affiche : RelativePath, RemoteName, RemoteUrl,
+        UserName, UserEmail, StatusDate
 
-        Remarque : UserName et UserEmail sont extraits exclusivement du fichier .git/config
-        local du référentiel. Les valeurs de configuration git globales et système sont
-        intentionnellement ignorées pour garantir un suivi précis de l'identité par référentiel.
+        Note : UserName et UserEmail sont extraits exclusivement du fichier local
+        .git/config du dépôt. Les valeurs de configuration git globale et système
+        sont intentionnellement ignorées pour garantir un suivi précis d''identité
+        par dépôt.
 
     DevDirManager.CloneResult
-        Représente le résultat d'une opération de clonage de référentiel. Contient :
-        - Status [string] : Success, Failed, ou Skipped
+        Représente le résultat d''une opération de clonage de dépôt. Contient :
+        - Status [string] : Success, Failed ou Skipped
         - TargetPath [string] : Chemin du répertoire de destination
-        - RemoteUrl [string] : URL du référentiel source
+        - RemoteUrl [string] : URL du dépôt source
 
     DevDirManager.GistResult
         Représente un Gist GitHub publié. Contient :
@@ -194,238 +228,268 @@ TYPES PERSONNALISÉS
         - HtmlUrl [string] : URL du navigateur pour le Gist
 
 EXEMPLES
-    Exemple 1 : Découvrir les référentiels dans un répertoire
-        PS C:\> Get-DevDirectory -RootPath C:\Projects -Recurse
+    Exemple 1 : Lancer le tableau de bord graphique
+        PS C:\> Show-DevDirectoryDashboard
 
-        Analyse C:\Projects de manière récursive et renvoie tous les référentiels Git avec
-        leurs URLs distantes.
+        Ouvre l''interface du tableau de bord WPF avec toutes les fonctionnalités de
+        gestion de dépôts accessibles via une interface graphique.
 
-    Exemple 2 : Exporter la liste de référentiels en CSV
-        PS C:\> Get-DevDirectory -RootPath C:\Projects -Recurse |
+    Exemple 2 : Lancer le tableau de bord avec dossier prérempli
+        PS C:\> Show-DevDirectoryDashboard -RootPath C:\Projects
+
+        Ouvre le tableau de bord avec C:\Projects déjà saisi dans l''onglet Découvrir,
+        prêt pour un scan immédiat.
+
+    Exemple 3 : Utiliser le tableau de bord pour l''automatisation
+        PS C:\> $dash = Show-DevDirectoryDashboard -ShowWindow:$false -PassThru
+        PS C:\> $dash.Controls.DiscoverPathBox.Text = ''C:\Projects''
+        PS C:\> $dash.Controls.DiscoverScanButton.RaiseEvent([System.Windows.RoutedEventArgs]::new([System.Windows.Controls.Button]::ClickEvent))
+
+        Crée un tableau de bord sans l''afficher, définit le chemin par programmation et
+        déclenche le bouton de scan pour les scénarios d''automatisation.
+
+    Exemple 4 : Découvrir des dépôts dans un répertoire
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse
+
+        Scanne C:\Projects de manière récursive et retourne tous les dépôts Git
+        avec leurs URLs distantes.
+
+    Exemple 5 : Exporter une liste de dépôts vers CSV
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
                 Export-DevDirectoryList -Path C:\Temp\repos.csv
 
-        Exporte les référentiels découverts vers un fichier CSV en utilisant l'encodage UTF8.
+        Exporte les dépôts découverts vers un fichier CSV en utilisant l''encodage UTF8.
 
-    Exemple 3 : Exporter en JSON avec format explicite
-        PS C:\> Get-DevDirectory -RootPath C:\Projects -Recurse |
+    Exemple 6 : Exporter vers JSON avec format explicite
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
                 Export-DevDirectoryList -Path C:\Temp\repos.txt -Format JSON
 
-        Exporte au format JSON même si l'extension de fichier est .txt.
+        Exporte au format JSON même si l''extension de fichier est .txt.
 
-    Exemple 4 : Importer la liste de référentiels et afficher le type
+    Exemple 7 : Importer une liste de dépôts et voir le type
         PS C:\> $repos = Import-DevDirectoryList -Path C:\Temp\repos.csv
         PS C:\> $repos[0].PSObject.TypeNames
 
-        Importe les référentiels depuis CSV et affiche les informations de type.
+        Importe des dépôts depuis CSV et affiche les informations de type.
 
-    Exemple 5 : Cloner les référentiels depuis une liste
+    Exemple 8 : Cloner des dépôts depuis une liste
         PS C:\> Restore-DevDirectory -RepositoryListPath C:\Temp\repos.csv -TargetDirectory D:\Projects
 
-        Clone tous les référentiels du fichier CSV vers D:\Projects, en préservant la
-        structure de répertoires d'origine.
+        Clone tous les dépôts du fichier CSV vers D:\Projects, en préservant
+        la structure de répertoires d''origine.
 
-    Exemple 6 : Synchroniser le répertoire avec la liste de référentiels
+    Exemple 9 : Synchroniser un répertoire avec une liste de dépôts
         PS C:\> Sync-DevDirectoryList -RepositoryListPath C:\Temp\repos.csv -Path C:\Projects -Recurse
 
-        Compare C:\Projects avec repos.csv et ajoute de nouveaux référentiels au fichier.
+        Compare C:\Projects avec repos.csv et ajoute de nouveaux dépôts au fichier.
 
-    Exemple 7 : Configurer le format par défaut en JSON
-        PS C:\> Set-PSFConfig -FullName 'DevDirManager.DefaultOutputFormat' -Value 'JSON'
-        PS C:\> Get-DevDirectory -RootPath C:\Projects -Recurse |
+    Exemple 10 : Configurer le format par défaut sur JSON
+        PS C:\> Set-PSFConfig -FullName ''DevDirManager.DefaultOutputFormat'' -Value ''JSON''
+        PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
                 Export-DevDirectoryList -Path C:\Temp\repos
 
-        Exporte au format JSON car aucune extension n'est fournie et le défaut est JSON.
+        Exporte au format JSON car aucune extension n''est fournie et le par défaut est JSON.
 
-    Exemple 8 : Publier la liste de référentiels sur GitHub Gist
+    Exemple 11 : Publier une liste de dépôts sur GitHub Gist
         PS C:\> $token = Read-Host -AsSecureString -Prompt "GitHub Token"
         PS C:\> Publish-DevDirectoryList -FromPath C:\Temp\repos.csv -Description "My Repositories" -GitHubToken $token
 
-        Publie la liste de référentiels en tant que Gist public sur GitHub.
+        Publie la liste de dépôts en tant que Gist public sur GitHub.
 
-    Exemple 9 : Modifier le chemin de l'exécutable Git
-        PS C:\> Set-PSFConfig -FullName 'DevDirManager.Git.Executable' -Value 'C:\PortableGit\bin\git.exe'
+    Exemple 12 : Changer le chemin de l''exécutable Git
+        PS C:\> Set-PSFConfig -FullName ''DevDirManager.Git.Executable'' -Value ''C:\PortableGit\bin\git.exe''
 
         Configure DevDirManager pour utiliser une installation Git portable.
 
-    Exemple 10 : Analyser les référentiels en utilisant un distant différent
-        PS C:\> Set-PSFConfig -FullName 'DevDirManager.Git.RemoteName' -Value 'upstream'
-        PS C:\> Get-DevDirectory -RootPath C:\Forks -Recurse
+    Exemple 13 : Scanner des dépôts en utilisant un distant différent
+        PS C:\> Set-PSFConfig -FullName ''DevDirManager.Git.RemoteName'' -Value ''upstream''
+        PS C:\> Get-DevDirectory -Path C:\Forks -Recurse
 
-        Analyse les référentiels et récupère l'URL du distant 'upstream' au lieu de 'origin'.
+        Scanne des dépôts et récupère l''URL du distant ''upstream'' au lieu de ''origin''.
 
-    Exemple 11 : Afficher la configuration utilisateur du référentiel
-        PS C:\> Get-DevDirectory -RootPath C:\Projects | Select-Object RelativePath, UserName, UserEmail, StatusDate
+    Exemple 14 : Voir la configuration utilisateur du dépôt
+        PS C:\> Get-DevDirectory -Path C:\Projects | Select-Object RelativePath, UserName, UserEmail, StatusDate
 
-        Affiche les référentiels avec leur configuration utilisateur locale et leur date d'activité.
-        UserName et UserEmail sont extraits du fichier .git/config du référentiel
-        (configuration locale uniquement, la config globale/système est ignorée).
+        Affiche les dépôts avec leur configuration utilisateur locale et date d''activité.
+        UserName et UserEmail sont extraits du fichier .git/config du dépôt
+        (configuration locale du dépôt uniquement, la configuration globale/système est ignorée).
 
-    Exemple 12 : Cloner les référentiels avec préservation de l'identité utilisateur
+    Exemple 15 : Cloner des dépôts avec préservation d''identité utilisateur
         PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.csv | Restore-DevDirectory -DestinationPath D:\Projects
 
-        Clone les référentiels vers D:\Projects. Si les métadonnées du référentiel incluent les
-        propriétés UserName et UserEmail, celles-ci sont automatiquement configurées dans chaque
-        référentiel cloné à l'aide de 'git config --local user.name' et 'git config --local user.email'.
+        Clone des dépôts vers D:\Projects. Si les métadonnées du dépôt incluent les
+        propriétés UserName et UserEmail, celles-ci sont automatiquement configurées
+        dans chaque dépôt cloné en utilisant ''git config --local user.name'' et
+        ''git config --local user.email''.
 
-MODÈLES DE WORKFLOW
-    Modèles DevDirManager courants :
+MODÈLES DE FLUX DE TRAVAIL
+    Flux de travail communs de DevDirManager :
 
-    Inventaire et sauvegarde
-        1. Analyser vos répertoires de développement
-        2. Exporter en CSV/JSON pour sauvegarde
-        3. Optionnellement publier sur GitHub Gist pour sauvegarde cloud
+    Utiliser le Tableau de Bord Graphique
+        1. Lancez Show-DevDirectoryDashboard
+        2. Utilisez l''onglet Découvrir pour scanner les dépôts et sélectionner le format d''exportation
+        3. Exportez directement vers un fichier depuis l''onglet Découvrir
+        4. Basculez vers les onglets Importer/Restaurer/Synchroniser selon les besoins (les chemins de fichiers se synchronisent automatiquement)
+        5. Le retour visuel vous tient informé pendant les opérations longues
 
-    Restaurer l'environnement de développement
-        1. Obtenir la liste de référentiels (depuis sauvegarde ou Gist)
-        2. Utiliser Restore-DevDirectory pour cloner tous les référentiels
-        3. Maintient la structure de dossiers d'origine
+    Inventaire et Sauvegarde
+        1. Scannez vos répertoires de développement
+        2. Exportez vers CSV/JSON pour sauvegarde
+        3. Publiez éventuellement sur GitHub Gist pour sauvegarde cloud
 
-    Maintenir l'inventaire à jour
-        1. Utiliser Sync-DevDirectoryList périodiquement
-        2. Ajoute automatiquement les nouveaux référentiels à votre inventaire
-        3. Optionnellement cloner les référentiels manquants
+    Restaurer l''Environnement de Développement
+        1. Obtenez la liste de dépôts (depuis sauvegarde ou Gist)
+        2. Utilisez Restore-DevDirectory pour cloner tous les dépôts
+        3. Maintient la structure de dossiers d''origine
 
-    Synchronisation multi-machines
-        1. Exporter la liste de référentiels depuis la machine principale
-        2. Publier sur GitHub Gist
-        3. Télécharger le Gist sur d'autres machines
-        4. Restaurer les référentiels pour refléter la configuration
+    Maintenir l''Inventaire à Jour
+        1. Utilisez Sync-DevDirectoryList périodiquement
+        2. Ajoute automatiquement de nouveaux dépôts à votre inventaire
+        3. Clone éventuellement les dépôts manquants
+
+    Synchronisation Multi-Machine
+        1. Exportez la liste de dépôts de la machine principale
+        2. Publiez sur GitHub Gist
+        3. Téléchargez Gist sur d''autres machines
+        4. Restaurez les dépôts pour refléter la configuration
 
 DÉTAILS TECHNIQUES
-    Algorithme de recherche
-        DevDirManager utilise un algorithme de recherche en largeur (BFS) lors de l'analyse
+    Algorithme de Recherche
+        DevDirManager utilise un algorithme de recherche en largeur (BFS) lors du scan
         des structures de répertoires. Cette approche :
         - Minimise la profondeur de récursion pour les grandes arborescences de répertoires
-        - Fournit une utilisation de la mémoire prévisible
+        - Fournit une utilisation de mémoire prévisible
         - Gère efficacement les hiérarchies profondes
-        - Ignore les répertoires .git pour éviter d'analyser les éléments internes du référentiel
+        - Ignore les répertoires .git pour éviter de scanner les internes du dépôt
 
     Encodage UTF8
-        Toutes les opérations de fichiers utilisent l'encodage UTF8 pour garantir :
-        - Prise en charge des caractères internationaux
+        Toutes les opérations de fichier utilisent l''encodage UTF8 pour garantir :
+        - Support de caractères internationaux
         - Compatibilité multiplateforme
         - Comportement cohérent sur Windows, Linux et macOS
 
-    Préservation du type
-        Les objets référentiels maintiennent leurs informations de type à travers la sérialisation :
+    Préservation de Type
+        Les objets de dépôt maintiennent leurs informations de type à travers la sérialisation :
         - Format XML : Automatique via Export-Clixml/Import-Clixml
-        - Format CSV : Type inséré lors d'Import-DevDirectoryList
-        - Format JSON : Type inséré lors d'Import-DevDirectoryList
+        - Format CSV : Type inséré pendant Import-DevDirectoryList
+        - Format JSON : Type inséré pendant Import-DevDirectoryList
 
-    Vue de format personnalisée
+    Vue de Format Personnalisée
         Les objets DevDirManager.Repository ont une vue de table personnalisée qui affiche :
         - RelativePath (pour identification facile)
-        - RemoteName (pour montrer quel distant)
+        - RemoteName (pour afficher quel distant)
         - RemoteUrl (pour vérification)
-        - UserName (identité utilisateur locale au référentiel)
-        - UserEmail (email utilisateur local au référentiel)
+        - UserName (identité utilisateur locale du dépôt)
+        - UserEmail (email utilisateur local du dépôt)
         - StatusDate (activité la plus récente)
-        Les autres propriétés sont disponibles mais masquées par défaut dans la vue tableau.
+        D''autres propriétés sont disponibles mais masquées par défaut dans la vue de table.
 
-    Suivi de l'identité utilisateur
-        DevDirManager extrait et préserve l'identité utilisateur locale au référentiel :
-        - UserName et UserEmail sont lus uniquement de la section [user] de .git/config
+    Suivi d''Identité Utilisateur
+        DevDirManager extrait et préserve l''identité utilisateur locale du dépôt :
+        - UserName et UserEmail sont lus uniquement depuis la section [user] de .git/config
         - La configuration git globale et système est intentionnellement ignorée
-        - Lors du clonage de référentiels, Restore-DevDirectory définit automatiquement
-          user.name et user.email dans le référentiel cloné si ces valeurs sont présentes
-          dans les métadonnées du référentiel
-        - Cela garantit que chaque référentiel maintient son identité de commit prévue
-        - Utile pour gérer des référentiels avec différentes identités d'auteur
+        - Lors du clonage de dépôts, Restore-DevDirectory définit automatiquement
+          user.name et user.email dans le dépôt cloné si ces valeurs sont présentes
+          dans les métadonnées du dépôt
+        - Cela garantit que chaque dépôt maintient son identité de commit prévue
+        - Utile pour gérer des dépôts avec différentes identités d''auteur
 
-    Date d'activité du référentiel
-        La propriété StatusDate représente l'activité la plus récente du référentiel :
-        - Extraite de l'horodatage du commit de la référence HEAD actuelle
+    Date d''Activité du Dépôt
+        La propriété StatusDate représente l''activité la plus récente du dépôt :
+        - Extraite de l''horodatage du commit de la référence HEAD actuelle
         - Lit .git/HEAD pour déterminer la référence de branche actuelle
-        - Utilise l'heure de modification du fichier de référence de branche comme date de commit
-        - Se rabat sur l'heure de modification du dossier .git si HEAD n'est pas disponible
-        - Fournit un moyen simple d'identifier les référentiels récemment actifs
+        - Utilise le temps de modification du fichier de référence de branche comme date de commit
+        - Recourt au temps de modification du dossier .git si HEAD n''est pas disponible
+        - Fournit un moyen simple d''identifier les dépôts récemment actifs
 
 SYSTÈME DE JOURNALISATION
-    DevDirManager utilise le système de journalisation PSFramework pour fournir des
-    informations de diagnostic complètes. Tous les messages de journalisation prennent
-    en charge l'internationalisation, avec des localisations disponibles en anglais (en-us),
-    français (fr-fr) et espagnol (es-es).
+    DevDirManager utilise le système de journalisation PSFramework pour fournir
+    des informations de diagnostic complètes. Tous les messages de journal prennent
+    en charge l''internationalisation, avec des localisations en anglais (en-us),
+    français (fr-fr) et espagnol (es-es) disponibles.
 
-    Niveaux de journalisation
-        Le module utilise les niveaux de journalisation de PSFramework pour catégoriser les messages :
+    Niveaux de Journalisation
+        Le module utilise les niveaux de journalisation PSFramework pour catégoriser les messages :
         - Debug : Informations de diagnostic détaillées pour le dépannage
         - Verbose : Messages informatifs sur les opérations normales
-        - System : Opérations de configuration et au niveau système
-        - Warning : Problèmes non critiques qui n'arrêtent pas l'exécution
-        - Error : Erreurs qui peuvent empêcher l'achèvement des opérations
+        - System : Opérations de configuration et niveau système
+        - Warning : Problèmes non critiques qui n''arrêtent pas l''exécution
+        - Error : Erreurs qui peuvent empêcher les opérations de se terminer
 
-    Affichage des messages de journalisation
-        Utilisez les paramètres communs de PowerShell pour contrôler la visibilité des journaux :
+    Affichage des Messages de Journal
+        Utilisez les paramètres communs PowerShell pour contrôler la visibilité du journal :
         - -Verbose : Affiche les messages de niveau Verbose et supérieurs
         - -Debug : Affiche les messages de niveau Debug et tous les autres niveaux
 
         Exemple :
         PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose
 
-    Fonctionnalités de journalisation PSFramework
-        DevDirManager exploite les capacités de journalisation avancées de PSFramework :
-        - Création automatique de fichiers journaux pour les diagnostics persistants
-        - Journalisation structurée avec balises pour le filtrage
-        - Modèles de messages pour une internationalisation cohérente
-        - Configuration à l'exécution des fournisseurs de journalisation
+    Fonctionnalités de Journalisation PSFramework
+        DevDirManager exploite les capacités avancées de journalisation de PSFramework :
+        - Création automatique de fichiers journaux pour diagnostics persistants
+        - Journalisation structurée avec balises pour filtrage
+        - Modèles de messages pour internationalisation cohérente
+        - Configuration d''exécution des fournisseurs de journalisation
 
         Configurer les fournisseurs de journalisation :
         PS C:\> Set-PSFLoggingProvider -Name logfile -FilePath C:\Logs\DevDirManager.log
         PS C:\> Set-PSFLoggingProvider -Name logfile -Enabled $true
 
-        Afficher les messages enregistrés :
-        PS C:\> Get-PSFMessage | Where-Object ModuleName -eq 'DevDirManager'
+        Voir les messages journalisés :
+        PS C:\> Get-PSFMessage | Where-Object ModuleName -eq ''DevDirManager''
 
     Internationalisation
-        Les messages de journalisation sont automatiquement localisés en fonction de la
-        culture actuelle de PowerShell ($PSCulture). Langues prises en charge :
+        Les messages de journal sont automatiquement localisés en fonction de la
+        culture PowerShell actuelle ($PSCulture). Langues prises en charge :
         - Anglais (en-us) : Par défaut
         - Français (fr-fr) : Français
         - Espagnol (es-es) : Español
 
         Remplacer la culture pour les tests :
-        PS C:\> [System.Threading.Thread]::CurrentThread.CurrentUICulture = 'fr-fr'
+        PS C:\> [System.Threading.Thread]::CurrentThread.CurrentUICulture = ''fr-fr''
         PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose
 
-    Modèles de journalisation courants
-        Opérations d'analyse de référentiels :
-        - GetDevDirectory.ScanStart : Lorsque l'analyse du répertoire commence
-        - GetDevDirectory.RepositoryFound : Chaque fois qu'un référentiel est découvert
-        - GetDevDirectory.ScanComplete : Résumé lorsque l'analyse se termine
+    Modèles Communs de Journalisation
+        Opérations de scan de dépôts :
+        - GetDevDirectory.ScanStart : Lorsque le scan de répertoires commence
+        - GetDevDirectory.RepositoryFound : Chaque fois qu''un dépôt est découvert
+        - GetDevDirectory.ScanComplete : Résumé lorsque le scan se termine
 
-        Opérations d'import/export :
-        - ImportDevDirectoryList.Start : L'opération d'importation commence
+        Opérations d''Importation/Exportation :
+        - ImportDevDirectoryList.Start : Commence l''opération d''importation
         - ExportDevDirectoryList.FormatResolved : Format de fichier déterminé
-        - ImportDevDirectoryList.CompleteCSV/JSON/XML : Succès de l'importation
+        - ImportDevDirectoryList.CompleteCSV/JSON/XML : Importation réussie
 
-        Opérations de clonage/restauration :
+        Opérations de Clonage/Restauration :
         - RestoreDevDirectory.CloneFailed : Erreurs de git clone
         - RestoreDevDirectory.Complete : Résumé lorsque la restauration se termine
 
-        Opérations de synchronisation :
-        - SyncDevDirectoryList.SyncStart : Le processus de synchronisation commence
-        - SyncDevDirectoryList.RemoteUrlMismatch : Conflits d'URL détectés
-        - SyncDevDirectoryList.Complete : Compte final de référentiels
+        Opérations de Synchronisation :
+        - SyncDevDirectoryList.SyncStart : Commence le processus de synchronisation
+        - SyncDevDirectoryList.RemoteUrlMismatch : Conflits d''URL détectés
+        - SyncDevDirectoryList.Complete : Compte final des dépôts
 
-    Dépannage avec les journaux
-        En cas de problèmes :
-        1. Réexécuter la commande avec -Verbose pour voir la progression détaillée
-        2. Utiliser -Debug pour un maximum de détails de diagnostic
-        3. Vérifier les journaux PSFramework : Get-PSFMessage | Where-Object Level -eq Error
-        4. Examiner les balises d'opération spécifiques pour le dépannage ciblé
-        5. Activer la journalisation de fichiers pour les enregistrements de diagnostic persistants
+    Dépannage avec les Journaux
+        Lors de la rencontre de problèmes :
+        1. Réexécutez la commande avec -Verbose pour voir la progression détaillée
+        2. Utilisez -Debug pour le maximum de détails de diagnostic
+        3. Examinez les journaux PSFramework : Get-PSFMessage | Where-Object Level -eq Error
+        4. Examinez les balises pour des opérations spécifiques pour un dépannage ciblé
+        5. Activez la journalisation de fichiers pour des journaux de diagnostic persistants
 
-        Exemple de workflow de dépannage :
+        Exemple de flux de travail de dépannage :
         PS C:\> Get-DevDirectory -RootPath C:\Projects -Verbose -Debug
         PS C:\> Get-PSFMessage | Where-Object Tag -contains "GetDevDirectory"
         PS C:\> Get-PSFMessage | Where-Object Level -eq Error | Format-List *
 
 MOTS-CLÉS
-    Git, Référentiel, DevOps, Contrôle de source, Gestion de répertoires, Inventaire,
-    Sauvegarde, Restauration, Synchronisation, GitHub, Gist, PSFramework, Configuration,
-    Journalisation, Internationalisation
+    Git, Dépôt, DevOps, Contrôle de Code Source, Gestion de Répertoires,
+    Inventaire, Sauvegarde, Restaurer, Synchronisation, GitHub, Gist, PSFramework,
+    Configuration, Journalisation, Internationalisation, WPF, Tableau de Bord, GUI,
+    Interface Graphique
 
 VOIR AUSSI
+    Show-DevDirectoryDashboard
     Get-DevDirectory
     Export-DevDirectoryList
     Import-DevDirectoryList

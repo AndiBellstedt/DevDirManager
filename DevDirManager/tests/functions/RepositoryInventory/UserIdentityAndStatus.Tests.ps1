@@ -1,9 +1,4 @@
 ﻿BeforeAll {
-    # Import the module under test
-    $ModuleBase = Split-Path -Path (Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent) -Parent
-    $ModuleName = Split-Path -Path $ModuleBase -Leaf
-    Import-Module -Name $ModuleBase -Force
-
     # Create a temporary directory for test files
     $script:TestRoot = Join-Path -Path $TestDrive -ChildPath 'UserIdentityTests'
     New-Item -Path $script:TestRoot -ItemType Directory -Force | Out-Null
@@ -67,10 +62,8 @@
     }
 }
 
-Describe 'Get-DevDirectoryUserInfo Internal Function' -Tag 'Unit', 'Internal' -Skip {
-    # Note: Get-DevDirectoryUserInfo is an internal function not exported from the module
-    # These tests are skipped because internal functions are not accessible in test scope
-    # The functionality is tested indirectly through Get-DevDirectory integration tests below
+Describe 'Get-DevDirectoryUserInfo Internal Function' -Tag 'Unit', 'Internal' {
+    # Testing the internal helper directly to ensure consistent behaviour
     BeforeAll {
         # Create test repository with user configuration
         $script:TestRepoWithUser = Join-Path -Path $script:TestRoot -ChildPath 'RepoWithUser'
@@ -142,10 +135,8 @@ Describe 'Get-DevDirectoryUserInfo Internal Function' -Tag 'Unit', 'Internal' -S
     }
 }
 
-Describe 'Get-DevDirectoryStatusDate Internal Function' -Tag 'Unit', 'Internal' -Skip {
-    # Note: Get-DevDirectoryStatusDate is an internal function not exported from the module
-    # These tests are skipped because internal functions are not accessible in test scope
-    # The functionality is tested indirectly through Get-DevDirectory integration tests below
+Describe 'Get-DevDirectoryStatusDate Internal Function' -Tag 'Unit', 'Internal' {
+    # Testing the internal helper directly to ensure consistent behaviour
     BeforeAll {
         # Create test repository with known modification date
         $script:TestRepoForDate = Join-Path -Path $script:TestRoot -ChildPath 'RepoForDate'
@@ -191,6 +182,16 @@ Describe 'Get-DevDirectoryStatusDate Internal Function' -Tag 'Unit', 'Internal' 
 
 Describe 'Get-DevDirectory New Properties Integration' -Tag 'Integration' {
     BeforeAll {
+        Mock -CommandName Test-DevDirectoryRemoteAccessible -ModuleName DevDirManager -MockWith {
+            param(
+                [string]$RemoteUrl,
+                [string]$GitExecutable,
+                [int]$TimeoutSeconds
+            )
+
+            return -not [string]::IsNullOrWhiteSpace($RemoteUrl)
+        }
+
         # Create test directory structure with multiple repositories
         $script:IntegrationTestRoot = Join-Path -Path $script:TestRoot -ChildPath 'Integration'
         New-Item -Path $script:IntegrationTestRoot -ItemType Directory -Force | Out-Null
@@ -263,6 +264,16 @@ Describe 'Get-DevDirectory New Properties Integration' -Tag 'Integration' {
 
 Describe 'Export-DevDirectoryList and Import-DevDirectoryList New Properties' -Tag 'Integration', 'Format' {
     BeforeAll {
+        Mock -CommandName Test-DevDirectoryRemoteAccessible -ModuleName DevDirManager -MockWith {
+            param(
+                [string]$RemoteUrl,
+                [string]$GitExecutable,
+                [int]$TimeoutSeconds
+            )
+
+            return -not [string]::IsNullOrWhiteSpace($RemoteUrl)
+        }
+
         # Create test repositories with new properties
         $script:FormatTestRoot = Join-Path -Path $script:TestRoot -ChildPath 'FormatTests'
         New-Item -Path $script:FormatTestRoot -ItemType Directory -Force | Out-Null
@@ -390,6 +401,16 @@ Describe 'Export-DevDirectoryList and Import-DevDirectoryList New Properties' -T
 
 Describe 'Sync-DevDirectoryList Property Merge Logic' -Tag 'Integration' {
     BeforeAll {
+        Mock -CommandName Test-DevDirectoryRemoteAccessible -ModuleName DevDirManager -MockWith {
+            param(
+                [string]$RemoteUrl,
+                [string]$GitExecutable,
+                [int]$TimeoutSeconds
+            )
+
+            return -not [string]::IsNullOrWhiteSpace($RemoteUrl)
+        }
+
         # Create directory for sync tests
         $script:SyncTestRoot = Join-Path -Path $script:TestRoot -ChildPath 'SyncTests'
         New-Item -Path $script:SyncTestRoot -ItemType Directory -Force | Out-Null
@@ -417,18 +438,22 @@ Describe 'Sync-DevDirectoryList Property Merge Logic' -Tag 'Integration' {
     }
 
     Context 'Property Merge Behavior' {
-        It 'Should prefer local UserName over file UserName during sync' -Skip {
-            # This test requires Sync-DevDirectoryList which may need git.exe
-            # Skip if git.exe is not available in test environment
+        It 'Should prefer local UserName over file UserName during sync' {
             $result = Sync-DevDirectoryList -DirectoryPath $script:SyncTestRoot -RepositoryListPath $script:SyncListPath -PassThru -WhatIf -InformationAction SilentlyContinue
-            # Verification would check that merged result has 'Local User' not 'File User'
+            $result | Should -Not -BeNullOrEmpty
+
+            $mergeRepo = $result | Where-Object { $_.RelativePath -eq 'MergeRepo' }
+            $mergeRepo | Should -Not -BeNullOrEmpty
+            $mergeRepo.UserName | Should -Be 'Local User'
         }
 
-        It 'Should prefer local UserEmail over file UserEmail during sync' -Skip {
-            # This test requires Sync-DevDirectoryList which may need git.exe
-            # Skip if git.exe is not available in test environment
+        It 'Should prefer local UserEmail over file UserEmail during sync' {
             $result = Sync-DevDirectoryList -DirectoryPath $script:SyncTestRoot -RepositoryListPath $script:SyncListPath -PassThru -WhatIf -InformationAction SilentlyContinue
-            # Verification would check that merged result has 'local@example.com' not 'file@example.com'
+            $result | Should -Not -BeNullOrEmpty
+
+            $mergeRepo = $result | Where-Object { $_.RelativePath -eq 'MergeRepo' }
+            $mergeRepo | Should -Not -BeNullOrEmpty
+            $mergeRepo.UserEmail | Should -Be 'local@example.com'
         }
     }
 }

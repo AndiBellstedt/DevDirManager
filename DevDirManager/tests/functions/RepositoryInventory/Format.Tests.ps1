@@ -1,9 +1,4 @@
 ﻿BeforeAll {
-    # Import the module under test
-    $ModuleBase = Split-Path -Path (Split-Path -Path (Split-Path -Path $PSScriptRoot -Parent) -Parent) -Parent
-    $ModuleName = Split-Path -Path $ModuleBase -Leaf
-    Import-Module -Name $ModuleBase -Force
-
     # Create a temporary directory for test files
     $script:TestRoot = Join-Path -Path $TestDrive -ChildPath 'FormatTests'
     New-Item -Path $script:TestRoot -ItemType Directory -Force | Out-Null

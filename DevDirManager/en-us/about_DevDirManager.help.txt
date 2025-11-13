@@ -17,9 +17,13 @@ LONG DESCRIPTION
     * Synchronize repository lists with actual directory contents
     * Publish repository inventories to GitHub Gists
     * Configure behavior through the PSFramework configuration system
+    * Manage repositories through a graphical WPF dashboard interface
 
     The module uses a breadth-first search algorithm to efficiently scan large
     directory structures and supports custom output formats for repository data.
+
+    For users who prefer graphical interfaces, the module includes a comprehensive
+    WPF dashboard that provides point-and-click access to all core functionality.
 
 CONFIGURATION SYSTEM
     DevDirManager leverages the PSFramework configuration system to provide
@@ -52,6 +56,35 @@ CONFIGURATION SYSTEM
     configured defaults for a specific operation.
 
 CORE FUNCTIONS
+    Graphical Dashboard
+    -------------------
+    Show-DevDirectoryDashboard
+        Launches a comprehensive WPF-based graphical user interface that provides
+        point-and-click access to all DevDirManager functionality. The dashboard
+        features:
+
+        - Theme-aware UI (automatic light/dark mode)
+        - Tabbed interface with Discover & Export, Import & Restore, and Sync operations
+        - Real-time visual feedback during long-running operations
+        - Resizable and reorderable data grid columns
+        - Automatic synchronization of repository list paths across tabs
+        - Logo display in header with automatic asset management
+        - Comprehensive localization (English, Spanish, French)
+
+        Parameters:
+        - RootPath: Optional path to pre-populate the Discover tab
+        - ShowWindow: Controls window display (default: $true)
+        - PassThru: Returns window, controls, and state objects for automation
+
+        Example:
+        PS C:\> Show-DevDirectoryDashboard -RootPath C:\Projects
+
+        The dashboard is ideal for:
+        - Interactive repository discovery and management
+        - Quick export/import operations without command-line syntax
+        - Visual verification of repository collections
+        - Users who prefer graphical interfaces over PowerShell commands
+
     Repository Discovery
     --------------------
     Get-DevDirectory
@@ -114,7 +147,6 @@ CORE FUNCTIONS
         - RepositoryListPath: Path to the repository list file
         - Force: Forwards to Restore-DevDirectory for overwriting existing dirs
         - SkipExisting: Forwards to Restore-DevDirectory for skipping existing
-        - ShowGitOutput: Forwards to Restore-DevDirectory to show git output
         - PassThru: Returns the merged repository list after synchronization
 
     GitHub Integration
@@ -190,73 +222,93 @@ CUSTOM TYPES
         - HtmlUrl [string]: Browser URL for the Gist
 
 EXAMPLES
-    Example 1: Discover repositories in a directory
+    Example 1: Launch the graphical dashboard
+        PS C:\> Show-DevDirectoryDashboard
+
+        Opens the WPF dashboard interface with all repository management features
+        accessible through a graphical interface.
+
+    Example 2: Launch dashboard with pre-populated folder
+        PS C:\> Show-DevDirectoryDashboard -RootPath C:\Projects
+
+        Opens the dashboard with C:\Projects already entered in the Discover tab,
+        ready for immediate scanning.
+
+    Example 3: Use dashboard for automation
+        PS C:\> $dash = Show-DevDirectoryDashboard -ShowWindow:$false -PassThru
+        PS C:\> $dash.Controls.DiscoverPathBox.Text = 'C:\Projects'
+        PS C:\> $dash.Controls.DiscoverScanButton.RaiseEvent([System.Windows.RoutedEventArgs]::new([System.Windows.Controls.Button]::ClickEvent))
+
+        Creates a dashboard without displaying it, programmatically sets the path,
+        and triggers the scan button for automation scenarios.
+
+    Example 4: Discover repositories in a directory
         PS C:\> Get-DevDirectory -Path C:\Projects -Recurse
 
         Scans C:\Projects recursively and returns all Git repositories with their
         remote URLs.
 
-    Example 2: Export repository list to CSV
+    Example 5: Export repository list to CSV
         PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
                 Export-DevDirectoryList -Path C:\Temp\repos.csv
 
         Exports the discovered repositories to a CSV file using UTF8 encoding.
 
-    Example 3: Export to JSON with explicit format
+    Example 6: Export to JSON with explicit format
         PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
                 Export-DevDirectoryList -Path C:\Temp\repos.txt -Format JSON
 
         Exports to JSON format even though the file extension is .txt.
 
-    Example 4: Import repository list and view type
+    Example 7: Import repository list and view type
         PS C:\> $repos = Import-DevDirectoryList -Path C:\Temp\repos.csv
         PS C:\> $repos[0].PSObject.TypeNames
 
         Imports repositories from CSV and displays the type information.
 
-    Example 5: Clone repositories from a list
+    Example 8: Clone repositories from a list
         PS C:\> Restore-DevDirectory -RepositoryListPath C:\Temp\repos.csv -TargetDirectory D:\Projects
 
         Clones all repositories from the CSV file to D:\Projects, preserving the
         original directory structure.
 
-    Example 6: Synchronize directory with repository list
+    Example 9: Synchronize directory with repository list
         PS C:\> Sync-DevDirectoryList -RepositoryListPath C:\Temp\repos.csv -Path C:\Projects -Recurse
 
         Compares C:\Projects with repos.csv and adds new repositories to the file.
 
-    Example 7: Configure default format to JSON
+    Example 10: Configure default format to JSON
         PS C:\> Set-PSFConfig -FullName 'DevDirManager.DefaultOutputFormat' -Value 'JSON'
         PS C:\> Get-DevDirectory -Path C:\Projects -Recurse |
                 Export-DevDirectoryList -Path C:\Temp\repos
 
         Exports to JSON format because no extension is provided and default is JSON.
 
-    Example 8: Publish repository list to GitHub Gist
+    Example 11: Publish repository list to GitHub Gist
         PS C:\> $token = Read-Host -AsSecureString -Prompt "GitHub Token"
         PS C:\> Publish-DevDirectoryList -FromPath C:\Temp\repos.csv -Description "My Repositories" -GitHubToken $token
 
         Publishes the repository list as a public Gist on GitHub.
 
-    Example 9: Change Git executable path
+    Example 12: Change Git executable path
         PS C:\> Set-PSFConfig -FullName 'DevDirManager.Git.Executable' -Value 'C:\PortableGit\bin\git.exe'
 
         Configures DevDirManager to use a portable Git installation.
 
-    Example 10: Scan for repositories using different remote
+    Example 13: Scan for repositories using different remote
         PS C:\> Set-PSFConfig -FullName 'DevDirManager.Git.RemoteName' -Value 'upstream'
         PS C:\> Get-DevDirectory -Path C:\Forks -Recurse
 
         Scans for repositories and retrieves the 'upstream' remote URL instead of 'origin'.
 
-    Example 11: View repository user configuration
+    Example 14: View repository user configuration
         PS C:\> Get-DevDirectory -Path C:\Projects | Select-Object RelativePath, UserName, UserEmail, StatusDate
 
         Displays repositories with their local user configuration and activity date.
         UserName and UserEmail are extracted from the repository's .git/config file
         (repository-local configuration only, global/system config is ignored).
 
-    Example 12: Clone repositories with user identity preservation
+    Example 15: Clone repositories with user identity preservation
         PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.csv | Restore-DevDirectory -DestinationPath D:\Projects
 
         Clones repositories to D:\Projects. If the repository metadata includes UserName
@@ -265,6 +317,13 @@ EXAMPLES
 
 WORKFLOW PATTERNS
     Common DevDirManager workflows:
+
+    Using the Graphical Dashboard
+        1. Launch Show-DevDirectoryDashboard
+        2. Use Discover tab to scan repositories and select export format
+        3. Export to file directly from the Discover tab
+        4. Switch to Import/Restore/Sync tabs as needed (file paths auto-sync)
+        5. Visual feedback keeps you informed during long operations
 
     Inventory and Backup
         1. Scan your development directories
@@ -419,9 +478,10 @@ LOGGING SYSTEM
 KEYWORDS
     Git, Repository, DevOps, Source Control, Directory Management, Inventory,
     Backup, Restore, Synchronization, GitHub, Gist, PSFramework, Configuration,
-    Logging, Internationalization
+    Logging, Internationalization, WPF, Dashboard, GUI, Graphical Interface
 
 SEE ALSO
+    Show-DevDirectoryDashboard
     Get-DevDirectory
     Export-DevDirectoryList
     Import-DevDirectoryList

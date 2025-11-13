@@ -1,5 +1,28 @@
 ﻿# Changelog
 
+## [1.4.0] - 2025-11-12
+
+Overview
+- For users upgrading from 1.3.0, this release introduces a simple graphical dashboard and streamlines daily workflows. All existing PowerShell commands remain unchanged and fully supported. No breaking changes.
+
+### Added
+- **New graphical dashboard (Show-DevDirectoryDashboard)**
+  - Manage Discover, Export, Import, Restore, and Sync in one window
+  - Adapts to Windows light/dark mode automatically
+  - Professional, consistent styling throughout
+  - Choose a repository list file once; the path is reused across Import, Restore, and Sync
+  - Clear visual feedback during longer operations (busy buttons and status bar messages)
+  - Resizable/reorderable columns in the results grids for easier review and sorting
+
+### Changed
+- **User experience improvements**
+  - add localization: German
+  - refactor localization for: English, Spanish, French
+
+### Compatibility and upgrade notes
+- No changes to existing commands or parameters; scripts written for 1.3.0 continue to work
+- The new dashboard is optional—launch it when you prefer a GUI: `Show-DevDirectoryDashboard`
+
 ## [1.3.0] - 2025-11-09
 
 ### Added

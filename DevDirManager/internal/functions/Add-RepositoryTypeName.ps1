@@ -32,9 +32,9 @@
         Processes each object in the pipeline, adding the type name to all objects.
 
     .NOTES
-        Version   : 1.0.1
         Author    : Copilot, Andi Bellstedt
         Date      : 2025-11-09
+        Version   : 1.0.1
         Keywords  : type, typename, repository, psobject, formatting
 
     .LINK
