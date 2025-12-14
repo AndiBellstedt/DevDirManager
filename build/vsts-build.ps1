@@ -271,7 +271,7 @@ if ($env:GITHUB_TOKEN) {
         $fileBytes = [System.IO.File]::ReadAllBytes($file.FullName)
         $uriUpload = "https://uploads.github.com/repos/$($gitRepository)/releases/$($response.id)/assets?name=$($file.Name)"
 
-        $response = Invoke-WebRequest -Headers $headerUpload -Method POST -Body $fileBytes -Uri $uriUpload
+        $response = Invoke-WebRequest -Headers $headerUpload -Method POST -Body $fileBytes -Uri $uriUpload -UseBasicParsing
 
         if ($response) {
             Write-PSFMessage -Level Important -Message "GitHub Release created successfully"
