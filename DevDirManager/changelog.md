@@ -21,7 +21,7 @@ This release focuses on dashboard improvements and bug fixes. The graphical dash
   - Fixed runtime error when using WhatIf option in the Sync tab (formatting exception with mismatched argument count)
   - Suppressed unwanted WhatIf messages from internal operations (temp file cleanup, remote accessibility checks)
   - Fixed PowerShell 7 compatibility: prevented "What if: Start-Process" spam during remote checks
-  - Fixed PowerShell 5.1 compatibility: removed unsupported `-Confirm`/`-WhatIf` parameters from `Start-Process`
+  - Fixed PowerShell 5.1 compatibility: suppressed WhatIf mode during Start-Process calls by temporarily setting preference variables
   - Dashboard status text now displays WhatIf summary (e.g., "Clone X repositories from list", "Update repository list file")
   - WhatIf summary is also shown in a message box for clear user feedback
 
