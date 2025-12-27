@@ -1,6 +1,9 @@
 ﻿# Changelog
 
-## [Unreleased]
+## [1.4.2] - 2025-12-27
+
+### Overview
+This release focuses on dashboard improvements and bug fixes. The graphical dashboard now features a redesigned interface with better control alignment across all tabs, and several WhatIf-related issues have been resolved. No breaking changes.
 
 ### Changed
 - **Dashboard UI redesign for improved usability**
