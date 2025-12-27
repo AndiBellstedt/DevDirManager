@@ -72,8 +72,8 @@ FONCTIONS PRINCIPALES
         - Retour visuel en temps réel pendant les opérations de longue durée
         - Colonnes de grille de données redimensionnables et réorganisables
         - Synchronisation automatique des chemins de liste de dépôts entre les onglets
-        - Affichage du logo d''en-tête avec gestion automatique des actifs
-        - Localisation complète (anglais, espagnol, français)
+        - Affichage du logo d''en-tête
+        - Localisation complète (anglais, espagnol, français, allemand)
 
         Paramètres :
         - RootPath : Chemin optionnel pour préremplir l''onglet Découvrir

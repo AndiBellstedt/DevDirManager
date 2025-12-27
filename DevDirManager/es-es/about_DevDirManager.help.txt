@@ -72,8 +72,8 @@ FUNCIONES PRINCIPALES
         - Retroalimentación visual en tiempo real durante operaciones de larga duración
         - Columnas de cuadrícula de datos redimensionables y reordenables
         - Sincronización automática de rutas de lista de repositorios entre pestañas
-        - Visualización de logotipo en encabezado con gestión automática de activos
-        - Localización completa (inglés, español, francés)
+        - Visualización de logotipo en encabezado
+        - Localización completa (inglés, español, francés, alemán)
 
         Parámetros:
         - RootPath: Ruta opcional para rellenar previamente la pestaña Descubrir

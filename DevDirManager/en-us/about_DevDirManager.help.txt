@@ -65,11 +65,14 @@ CORE FUNCTIONS
 
         - Theme-aware UI (automatic light/dark mode)
         - Tabbed interface with Discover & Export, Import & Restore, and Sync operations
+        - Professional layout with consistent control alignment across all tabs
+        - Controls grouped logically above data grids for intuitive workflow
         - Real-time visual feedback during long-running operations
+        - Summary status and action buttons aligned on same row for quick access
         - Resizable and reorderable data grid columns
         - Automatic synchronization of repository list paths across tabs
-        - Logo display in header with automatic asset management
-        - Comprehensive localization (English, Spanish, French)
+        - Logo display in header
+        - Comprehensive localization (English, Spanish, French, German)
 
         Parameters:
         - RootPath: Optional path to pre-populate the Discover tab

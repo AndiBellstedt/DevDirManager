@@ -37,8 +37,8 @@
 
     .NOTES
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-11
-        Version   : 1.0.5
+        Date      : 2025-12-27
+        Version   : 1.0.6
         Keywords  : Git, Remote, Internal, Helper, Validation
 
     .LINK
@@ -86,13 +86,23 @@
             $stdOutFile = [System.IO.Path]::GetTempFileName()
             $stdErrFile = [System.IO.Path]::GetTempFileName()
 
-            $process = Start-Process -FilePath $GitExecutable `
-                -ArgumentList @("ls-remote", "--heads", "--", $RemoteUrl) `
-                -NoNewWindow `
-                -PassThru `
-                -RedirectStandardOutput $stdOutFile `
-                -RedirectStandardError $stdErrFile `
-                -ErrorAction Stop
+            $originalWhatIfPreference = $WhatIfPreference
+            $originalInformationPreference = $InformationPreference
+            $WhatIfPreference = $false
+            $InformationPreference = 'SilentlyContinue'
+
+            try {
+                $process = Start-Process -FilePath $GitExecutable `
+                    -ArgumentList @("ls-remote", "--heads", "--", $RemoteUrl) `
+                    -NoNewWindow `
+                    -PassThru `
+                    -RedirectStandardOutput $stdOutFile `
+                    -RedirectStandardError $stdErrFile `
+                    -ErrorAction Stop
+            } finally {
+                $WhatIfPreference = $originalWhatIfPreference
+                $InformationPreference = $originalInformationPreference
+            }
 
             if (-not $process) {
                 Write-PSFMessage -Level Warning -String "TestDevDirectoryRemoteAccessible.ProcessStartFailed" -StringValues @($RemoteUrl) -Tag "TestDevDirectoryRemoteAccessible", "StartProcess"
@@ -154,11 +164,11 @@
             }
 
             if ($stdOutFile -and (Test-Path -LiteralPath $stdOutFile)) {
-                Remove-Item -LiteralPath $stdOutFile -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $stdOutFile -Force -ErrorAction SilentlyContinue -Confirm:$false -WhatIf:$false
             }
 
             if ($stdErrFile -and (Test-Path -LiteralPath $stdErrFile)) {
-                Remove-Item -LiteralPath $stdErrFile -Force -ErrorAction SilentlyContinue
+                Remove-Item -LiteralPath $stdErrFile -Force -ErrorAction SilentlyContinue -Confirm:$false -WhatIf:$false
             }
         }
     }

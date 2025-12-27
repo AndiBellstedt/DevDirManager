@@ -56,9 +56,9 @@
             Constructs the dashboard without displaying it, programmatically sets the source path to "C:\Development", triggers the scan operation, and then displays the window with results already loaded.
 
         .NOTES
-            Version   : 1.2.0
+            Version   : 1.2.1
             Author    : Andi Bellstedt, Copilot
-            Date      : 2025-11-12
+            Date      : 2025-12-27
             Keywords  : Dashboard, UI, WPF, Repository, Management
 
         .LINK
@@ -109,31 +109,6 @@
         if (-not (Test-Path -Path $xamlPath -PathType Leaf)) {
             Stop-PSFFunction -String 'ShowDevDirectoryDashboard.XamlMissing' -StringValues @($xamlPath) -EnableException $true -Cmdlet $PSCmdlet
             return
-        }
-
-        # Ensure the logo exists in the UI folder as DevDirManager.png by copying from assets if available
-        try {
-            $repoRoot = Split-Path -Path $moduleRoot -Parent
-            $assetSource = Join-Path -Path $repoRoot -ChildPath 'assets\DevDirManager_500x500.png'
-            $uiFolder = Join-Path -Path $moduleRoot -ChildPath 'internal\ui'
-            $logoTarget = Join-Path -Path $uiFolder -ChildPath 'DevDirManager.png'
-
-            if ((Test-Path -Path $assetSource -PathType Leaf)) {
-                $shouldCopy = $true
-                if (Test-Path -Path $logoTarget -PathType Leaf) {
-                    $srcTime = (Get-Item -LiteralPath $assetSource).LastWriteTimeUtc
-                    $dstTime = (Get-Item -LiteralPath $logoTarget).LastWriteTimeUtc
-                    $shouldCopy = ($srcTime -gt $dstTime)
-                }
-
-                if ($shouldCopy) {
-                    Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.CopyLogo' -StringValues @($assetSource, $logoTarget) -Tag 'Asset', 'Logo'
-                    Copy-Item -LiteralPath $assetSource -Destination $logoTarget -Force -ErrorAction Stop
-                }
-            }
-        } catch {
-            # Log but do not fail the UI if the logo copy fails
-            Write-PSFMessage -Level Warning -Message "Failed to prepare UI logo: $($_.Exception.Message)" -Tag 'Asset', 'Logo' -PScmdlet $PSCmdlet
         }
 
         $xamlContent = Get-Content -Path $xamlPath -Raw -ErrorAction Stop
@@ -770,7 +745,7 @@
 
                 $runAsync.Invoke($controls.SyncRunButton, {
                         try {
-                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncStarted', @($directory, $listPath)[0])
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncStarted', @($directory, $listPath))
 
                             $syncParams = @{
                                 DirectoryPath      = $directory
@@ -779,16 +754,72 @@
                                 ErrorAction        = 'Stop'
                             }
 
+                            $syncWhatIfEnabled = $false
+                            if ($controls.SyncWhatIfCheckBox.IsChecked) {
+                                $syncWhatIfEnabled = $true
+                                # Capture WhatIf output (PowerShell 7+) and suppress console spam.
+                                $syncParams.WhatIf = $true
+                                $syncParams.InformationAction = 'SilentlyContinue'
+                                $syncParams.InformationVariable = 'syncInformation'
+                            }
+
                             if ($controls.SyncForceCheckBox.IsChecked) { $syncParams.Force = $true }
                             if ($controls.SyncSkipExistingCheckBox.IsChecked) { $syncParams.SkipExisting = $true }
                             if ($controls.SyncShowGitOutputCheckBox.IsChecked) { $syncParams.ShowGitOutput = $true }
-                            if ($controls.SyncWhatIfCheckBox.IsChecked) { $syncParams.WhatIf = $true }
 
                             $syncResult = Sync-DevDirectoryList @syncParams
+
                             $populateCollection.Invoke($state.SyncItems, $syncResult)
                             $controls.SyncSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.SyncSummaryTemplate', @($state.SyncItems.Count)[0])
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SyncComplete', @($state.SyncItems.Count)[0])
+
                             Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.SyncCompleted' -StringValues @($directory, $listPath, $state.SyncItems.Count) -Tag 'ShowDevDirectoryDashboard', 'Sync'
+
+                            if ($syncWhatIfEnabled -and $syncInformation) {
+                                $whatIfMessages = foreach ($record in $syncInformation) {
+                                    if ($null -eq $record) { continue }
+
+                                    # InformationRecord.MessageData is the formatted WhatIf string.
+                                    $message = [string]$record.MessageData
+                                    if ([string]::IsNullOrWhiteSpace($message)) { continue }
+
+                                    if ($record.Tags -contains 'WhatIf' -or $message.StartsWith('What if:', [System.StringComparison]::OrdinalIgnoreCase)) {
+                                        $message
+                                    }
+                                }
+
+                                if ($whatIfMessages) {
+                                    # Prefer the most relevant summary lines (clone/update list file) for status and UI feedback.
+                                    $summaryMessages = $whatIfMessages | Where-Object {
+                                        $_ -match 'Clone\s+\d+\s+repository' -or $_ -match 'Update\s+repository\s+list\s+file'
+                                    }
+
+                                    if (-not $summaryMessages) {
+                                        $escapedDirectory = [regex]::Escape($directory)
+                                        $escapedListPath = [regex]::Escape($listPath)
+                                        $summaryMessages = $whatIfMessages | Where-Object { $_ -match $escapedDirectory -or $_ -match $escapedListPath } | Select-Object -Last 2
+                                    }
+
+                                    if (-not $summaryMessages) {
+                                        $summaryMessages = $whatIfMessages | Select-Object -Last 2
+                                    }
+
+                                    # Minimum requirement: status text must show WhatIf info.
+                                    if ($summaryMessages) {
+                                        $controls.StatusText.Text = "$($controls.StatusText.Text)$([System.Environment]::NewLine)$($summaryMessages -join [System.Environment]::NewLine)"
+                                    }
+
+                                    if ($summaryMessages) {
+                                        [System.Windows.MessageBox]::Show(
+                                            $window,
+                                            ($summaryMessages -join [System.Environment]::NewLine),
+                                            $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0],
+                                            [System.Windows.MessageBoxButton]::OK,
+                                            [System.Windows.MessageBoxImage]::Information
+                                        ) | Out-Null
+                                    }
+                                }
+                            }
                         } catch {
                             Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Sync'
                             $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
