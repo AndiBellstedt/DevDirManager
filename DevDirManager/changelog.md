@@ -1,5 +1,27 @@
 ﻿# Changelog
 
+## [Unreleased]
+
+### Changed
+- **Dashboard UI redesign for improved usability**
+  - Reorganized all three tabs (Discover & Export, Import & Restore, Sync) with consistent professional layout
+  - Aligned all text input fields at fixed 110px label column for visual consistency
+  - Standardized action button sizes (Scan, Load, Export, Restore, Sync) with MinWidth 100px
+  - Moved all controls above the data grid for logical top-to-bottom workflow
+  - **Discover & Export tab**: Format dropdown, summary text, Scan and Export buttons now on same row
+  - **Import & Restore tab**: Checkboxes, summary text, Load and Restore buttons now on same row
+  - **Sync tab**: Swapped Data file and Workspace field order; moved summary text inline with action buttons
+  - Removed separator lines in favor of cleaner spacing between control groups
+
+### Fixed
+- **Dashboard Sync WhatIf functionality**
+  - Fixed runtime error when using WhatIf option in the Sync tab (formatting exception with mismatched argument count)
+  - Suppressed unwanted WhatIf messages from internal operations (temp file cleanup, remote accessibility checks)
+  - Fixed PowerShell 7 compatibility: prevented "What if: Start-Process" spam during remote checks
+  - Fixed PowerShell 5.1 compatibility: removed unsupported `-Confirm`/`-WhatIf` parameters from `Start-Process`
+  - Dashboard status text now displays WhatIf summary (e.g., "Clone X repositories from list", "Update repository list file")
+  - WhatIf summary is also shown in a message box for clear user feedback
+
 ## [1.4.0] - 2025-11-12
 
 Overview

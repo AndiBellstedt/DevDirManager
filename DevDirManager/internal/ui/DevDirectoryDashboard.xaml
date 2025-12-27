@@ -278,9 +278,10 @@
                     </TabItem.Header>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="28,24">
+                            <!-- Discover Section -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
@@ -288,28 +289,29 @@
                                 <TextBox x:Name="DiscoverPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="DiscoverBrowseButton" Margin="0,0,0,0" />
-                                    <Button x:Name="DiscoverScanButton" Margin="10,0,0,0" />
                                 </StackPanel>
                             </Grid>
 
-                            <TextBlock x:Name="DiscoverSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
-
-                            <!-- Export Controls Section -->
-                            <Separator Margin="0,32,0,24" Background="{DynamicResource Brush.Border}" />
-
-                            <Grid>
+                            <!-- Format + Summary + Buttons Row -->
+                            <Grid Margin="0,16,0,0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock x:Name="ExportFormatLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
                                 <ComboBox x:Name="ExportFormatCombo" Grid.Column="1" />
+                                <TextBlock x:Name="DiscoverSummaryText" Grid.Column="2" Margin="16,0,16,0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" />
+                                <Button x:Name="DiscoverScanButton" Grid.Column="3" HorizontalAlignment="Right" MinWidth="100" />
+                                <Button x:Name="ExportRunButton" Grid.Column="4" HorizontalAlignment="Right" MinWidth="100" />
                             </Grid>
 
+                            <!-- Export Path Row -->
                             <Grid Margin="0,16,0,0">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
@@ -317,11 +319,9 @@
                                 <TextBox x:Name="ExportPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="ExportBrowseButton" Margin="0,0,0,0" />
-                                    <Button x:Name="ExportRunButton" Margin="10,0,0,0" />
                                 </StackPanel>
                             </Grid>
 
-                            <!-- DataGrid moved below export controls -->
                             <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
                                 <DataGrid x:Name="DiscoverGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True" ColumnHeaderHeight="34">
                                     <DataGrid.Columns>
@@ -345,9 +345,10 @@
                     </TabItem.Header>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="28,24">
+                            <!-- Import Section -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
@@ -355,18 +356,30 @@
                                 <TextBox x:Name="ImportPathBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="ImportBrowseButton" Margin="0,0,0,0" />
-                                    <Button x:Name="ImportLoadButton" Margin="10,0,0,0" />
                                 </StackPanel>
                             </Grid>
 
-                            <TextBlock x:Name="ImportSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
-
-                            <!-- Restore Controls Section -->
-                            <Separator Margin="0,32,0,24" Background="{DynamicResource Brush.Border}" />
-
-                            <Grid>
+                            <!-- Options + Summary + Buttons Row -->
+                            <Grid Margin="0,16,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <WrapPanel Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <CheckBox x:Name="RestoreForceCheckBox" />
+                                    <CheckBox x:Name="RestoreSkipExistingCheckBox" />
+                                </WrapPanel>
+                                <TextBlock x:Name="ImportSummaryText" Grid.Column="1" Margin="16,0,16,0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" />
+                                <Button x:Name="ImportLoadButton" Grid.Column="2" HorizontalAlignment="Right" MinWidth="100" />
+                                <Button x:Name="RestoreRunButton" Grid.Column="3" HorizontalAlignment="Right" MinWidth="100" />
+                            </Grid>
+
+                            <!-- Restore Destination Row -->
+                            <Grid Margin="0,16,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
@@ -374,16 +387,9 @@
                                 <TextBox x:Name="RestoreDestinationBox" Grid.Column="1" MinWidth="320" />
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="RestoreDestinationBrowseButton" Margin="0,0,0,0" />
-                                    <Button x:Name="RestoreRunButton" Margin="10,0,0,0" />
                                 </StackPanel>
                             </Grid>
 
-                            <WrapPanel Margin="0,20,0,0" HorizontalAlignment="Left">
-                                <CheckBox x:Name="RestoreForceCheckBox" />
-                                <CheckBox x:Name="RestoreSkipExistingCheckBox" />
-                            </WrapPanel>
-
-                            <!-- DataGrid moved below restore controls -->
                             <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
                                 <DataGrid x:Name="ImportGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
@@ -408,7 +414,20 @@
                         <StackPanel Margin="28,24">
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="SyncListPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
+                                <TextBox x:Name="SyncListPathBox" Grid.Column="1" MinWidth="320" />
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <Button x:Name="SyncListBrowseButton" Margin="0,0,0,0" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,16,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
@@ -419,26 +438,21 @@
                                 </StackPanel>
                             </Grid>
 
-                            <Grid Margin="0,16,0,0">
+                            <Grid Margin="0,20,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SyncListPathLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
-                                <TextBox x:Name="SyncListPathBox" Grid.Column="1" MinWidth="320" />
-                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Left">
-                                    <Button x:Name="SyncListBrowseButton" Margin="0,0,0,0" />
-                                    <Button x:Name="SyncRunButton" Margin="10,0,0,0" />
-                                </StackPanel>
+                                <WrapPanel Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <CheckBox x:Name="SyncForceCheckBox" />
+                                    <CheckBox x:Name="SyncSkipExistingCheckBox" />
+                                    <CheckBox x:Name="SyncShowGitOutputCheckBox" />
+                                    <CheckBox x:Name="SyncWhatIfCheckBox" />
+                                </WrapPanel>
+                                <TextBlock x:Name="SyncSummaryText" Grid.Column="1" Margin="16,0,16,0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" />
+                                <Button x:Name="SyncRunButton" Grid.Column="2" HorizontalAlignment="Right" MinWidth="100" />
                             </Grid>
-
-                            <WrapPanel Margin="0,20,0,0" HorizontalAlignment="Left">
-                                <CheckBox x:Name="SyncForceCheckBox" />
-                                <CheckBox x:Name="SyncSkipExistingCheckBox" />
-                                <CheckBox x:Name="SyncShowGitOutputCheckBox" />
-                                <CheckBox x:Name="SyncWhatIfCheckBox" />
-                            </WrapPanel>
 
                             <Border Background="{DynamicResource Brush.Surface}" CornerRadius="12" Padding="12" Margin="0,20,0,0">
                                 <DataGrid x:Name="SyncGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
@@ -450,8 +464,6 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
-
-                            <TextBlock x:Name="SyncSummaryText" Margin="0,12,0,0" Foreground="{DynamicResource Brush.SecondaryText}" />
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
