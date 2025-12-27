@@ -236,7 +236,6 @@
     'ShowDevDirectoryDashboard.ImportCompleted'             = "Import abgeschlossen von '{0}' mit {1} Repositories."
     'ShowDevDirectoryDashboard.RestoreCompleted'            = "Wiederherstellung abgeschlossen zu '{0}' mit {1} Repositories."
     'ShowDevDirectoryDashboard.SyncCompleted'               = "Synchronisierung abgeschlossen für Verzeichnis '{0}' und Liste '{1}' mit {2} Repositories."
-    'ShowDevDirectoryDashboard.CopyLogo'                    = "Kopiere Logo von '{0}' zu '{1}'"
 
     # Generic / Shared
     'RepositoryList.UsingDefaultFormat'                     = "Verwende konfiguriertes Standardformat '{0}' für Datei '{1}'."

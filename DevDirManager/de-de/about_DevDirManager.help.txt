@@ -71,7 +71,7 @@ KERNFUNKTIONEN
         - Visuelles Echtzeit-Feedback während langwieriger Vorgänge
         - Größenveränderbare und neu anordbare Datengitter-Spalten
         - Automatische Synchronisierung von Repository-Listenpfaden über Registerkarten hinweg
-        - Logo-Anzeige im Header mit automatischer Asset-Verwaltung
+        - Logo-Anzeige im Header
         - Umfassende Lokalisierung (Englisch, Spanisch, Französisch, Deutsch)
 
         Parameter:

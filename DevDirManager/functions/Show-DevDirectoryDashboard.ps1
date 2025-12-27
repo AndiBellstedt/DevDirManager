@@ -111,31 +111,6 @@
             return
         }
 
-        # Ensure the logo exists in the UI folder as DevDirManager.png by copying from assets if available
-        try {
-            $repoRoot = Split-Path -Path $moduleRoot -Parent
-            $assetSource = Join-Path -Path $repoRoot -ChildPath 'assets\DevDirManager_500x500.png'
-            $uiFolder = Join-Path -Path $moduleRoot -ChildPath 'internal\ui'
-            $logoTarget = Join-Path -Path $uiFolder -ChildPath 'DevDirManager.png'
-
-            if ((Test-Path -Path $assetSource -PathType Leaf)) {
-                $shouldCopy = $true
-                if (Test-Path -Path $logoTarget -PathType Leaf) {
-                    $srcTime = (Get-Item -LiteralPath $assetSource).LastWriteTimeUtc
-                    $dstTime = (Get-Item -LiteralPath $logoTarget).LastWriteTimeUtc
-                    $shouldCopy = ($srcTime -gt $dstTime)
-                }
-
-                if ($shouldCopy) {
-                    Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.CopyLogo' -StringValues @($assetSource, $logoTarget) -Tag 'Asset', 'Logo'
-                    Copy-Item -LiteralPath $assetSource -Destination $logoTarget -Force -ErrorAction Stop
-                }
-            }
-        } catch {
-            # Log but do not fail the UI if the logo copy fails
-            Write-PSFMessage -Level Warning -Message "Failed to prepare UI logo: $($_.Exception.Message)" -Tag 'Asset', 'Logo' -PScmdlet $PSCmdlet
-        }
-
         $xamlContent = Get-Content -Path $xamlPath -Raw -ErrorAction Stop
         $stringReader = New-Object System.IO.StringReader($xamlContent)
         $xmlReader = [System.Xml.XmlReader]::Create($stringReader)

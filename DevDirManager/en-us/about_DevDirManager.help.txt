@@ -71,7 +71,7 @@ CORE FUNCTIONS
         - Summary status and action buttons aligned on same row for quick access
         - Resizable and reorderable data grid columns
         - Automatic synchronization of repository list paths across tabs
-        - Logo display in header with automatic asset management
+        - Logo display in header
         - Comprehensive localization (English, Spanish, French, German)
 
         Parameters:

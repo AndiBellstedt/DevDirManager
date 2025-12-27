@@ -22,6 +22,10 @@
   - Dashboard status text now displays WhatIf summary (e.g., "Clone X repositories from list", "Update repository list file")
   - WhatIf summary is also shown in a message box for clear user feedback
 
+- **Dashboard asset handling**
+  - Removed external asset access that attempted to copy logo from outside the module folder
+  - Dashboard now loads logo directly from within the module structure (read-only)
+
 ## [1.4.0] - 2025-11-12
 
 Overview
