@@ -139,6 +139,9 @@
         $autoSyncChanging = $false
         $newAutoSyncValue = $null
 
+        # Track if any configuration needs manual persistence (since handlers are removed).
+        $needsPersistence = $false
+
         if ($PSBoundParameters.ContainsKey("AutoSyncEnabled")) {
             $currentAutoSync = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
             if ($currentAutoSync -ne $AutoSyncEnabled) {
@@ -159,16 +162,13 @@
                 $action = $action -f $paramName, $value
 
                 if ($PSCmdlet.ShouldProcess($target, $action)) {
-                    # For AutoSyncEnabled changes, we need special handling to prevent handler recursion.
-                    if ($paramName -eq "AutoSyncEnabled") {
-                        # Disable handler to prevent recursive scheduled task registration.
-                        Set-PSFConfig -Module "DevDirManager" -Name $psfKey -Value $value -DisableHandler
-                    } else {
-                        # Normal setting update (handler will auto-persist to JSON).
-                        Set-PSFConfig -Module "DevDirManager" -Name $psfKey -Value $value
-                    }
+                    # Update the PSFConfig value (handlers are removed - manual persistence is required).
+                    Set-PSFConfig -Module "DevDirManager" -Name $psfKey -Value $value
 
                     Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.ConfigUpdated" -StringValues @($paramName, $value) -Tag "SetDevDirectorySetting", "Update"
+
+                    # Mark that configuration needs manual persistence.
+                    $needsPersistence = $true
                 }
             }
         }
@@ -185,7 +185,7 @@
                     Write-PSFMessage -Level Important -String "SetDevDirectorySetting.AutoSyncEnabled.Registered" -Tag "SetDevDirectorySetting", "ScheduledTask"
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
-                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $false -DisableHandler
+                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $false
                     Stop-PSFFunction -Message "Failed to register scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
                     return
                 }
@@ -196,20 +196,29 @@
                     Write-PSFMessage -Level Important -String "SetDevDirectorySetting.AutoSyncEnabled.Unregistered" -Tag "SetDevDirectorySetting", "ScheduledTask"
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
-                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $true -DisableHandler
+                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $true
                     Stop-PSFFunction -Message "Failed to unregister scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
                     return
                 }
             }
+        }
 
-            # After successful task management, persist the AutoSyncEnabled value manually.
-            # We need to trigger the handler manually since we disabled it above.
+        #endregion Handle AutoSyncEnabled changes (register/unregister scheduled task)
+
+        #region -- Persist configuration to JSON file
+
+        # Manual persistence is required since PSFramework handlers are removed.
+        # This is done AFTER all configuration changes and task management is complete.
+        if ($needsPersistence -and -not $WhatIfPreference) {
             $configPath = Get-DevDirectoryConfigPath
             $configDir = Split-Path -Path $configPath -Parent
+
+            # Ensure directory exists.
             if (-not (Test-Path -Path $configDir -PathType Container)) {
                 $null = New-Item -Path $configDir -ItemType Directory -Force
             }
 
+            # Build configuration export object from current PSFConfig values.
             $configExport = [ordered]@{
                 RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
                 LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
@@ -219,14 +228,18 @@
                 LastSyncResult      = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult"
             }
 
+            # Convert datetime to ISO 8601 string for JSON serialization.
             if ($configExport.LastSyncTime -is [datetime]) {
                 $configExport.LastSyncTime = $configExport.LastSyncTime.ToString("o")
             }
 
+            # Write configuration to JSON file.
             $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8 -Force
+
+            Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.ConfigPersisted" -StringValues @($configPath) -Tag "SetDevDirectorySetting", "Persistence"
         }
 
-        #endregion Handle AutoSyncEnabled changes (register/unregister scheduled task)
+        #endregion Persist configuration to JSON file
 
         #region -- Return updated settings if PassThru
 

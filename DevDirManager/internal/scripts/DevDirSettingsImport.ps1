@@ -26,6 +26,9 @@ if ($PSVersionTable.PSVersion.Major -ge 6) {
 # Define the configuration file path.
 $script:DevDirManagerConfigPath = Join-Path -Path $script:DevDirManagerPowerShellDataFolder -ChildPath "DevDirManagerConfiguration.json"
 
+# Store the config path in PSFramework so it can be accessed from anywhere, including handlers.
+Set-PSFConfig -Module "DevDirManager" -Name "Internal.ConfigPath" -Value $script:DevDirManagerConfigPath -Hidden -Initialize -Description "Internal configuration file path (read-only)"
+
 #endregion Configuration path determination
 
 
@@ -57,57 +60,6 @@ $script:DevDirManagerScheduledTaskName = "PS{0}_DevDirManager_{1}" -f $psMajorVe
 #endregion Scheduled Task Name determination
 
 
-#region -- Configuration handler scriptblock
-
-# This handler is executed whenever a PSFConfig value is changed.
-# It persists the configuration to the JSON file automatically.
-$script:DevDirManagerConfigHandler = {
-    param($Value)
-
-    # Prevent recursive handler execution by using a flag.
-    if ($script:DevDirManagerHandlerExecuting) {
-        return
-    }
-
-    $script:DevDirManagerHandlerExecuting = $true
-
-    try {
-        $configPath = $script:DevDirManagerConfigPath
-
-        # Ensure directory exists.
-        $configDir = Split-Path -Path $configPath -Parent
-        if (-not (Test-Path -Path $configDir -PathType Container)) {
-            $null = New-Item -Path $configDir -ItemType Directory -Force
-        }
-
-        # Build configuration object for export from current PSFConfig values.
-        $configExport = [ordered]@{
-            RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
-            LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
-            AutoSyncEnabled     = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
-            SyncIntervalMinutes = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
-            LastSyncTime        = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncTime"
-            LastSyncResult      = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult"
-        }
-
-        # Convert datetime to ISO 8601 string for JSON serialization.
-        if ($configExport.LastSyncTime -is [datetime]) {
-            $configExport.LastSyncTime = $configExport.LastSyncTime.ToString("o")
-        }
-
-        # Write the configuration to JSON file.
-        $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8 -Force
-    } finally {
-        $script:DevDirManagerHandlerExecuting = $false
-    }
-}
-
-# Initialize handler execution flag.
-$script:DevDirManagerHandlerExecuting = $false
-
-#endregion Configuration handler scriptblock
-
-
 #region -- Configuration defaults and initialization
 
 # Define default values for all configuration keys.
@@ -129,14 +81,14 @@ Set-PSFConfig -Module "DevDirManager" -Name "Internal.ScheduledTaskName" -Value 
 
 #region -- Load configuration from JSON file
 
-# Helper function to set a configuration with validation and handler.
+# Helper function to set a configuration WITHOUT handler.
+# Manual persistence is handled in Set-DevDirectorySetting to avoid handler scope issues.
 function script:Set-DevDirManagerConfigItem {
     param(
         [string]$Name,
         [object]$Value,
         [string]$Validation,
-        [string]$Description,
-        [switch]$NoHandler
+        [string]$Description
     )
 
     $setParams = @{
@@ -149,11 +101,6 @@ function script:Set-DevDirManagerConfigItem {
 
     if ($Validation) {
         $setParams["Validation"] = $Validation
-    }
-
-    # Add handler for automatic persistence (except for read-only fields like LastSyncTime/LastSyncResult).
-    if (-not $NoHandler) {
-        $setParams["Handler"] = $script:DevDirManagerConfigHandler
     }
 
     Set-PSFConfig @setParams
@@ -172,6 +119,75 @@ if (Test-Path -Path $script:DevDirManagerConfigPath -PathType Leaf) {
 } else {
     Write-PSFMessage -Level Verbose -String "DevDirSettingsImport.ConfigNotFound" -StringValues @($script:DevDirManagerConfigPath) -Tag "DevDirSettingsImport", "Load"
 }
+
+#endregion Load configuration from JSON file
+
+
+#region -- Configuration persistence handler
+
+# Create a working handler that uses Get-PSFConfigValue to get the config path.
+# This avoids scope issues since Get-PSFConfigValue works reliably in handlers.
+$script:DevDirManagerWorkingHandler = {
+    param($Value)
+
+    try {
+        # Get config path from PSFramework config (accessible in handler scope).
+        $configPath = Get-PSFConfigValue -FullName "DevDirManager.Internal.ConfigPath"
+
+        if (-not $configPath) {
+            Write-PSFMessage -Level Warning -Message "Config path not found in handler" -Tag "DevDirSettingsImport", "Handler"
+            return
+        }
+
+        # Ensure directory exists.
+        $configDir = Split-Path -Path $configPath -Parent
+        if (-not (Test-Path -Path $configDir -PathType Container)) {
+            $null = New-Item -Path $configDir -ItemType Directory -Force
+        }
+
+        # Build configuration export from current PSFConfig values.
+        $configExport = [ordered]@{
+            RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
+            LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
+            AutoSyncEnabled     = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
+            SyncIntervalMinutes = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
+            LastSyncTime        = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncTime"
+            LastSyncResult      = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult"
+        }
+
+        # Convert datetime to ISO 8601 string for JSON serialization.
+        if ($configExport.LastSyncTime -is [datetime]) {
+            $configExport.LastSyncTime = $configExport.LastSyncTime.ToString("o")
+        }
+
+        # Write configuration to JSON file.
+        $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8 -Force
+    } catch {
+        # Log error but don't throw - handler errors should not break config updates.
+        Write-PSFMessage -Level Warning -Message "Handler failed: $_" -ErrorRecord $_ -Tag "DevDirSettingsImport", "HandlerError"
+    }
+}
+
+#endregion Configuration persistence handler
+
+
+#region -- Update old handlers (replace with working handler)
+
+# Replace handlers on existing config items with the working handler.
+# This fixes issues from previous module versions where handlers had scope problems.
+$existingConfigs = Get-PSFConfig -Module "DevDirManager" -Name "System.*"
+foreach ($cfg in $existingConfigs) {
+    if ($cfg.Handler) {
+        # Replace old handler with working handler.
+        Set-PSFConfig -FullName $cfg.FullName -Handler $script:DevDirManagerWorkingHandler
+        Write-PSFMessage -Level Debug -Message "Handler updated for $($cfg.FullName)" -Tag "DevDirSettingsImport", "Cleanup"
+    }
+}
+
+#endregion Update old handlers (replace with working handler)
+
+
+#region -- Initialize configuration items
 
 # Initialize all configuration items with validation and handlers.
 # RepositoryListPath - Optional path (no validation to allow empty strings).
@@ -201,11 +217,11 @@ if ($configFromFile -and $configFromFile.LastSyncTime -is [string] -and -not [st
         $lastSyncTimeValue = $null
     }
 }
-Set-DevDirManagerConfigItem -Name "System.LastSyncTime" -Value $lastSyncTimeValue -Description "Timestamp of last sync operation" -NoHandler
+Set-DevDirManagerConfigItem -Name "System.LastSyncTime" -Value $lastSyncTimeValue -Description "Timestamp of last sync operation"
 
 # LastSyncResult - Optional string, no handler (set programmatically only).
 $lastSyncResultValue = if ($configFromFile -and $configFromFile.LastSyncResult) { $configFromFile.LastSyncResult } else { $script:DevDirManagerConfigDefaults["System.LastSyncResult"] }
-Set-DevDirManagerConfigItem -Name "System.LastSyncResult" -Value $lastSyncResultValue -Description "Result of last sync operation" -NoHandler
+Set-DevDirManagerConfigItem -Name "System.LastSyncResult" -Value $lastSyncResultValue -Description "Result of last sync operation"
 
 #endregion Load configuration from JSON file
 

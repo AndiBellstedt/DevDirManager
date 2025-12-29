@@ -164,17 +164,13 @@
 
         #region -- Return requested data
 
-        # Handle "All" and "*" as requests for all settings.
-        if ($Name -eq "All" -or $Name -eq "*") {
-            $Name = $null
-        }
-
-        if ($PSBoundParameters.ContainsKey("Name") -and -not [string]::IsNullOrWhiteSpace($Name)) {
+        # Check if a specific single value is requested (not "All" or "*").
+        if ($PSBoundParameters.ContainsKey("Name") -and -not [string]::IsNullOrWhiteSpace($Name) -and $Name -ne "All" -and $Name -ne "*") {
             # Return only the single requested value.
             Write-PSFMessage -Level Verbose -String "GetDevDirectorySetting.ReturnSingleValue" -StringValues @($Name) -Tag "GetDevDirectorySetting", "SingleValue"
             $configValues[$Name]
         } else {
-            # Return the full settings object.
+            # Return the full settings object (when no Name specified, or Name is "All" or "*").
             $settingObject = [PSCustomObject]@{
                 PSTypeName          = "DevDirManager.SystemSetting"
                 ComputerName        = $env:COMPUTERNAME
