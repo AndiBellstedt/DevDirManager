@@ -12,10 +12,8 @@
         at the specified interval. Optionally, the task can also be configured
         to run at user logon.
 
-        This function requires administrative privileges to create scheduled tasks.
-
-    .PARAMETER TaskName
-        Name for the scheduled task. Defaults to "DevDirManager-AutoSync".
+        The task name is automatically generated to be unique per user and
+        PowerShell version to avoid conflicts in multi-user environments.
 
     .PARAMETER RunAtLogon
         Also triggers the sync task at user logon in addition to the interval trigger.
@@ -40,9 +38,9 @@
         Creates a scheduled task that runs at the configured interval and also at user logon.
 
     .EXAMPLE
-        PS C:\> Register-DevDirectoryScheduledSync -TaskName "MyRepoSync" -Force
+        PS C:\> Register-DevDirectoryScheduledSync -Force
 
-        Creates or updates a scheduled task with custom name, overwriting if it exists.
+        Creates or updates the scheduled task, overwriting if it exists.
 
     .EXAMPLE
         PS C:\> Register-DevDirectoryScheduledSync -WhatIf
@@ -50,10 +48,15 @@
         Shows what scheduled task would be created without actually creating it.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-28
+        Date      : 2025-12-29
         Keywords  : ScheduledTask, Sync, Automation
+
+        Security Note: The -ExecutionPolicy parameter is intentionally omitted from
+        the PowerShell arguments. This is by design for security reasons - the
+        execution policy should be configured at the system or user level, not
+        bypassed by individual scripts.
 
     .LINK
         https://github.com/AndiBellstedt/DevDirManager
@@ -65,11 +68,6 @@
     )]
     [OutputType([Microsoft.Management.Infrastructure.CimInstance])]
     param(
-        [Parameter(Position = 0)]
-        [ValidateNotNullOrEmpty()]
-        [string]
-        $TaskName = "DevDirManager-AutoSync",
-
         [Parameter()]
         [switch]
         $RunAtLogon,
@@ -80,18 +78,23 @@
     )
 
     begin {
-        Write-PSFMessage -Level Debug -String "RegisterDevDirectoryScheduledSync.Start" -StringValues @($TaskName) -Tag "RegisterDevDirectoryScheduledSync", "Start"
+        # Get the task name from PSFConfig (set during module import).
+        $taskName = Get-PSFConfigValue -FullName "DevDirManager.Internal.ScheduledTaskName"
+
+        Write-PSFMessage -Level Debug -String "RegisterDevDirectoryScheduledSync.Start" -StringValues @($taskName) -Tag "RegisterDevDirectoryScheduledSync", "Start"
 
         #region -- Validate system configuration
 
-        $settings = Get-DevDirectorySetting
+        $repoListPath = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
+        $localDevDir = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
+        $syncInterval = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
 
-        if ([string]::IsNullOrWhiteSpace($settings.RepositoryListPath)) {
+        if ([string]::IsNullOrWhiteSpace($repoListPath)) {
             Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath") -EnableException $true -Category InvalidOperation -Tag "RegisterDevDirectoryScheduledSync", "Configuration"
             return
         }
 
-        if ([string]::IsNullOrWhiteSpace($settings.LocalDevDirectory)) {
+        if ([string]::IsNullOrWhiteSpace($localDevDir)) {
             Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory") -EnableException $true -Category InvalidOperation -Tag "RegisterDevDirectoryScheduledSync", "Configuration"
             return
         }
@@ -100,9 +103,9 @@
 
         #region -- Check for existing task
 
-        $existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+        $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
         if ($existingTask -and -not $Force) {
-            Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.Exists") -StringValues @($TaskName) -EnableException $true -Category ResourceExists -Tag "RegisterDevDirectoryScheduledSync", "Exists"
+            Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.Exists") -StringValues @($taskName) -EnableException $true -Category ResourceExists -Tag "RegisterDevDirectoryScheduledSync", "Exists"
             return
         }
 
@@ -114,17 +117,22 @@
 
         #region -- Build scheduled task components
 
-        # Determine the PowerShell executable path.
-        # Use pwsh.exe for PowerShell 7+ and powershell.exe for Windows PowerShell.
-        if ($PSVersionTable.PSVersion.Major -ge 6) {
-            $psExecutable = "pwsh.exe"
-        } else {
-            $psExecutable = "powershell.exe"
+        # Get the PowerShell executable from the environment (full path).
+        $psExecutable = [Environment]::ProcessPath
+        if ([string]::IsNullOrWhiteSpace($psExecutable)) {
+            # Fallback for older PowerShell versions that don't have ProcessPath.
+            if ($PSVersionTable.PSVersion.Major -ge 6) {
+                $psExecutable = (Get-Process -Id $PID).Path
+            } else {
+                $psExecutable = Join-Path -Path $PSHOME -ChildPath "powershell.exe"
+            }
         }
 
         # Build the command to execute.
+        # Note: ExecutionPolicy is intentionally omitted for security reasons.
+        # The execution policy should be configured at the system or user level.
         $syncCommand = "Import-Module DevDirManager -Force; Invoke-DevDirectorySync"
-        $arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command `"$($syncCommand)`""
+        $arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -Command `"$($syncCommand)`""
 
         # Create the action.
         $action = New-ScheduledTaskAction -Execute $psExecutable -Argument $arguments
@@ -133,9 +141,8 @@
         $triggerList = @()
 
         # Interval-based trigger.
-        $intervalMinutes = $settings.SyncIntervalMinutes
-        if ($intervalMinutes -gt 0) {
-            $intervalTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes $intervalMinutes)
+        if ($syncInterval -gt 0) {
+            $intervalTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes $syncInterval)
             $triggerList += $intervalTrigger
         }
 
@@ -155,19 +162,25 @@
 
         #region -- Register the scheduled task
 
-        $taskDescription = "Automatically synchronizes Git repositories using DevDirManager. Syncs from '$($settings.RepositoryListPath)' to '$($settings.LocalDevDirectory)' every $($intervalMinutes) minutes."
+        # Get localized task description.
+        $taskDescription = Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.TaskDescription"
 
-        if ($PSCmdlet.ShouldProcess($TaskName, "Register scheduled task")) {
+        if ($PSCmdlet.ShouldProcess($taskName, "Register scheduled task")) {
             # Remove existing task if Force is specified.
             if ($existingTask -and $Force) {
-                Write-PSFMessage -Level Verbose -String "RegisterDevDirectoryScheduledSync.RemovingExisting" -StringValues @($TaskName) -Tag "RegisterDevDirectoryScheduledSync", "Remove"
-                Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+                Write-PSFMessage -Level Verbose -String "RegisterDevDirectoryScheduledSync.RemovingExisting" -StringValues @($taskName) -Tag "RegisterDevDirectoryScheduledSync", "Remove"
+                Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
             }
 
             # Register the new task.
-            $task = Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $triggerList -Principal $principal -Settings $taskSettings -Description $taskDescription
+            $task = Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $triggerList -Principal $principal -Settings $taskSettings -Description $taskDescription
 
-            Write-PSFMessage -Level Host -String "RegisterDevDirectoryScheduledSync.Created" -StringValues @($TaskName, $intervalMinutes) -Tag "RegisterDevDirectoryScheduledSync", "Created"
+            Write-PSFMessage -Level Host -String "RegisterDevDirectoryScheduledSync.Created" -StringValues @($taskName, $syncInterval) -Tag "RegisterDevDirectoryScheduledSync", "Created"
+
+            # Update AutoSyncEnabled to true in PSFConfig (disable handler to prevent recursion).
+            Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $true -DisableHandler
+
+            Write-PSFMessage -Level Important -String "RegisterDevDirectoryScheduledSync.AutoSyncEnabled" -Tag "RegisterDevDirectoryScheduledSync", "AutoSync"
 
             # Return the created task.
             $task

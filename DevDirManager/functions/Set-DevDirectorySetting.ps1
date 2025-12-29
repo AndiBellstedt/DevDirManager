@@ -7,12 +7,13 @@
         Sets the system-level configuration for automated synchronization including
         the central repository list path, local development directory, and sync options.
 
-        Settings are persisted to a JSON file within the PowerShell data folder:
+        Settings are persisted to a JSON file within the PowerShell data folder
+        automatically via the PSFramework configuration handler system:
         - Windows PowerShell 5.1: %LOCALAPPDATA%\Microsoft\Windows\PowerShell\DevDirManagerConfiguration.json
         - PowerShell 7+: %LOCALAPPDATA%\Microsoft\PowerShell\DevDirManagerConfiguration.json
 
-        The configuration enables automated synchronization of repositories across
-        multiple computers using system-based filtering.
+        When AutoSyncEnabled is modified, the scheduled task is automatically
+        registered or unregistered to maintain consistency.
 
     .PARAMETER RepositoryListPath
         Path to the central repository list file (JSON, CSV, or XML).
@@ -26,22 +27,13 @@
 
     .PARAMETER AutoSyncEnabled
         Enables or disables automatic synchronization.
-        When enabled, the scheduled sync task will actively synchronize repositories.
+        When enabled, the scheduled sync task will be registered automatically.
+        When disabled, the scheduled sync task will be unregistered.
 
     .PARAMETER SyncIntervalMinutes
         Interval in minutes between automatic sync operations (for scheduled task).
         Must be a positive integer between 1 and 1440 (24 hours).
-
-    .PARAMETER DefaultSystemFilter
-        Default filter pattern for this computer. Repositories without a SystemFilter
-        property will use this pattern for matching.
-
-        Pattern syntax:
-        - "*" matches all systems (default)
-        - "WORKSTATION-01" exact match
-        - "DEV-*" wildcard match (starts with DEV-)
-        - "!SERVER-*" exclusion pattern (NOT on SERVER-* machines)
-        - "DEV-*,LAPTOP-*" multiple patterns (OR logic)
+        Default: 360 (6 hours).
 
     .PARAMETER PassThru
         Returns the updated configuration object after saving.
@@ -60,13 +52,12 @@
     .EXAMPLE
         PS C:\> Set-DevDirectorySetting -AutoSyncEnabled $true -SyncIntervalMinutes 30
 
-        Enables automatic sync every 30 minutes.
+        Enables automatic sync every 30 minutes. This also registers the scheduled task.
 
     .EXAMPLE
-        PS C:\> Set-DevDirectorySetting -DefaultSystemFilter "DEV-*,LAPTOP-*" -PassThru
+        PS C:\> Set-DevDirectorySetting -AutoSyncEnabled $false
 
-        Sets the system filter to match computers starting with "DEV-" or "LAPTOP-"
-        and returns the updated configuration.
+        Disables automatic sync and unregisters the scheduled task.
 
     .EXAMPLE
         PS C:\> Set-DevDirectorySetting -RepositoryListPath "C:\Backup\repos.json" -WhatIf
@@ -74,9 +65,9 @@
         Shows what would be saved without making changes.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-28
+        Date      : 2025-12-29
         Keywords  : Configuration, Settings, Sync
 
     .LINK
@@ -106,10 +97,6 @@
         [int]
         $SyncIntervalMinutes,
 
-        [Parameter(ValueFromPipelineByPropertyName = $true)]
-        [string]
-        $DefaultSystemFilter,
-
         [Parameter()]
         [switch]
         $PassThru
@@ -117,9 +104,6 @@
 
     begin {
         Write-PSFMessage -Level Debug -String "SetDevDirectorySetting.Start" -Tag "SetDevDirectorySetting", "Start"
-
-        # Get configuration file path (respects PS version).
-        $configPath = Get-DevDirectoryConfigPath
     }
 
     process {
@@ -149,67 +133,110 @@
             "LocalDevDirectory"   = "System.LocalDevDirectory"
             "AutoSyncEnabled"     = "System.AutoSyncEnabled"
             "SyncIntervalMinutes" = "System.SyncIntervalMinutes"
-            "DefaultSystemFilter" = "System.DefaultSystemFilter"
         }
 
+        # Track if AutoSyncEnabled is being changed.
+        $autoSyncChanging = $false
+        $newAutoSyncValue = $null
+
+        if ($PSBoundParameters.ContainsKey("AutoSyncEnabled")) {
+            $currentAutoSync = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
+            if ($currentAutoSync -ne $AutoSyncEnabled) {
+                $autoSyncChanging = $true
+                $newAutoSyncValue = $AutoSyncEnabled
+            }
+        }
+
+        # Process each parameter that was provided.
         foreach ($paramName in $parameterMapping.Keys) {
             if ($PSBoundParameters.ContainsKey($paramName)) {
                 $psfKey = $parameterMapping[$paramName]
                 $value = $PSBoundParameters[$paramName]
 
-                Set-PSFConfig -Module "DevDirManager" -Name $psfKey -Value $value
-                Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.ConfigUpdated" -StringValues @($paramName, $value) -Tag "SetDevDirectorySetting", "Update"
+                # ShouldProcess check for each setting change.
+                $target = Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.ShouldProcess.Target"
+                $action = Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.ShouldProcess.Action"
+                $action = $action -f $paramName, $value
+
+                if ($PSCmdlet.ShouldProcess($target, $action)) {
+                    # For AutoSyncEnabled changes, we need special handling to prevent handler recursion.
+                    if ($paramName -eq "AutoSyncEnabled") {
+                        # Disable handler to prevent recursive scheduled task registration.
+                        Set-PSFConfig -Module "DevDirManager" -Name $psfKey -Value $value -DisableHandler
+                    } else {
+                        # Normal setting update (handler will auto-persist to JSON).
+                        Set-PSFConfig -Module "DevDirManager" -Name $psfKey -Value $value
+                    }
+
+                    Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.ConfigUpdated" -StringValues @($paramName, $value) -Tag "SetDevDirectorySetting", "Update"
+                }
             }
         }
 
-        # Update config file path in case it changed (PS version switch scenario).
-        Set-PSFConfig -Module "DevDirManager" -Name "System.ConfigFilePath" -Value $configPath
-
         #endregion Update PSFramework configuration
 
-        #region -- Persist configuration to JSON file
+        #region -- Handle AutoSyncEnabled changes (register/unregister scheduled task)
 
-        if ($PSCmdlet.ShouldProcess($configPath, "Save configuration")) {
-            # Ensure directory exists.
+        if ($autoSyncChanging -and -not $WhatIfPreference) {
+            if ($newAutoSyncValue -eq $true) {
+                # Register the scheduled task.
+                try {
+                    Register-DevDirectoryScheduledSync -Force
+                    Write-PSFMessage -Level Important -String "SetDevDirectorySetting.AutoSyncEnabled.Registered" -Tag "SetDevDirectorySetting", "ScheduledTask"
+                } catch {
+                    # Rollback the AutoSyncEnabled setting on failure.
+                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $false -DisableHandler
+                    Write-PSFMessage -Level Error -Message "Failed to register scheduled task: $_" -Tag "SetDevDirectorySetting", "Error"
+                    throw
+                }
+            } else {
+                # Unregister the scheduled task.
+                try {
+                    Unregister-DevDirectoryScheduledSync
+                    Write-PSFMessage -Level Important -String "SetDevDirectorySetting.AutoSyncEnabled.Unregistered" -Tag "SetDevDirectorySetting", "ScheduledTask"
+                } catch {
+                    # Rollback the AutoSyncEnabled setting on failure.
+                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $true -DisableHandler
+                    Write-PSFMessage -Level Error -Message "Failed to unregister scheduled task: $_" -Tag "SetDevDirectorySetting", "Error"
+                    throw
+                }
+            }
+
+            # After successful task management, persist the AutoSyncEnabled value manually.
+            # We need to trigger the handler manually since we disabled it above.
+            $configPath = Get-DevDirectoryConfigPath
             $configDir = Split-Path -Path $configPath -Parent
             if (-not (Test-Path -Path $configDir -PathType Container)) {
                 $null = New-Item -Path $configDir -ItemType Directory -Force
-                Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.DirectoryCreated" -StringValues @($configDir) -Tag "SetDevDirectorySetting", "Directory"
             }
 
-            # Build configuration object for export.
             $configExport = [ordered]@{
                 RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
                 LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
                 AutoSyncEnabled     = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
                 SyncIntervalMinutes = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
-                DefaultSystemFilter = Get-PSFConfigValue -FullName "DevDirManager.System.DefaultSystemFilter"
                 LastSyncTime        = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncTime"
                 LastSyncResult      = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult"
             }
 
-            # Convert datetime to ISO 8601 string for JSON serialization.
             if ($configExport.LastSyncTime -is [datetime]) {
                 $configExport.LastSyncTime = $configExport.LastSyncTime.ToString("o")
             }
 
-            # Write the configuration to JSON file.
             $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8 -Force
-
-            Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.Persisted" -StringValues @($configPath) -Tag "SetDevDirectorySetting", "Persisted"
         }
 
-        #endregion Persist configuration to JSON file
+        #endregion Handle AutoSyncEnabled changes (register/unregister scheduled task)
 
-        #region -- Return result if requested
+        #region -- Return updated settings if PassThru
 
         if ($PassThru) {
             Get-DevDirectorySetting
         }
 
-        Write-PSFMessage -Level Debug -String "SetDevDirectorySetting.Complete" -Tag "SetDevDirectorySetting", "Complete"
+        Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.Complete" -Tag "SetDevDirectorySetting", "Complete"
 
-        #endregion Return result if requested
+        #endregion Return updated settings if PassThru
     }
 
     end {

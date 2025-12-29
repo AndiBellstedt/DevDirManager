@@ -25,5 +25,5 @@ $moduleRoot = Split-Path (Split-Path $PSScriptRoot)
 # Load License
 "$moduleRoot\internal\scripts\license.ps1"
 
-# Load System Configuration
-"$moduleRoot\internal\scripts\configuration.ps1"
+# Load DevDirManager Settings (configuration from JSON file with PSFConfig handlers)
+"$moduleRoot\internal\scripts\DevDirSettingsImport.ps1"

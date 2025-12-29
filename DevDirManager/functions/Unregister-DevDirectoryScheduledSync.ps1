@@ -7,8 +7,11 @@
         Removes the Windows scheduled task that was created by Register-DevDirectoryScheduledSync.
         This stops automated synchronization of repositories.
 
-    .PARAMETER TaskName
-        Name of the scheduled task to remove. Defaults to "DevDirManager-AutoSync".
+        The task name is automatically determined based on the current user and
+        PowerShell version to match the task created by Register-DevDirectoryScheduledSync.
+
+        Also sets AutoSyncEnabled to false in the system configuration to maintain
+        consistency between the scheduled task state and configuration.
 
     .PARAMETER WhatIf
         Shows what would happen if the cmdlet runs. The cmdlet is not run.
@@ -19,12 +22,7 @@
     .EXAMPLE
         PS C:\> Unregister-DevDirectoryScheduledSync
 
-        Removes the default "DevDirManager-AutoSync" scheduled task.
-
-    .EXAMPLE
-        PS C:\> Unregister-DevDirectoryScheduledSync -TaskName "MyRepoSync"
-
-        Removes a scheduled task with a custom name.
+        Removes the DevDirManager scheduled sync task and disables AutoSync in settings.
 
     .EXAMPLE
         PS C:\> Unregister-DevDirectoryScheduledSync -WhatIf
@@ -32,9 +30,9 @@
         Shows what would be removed without actually removing the task.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-28
+        Date      : 2025-12-29
         Keywords  : ScheduledTask, Sync, Automation
 
     .LINK
@@ -46,25 +44,25 @@
         ConfirmImpact = "Medium"
     )]
     [OutputType([void])]
-    param(
-        [Parameter(Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
-        [ValidateNotNullOrEmpty()]
-        [Alias("Name")]
-        [string]
-        $TaskName = "DevDirManager-AutoSync"
-    )
+    param()
 
     begin {
-        Write-PSFMessage -Level Debug -String "UnregisterDevDirectoryScheduledSync.Start" -StringValues @($TaskName) -Tag "UnregisterDevDirectoryScheduledSync", "Start"
+        # Get the task name from PSFConfig (set during module import).
+        $taskName = Get-PSFConfigValue -FullName "DevDirManager.Internal.ScheduledTaskName"
+
+        Write-PSFMessage -Level Debug -String "UnregisterDevDirectoryScheduledSync.Start" -StringValues @($taskName) -Tag "UnregisterDevDirectoryScheduledSync", "Start"
     }
 
     process {
         #region -- Check if task exists
 
-        $existingTask = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+        $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
 
         if (-not $existingTask) {
-            Write-PSFMessage -Level Warning -String "UnregisterDevDirectoryScheduledSync.NotFound" -StringValues @($TaskName) -Tag "UnregisterDevDirectoryScheduledSync", "NotFound"
+            Write-PSFMessage -Level Warning -String "UnregisterDevDirectoryScheduledSync.NotFound" -StringValues @($taskName) -Tag "UnregisterDevDirectoryScheduledSync", "NotFound"
+
+            # Even if task doesn't exist, ensure AutoSyncEnabled is false for consistency.
+            Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $false -DisableHandler
             return
         }
 
@@ -72,10 +70,15 @@
 
         #region -- Remove the scheduled task
 
-        if ($PSCmdlet.ShouldProcess($TaskName, "Remove scheduled task")) {
-            Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false
+        if ($PSCmdlet.ShouldProcess($taskName, "Remove scheduled task")) {
+            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
 
-            Write-PSFMessage -Level Host -String "UnregisterDevDirectoryScheduledSync.Removed" -StringValues @($TaskName) -Tag "UnregisterDevDirectoryScheduledSync", "Removed"
+            Write-PSFMessage -Level Host -String "UnregisterDevDirectoryScheduledSync.Removed" -StringValues @($taskName) -Tag "UnregisterDevDirectoryScheduledSync", "Removed"
+
+            # Update AutoSyncEnabled to false in PSFConfig (disable handler to prevent recursion).
+            Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $false -DisableHandler
+
+            Write-PSFMessage -Level Important -String "UnregisterDevDirectoryScheduledSync.AutoSyncDisabled" -Tag "UnregisterDevDirectoryScheduledSync", "AutoSync"
         }
 
         #endregion Remove the scheduled task

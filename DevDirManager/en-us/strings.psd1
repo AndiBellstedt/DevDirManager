@@ -250,6 +250,8 @@
     'SetDevDirectorySetting.DirectoryCreated'                            = "Created configuration directory: '{0}'"
     'SetDevDirectorySetting.Persisted'                                   = "Settings persisted to '{0}'"
     'SetDevDirectorySetting.Complete'                                    = "System settings configured successfully"
+    'SetDevDirectorySetting.ShouldProcess.Target'                        = "DevDirManager system configuration"
+    'SetDevDirectorySetting.ShouldProcess.Action'                        = "Set setting '{0}' to '{1}'"
 
     # Invoke-DevDirectorySync
     'InvokeDevDirectorySync.Start'                                       = "Starting system-configured sync for computer '{0}'"
@@ -268,12 +270,31 @@
     'RegisterDevDirectoryScheduledSync.RemovingExisting'                 = "Removing existing scheduled task '{0}'"
     'RegisterDevDirectoryScheduledSync.Created'                          = "Scheduled task '{0}' created: runs every {1} minutes"
     'RegisterDevDirectoryScheduledSync.Complete'                         = "Scheduled task registration completed"
+    'RegisterDevDirectoryScheduledSync.TaskDescription'                  = "DevDirManager automatic repository synchronization. Syncs repositories from the configured central list to the local development directory."
+    'RegisterDevDirectoryScheduledSync.AutoSyncEnabled'                  = "AutoSyncEnabled setting has been set to true."
 
     # Unregister-DevDirectoryScheduledSync
     'UnregisterDevDirectoryScheduledSync.Start'                          = "Removing scheduled task '{0}'"
     'UnregisterDevDirectoryScheduledSync.NotFound'                       = "Scheduled task '{0}' not found"
     'UnregisterDevDirectoryScheduledSync.Removed'                        = "Scheduled task '{0}' removed"
     'UnregisterDevDirectoryScheduledSync.Complete'                       = "Scheduled task removal completed"
+    'UnregisterDevDirectoryScheduledSync.AutoSyncDisabled'               = "AutoSyncEnabled setting has been set to false."
+
+    # DevDirSettingsImport (internal script)
+    'DevDirSettingsImport.ConfigLoaded'                                  = "Loaded DevDirManager configuration from '{0}'"
+    'DevDirSettingsImport.ConfigLoadFailed'                              = "Failed to load configuration from '{0}': {1}"
+    'DevDirSettingsImport.ConfigNotFound'                                = "No configuration file found at '{0}'. Using defaults."
+    'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled is true, but scheduled task '{0}' does not exist. Run Register-DevDirectoryScheduledSync to create it."
+    'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled is true, but scheduled task '{0}' is disabled. Enable it or set AutoSyncEnabled to false."
+
+    # Test-DevDirectorySystemFilter
+    'TestDevDirectorySystemFilter.EmptyFilter'                           = "SystemFilter is empty, matching all systems"
+    'TestDevDirectorySystemFilter.WildcardFilter'                        = "SystemFilter is '*', matching all systems"
+    'TestDevDirectorySystemFilter.MatchedExclusion'                      = "Computer '{0}' matches exclusion pattern '{1}'"
+    'TestDevDirectorySystemFilter.MatchedInclusion'                      = "Computer '{0}' matches inclusion pattern '{1}'"
+    'TestDevDirectorySystemFilter.Excluded'                              = "Computer '{0}' excluded by filter '{1}'"
+    'TestDevDirectorySystemFilter.InclusionResult'                       = "Computer '{0}' inclusion check result: {1}"
+    'TestDevDirectorySystemFilter.NotExcluded'                           = "Computer '{0}' not excluded, allowing"
 
     # Generic / Shared
     'RepositoryList.UsingDefaultFormat'                                  = "Using configured default format '{0}' for file '{1}'."

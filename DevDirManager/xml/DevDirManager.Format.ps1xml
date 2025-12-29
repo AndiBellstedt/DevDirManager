@@ -217,20 +217,12 @@
                                 <PropertyName>SyncIntervalMinutes</PropertyName>
                             </ListItem>
                             <ListItem>
-                                <Label>DefaultSystemFilter</Label>
-                                <PropertyName>DefaultSystemFilter</PropertyName>
-                            </ListItem>
-                            <ListItem>
                                 <Label>LastSyncTime</Label>
                                 <PropertyName>LastSyncTime</PropertyName>
                             </ListItem>
                             <ListItem>
                                 <Label>LastSyncResult</Label>
                                 <PropertyName>LastSyncResult</PropertyName>
-                            </ListItem>
-                            <ListItem>
-                                <Label>ConfigFilePath</Label>
-                                <PropertyName>ConfigFilePath</PropertyName>
                             </ListItem>
                         </ListItems>
                     </ListEntry>
@@ -261,9 +253,6 @@
                         <Label>Interval</Label>
                     </TableColumnHeader>
                     <TableColumnHeader>
-                        <Label>SystemFilter</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
                         <Label>LastSync</Label>
                     </TableColumnHeader>
                 </TableHeaders>
@@ -284,9 +273,6 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>SyncIntervalMinutes</PropertyName>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>DefaultSystemFilter</PropertyName>
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>LastSyncTime</PropertyName>

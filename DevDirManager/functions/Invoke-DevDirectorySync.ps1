@@ -5,13 +5,17 @@
 
     .DESCRIPTION
         Convenience function that reads the system configuration and invokes
-        Sync-DevDirectoryList with the configured paths and filter settings.
-        Applies the SystemFilter property to include only matching repositories
+        Sync-DevDirectoryList with the configured paths. Applies the SystemFilter
+        property from each repository to include only matching repositories
         for the current computer.
 
         Requires system settings to be configured via Set-DevDirectorySetting first.
         The function reads the RepositoryListPath and LocalDevDirectory from the
-        system configuration, then applies system-based filtering before syncing.
+        system configuration, then applies per-repository filtering before syncing.
+
+        Each repository in the list can have a SystemFilter property that determines
+        which computers should sync that repository. Repositories without a
+        SystemFilter property will sync to all systems (equivalent to "*").
 
         This function is designed for automated synchronization scenarios, such as
         scheduled tasks or logon scripts, where the sync should happen without
@@ -34,6 +38,8 @@
 
     .PARAMETER WhatIf
         Shows what would happen if the cmdlet runs. The cmdlet is not run.
+        In WhatIf mode, the filtering is still performed and a summary is shown,
+        but no actual synchronization occurs and LastSync settings are not updated.
 
     .PARAMETER Confirm
         Prompts you for confirmation before running the cmdlet.
@@ -59,9 +65,9 @@
         Syncs repositories, skipping existing ones and showing git output.
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-28
+        Date      : 2025-12-29
         Keywords  : Git, Sync, Repository, Automation
 
     .LINK
@@ -94,22 +100,23 @@
     begin {
         Write-PSFMessage -Level Debug -String "InvokeDevDirectorySync.Start" -StringValues @($env:COMPUTERNAME) -Tag "InvokeDevDirectorySync", "Start"
 
-        #region -- Validate system configuration
+        #region -- Validate system configuration (get values directly from PSFConfig)
 
-        $settings = Get-DevDirectorySetting
+        $repoListPath = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
+        $localDevDir = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
 
-        if ([string]::IsNullOrWhiteSpace($settings.RepositoryListPath)) {
+        if ([string]::IsNullOrWhiteSpace($repoListPath)) {
             Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "InvokeDevDirectorySync.NotConfigured.RepositoryListPath") -EnableException $true -Category InvalidOperation -Tag "InvokeDevDirectorySync", "Configuration"
             return
         }
 
-        if ([string]::IsNullOrWhiteSpace($settings.LocalDevDirectory)) {
+        if ([string]::IsNullOrWhiteSpace($localDevDir)) {
             Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "InvokeDevDirectorySync.NotConfigured.LocalDevDirectory") -EnableException $true -Category InvalidOperation -Tag "InvokeDevDirectorySync", "Configuration"
             return
         }
 
-        if (-not (Test-Path -Path $settings.RepositoryListPath -PathType Leaf)) {
-            Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "InvokeDevDirectorySync.RepositoryListNotFound") -StringValues @($settings.RepositoryListPath) -EnableException $true -Category ObjectNotFound -Tag "InvokeDevDirectorySync", "Configuration"
+        if (-not (Test-Path -Path $repoListPath -PathType Leaf)) {
+            Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "InvokeDevDirectorySync.RepositoryListNotFound") -StringValues @($repoListPath) -EnableException $true -Category ObjectNotFound -Tag "InvokeDevDirectorySync", "Configuration"
             return
         }
 
@@ -119,30 +126,35 @@
     process {
         if (Test-PSFFunctionInterrupt) { return }
 
-        #region -- Execute sync with filtering
+        #region -- Import and filter repositories
 
-        $syncTarget = "Sync repositories from '$($settings.RepositoryListPath)'"
-        if ($PSCmdlet.ShouldProcess($settings.LocalDevDirectory, $syncTarget)) {
-            # Import repository list from the configured path.
-            $allRepositoryList = Import-DevDirectoryList -FilePath $settings.RepositoryListPath
+        # Import repository list from the configured path.
+        $allRepositoryList = Import-DevDirectoryList -FilePath $repoListPath
 
-            # Apply system filter to each repository.
-            # Repositories with a SystemFilter property use that value; others use the default.
-            $filteredRepositoryList = $allRepositoryList | Where-Object {
-                $filterValue = if ($_.SystemFilter) { $_.SystemFilter } else { $settings.DefaultSystemFilter }
-                Test-DevDirectorySystemFilter -SystemFilter $filterValue
-            }
+        # Apply system filter to each repository.
+        # Each repository can have a SystemFilter property; if absent, defaults to "*" (all systems).
+        $filteredRepositoryList = $allRepositoryList | Where-Object {
+            $filterValue = if ($_.SystemFilter) { $_.SystemFilter } else { "*" }
+            Test-DevDirectorySystemFilter -SystemFilter $filterValue
+        }
 
-            $totalCount = ($allRepositoryList | Measure-Object).Count
-            $filteredCount = ($filteredRepositoryList | Measure-Object).Count
+        $totalCount = ($allRepositoryList | Measure-Object).Count
+        $filteredCount = ($filteredRepositoryList | Measure-Object).Count
 
-            Write-PSFMessage -Level Host -String "InvokeDevDirectorySync.FilterApplied" -StringValues @($filteredCount, $totalCount, $env:COMPUTERNAME) -Tag "InvokeDevDirectorySync", "Filter"
+        Write-PSFMessage -Level Host -String "InvokeDevDirectorySync.FilterApplied" -StringValues @($filteredCount, $totalCount, $env:COMPUTERNAME) -Tag "InvokeDevDirectorySync", "Filter"
 
-            if ($filteredCount -eq 0) {
-                Write-PSFMessage -Level Warning -String "InvokeDevDirectorySync.NoMatchingRepositories" -StringValues @($env:COMPUTERNAME) -Tag "InvokeDevDirectorySync", "Warning"
-                return
-            }
+        if ($filteredCount -eq 0) {
+            Write-PSFMessage -Level Warning -String "InvokeDevDirectorySync.NoMatchingRepositories" -StringValues @($env:COMPUTERNAME) -Tag "InvokeDevDirectorySync", "Warning"
+            return
+        }
 
+        #endregion Import and filter repositories
+
+        #region -- Execute sync operation
+
+        $syncTarget = "Sync $filteredCount repositories to '$localDevDir'"
+
+        if ($PSCmdlet.ShouldProcess($localDevDir, $syncTarget)) {
             # Create temporary file with filtered repositories for sync.
             $tempFile = [System.IO.Path]::GetTempFileName()
             $tempFile = [System.IO.Path]::ChangeExtension($tempFile, ".json")
@@ -153,7 +165,7 @@
 
                 # Build sync parameters.
                 $syncParams = @{
-                    DirectoryPath      = $settings.LocalDevDirectory
+                    DirectoryPath      = $localDevDir
                     RepositoryListPath = $tempFile
                 }
 
@@ -165,21 +177,21 @@
                 # Execute the sync operation.
                 $result = Sync-DevDirectoryList @syncParams
 
-                # Update last sync time and result in PSFramework config.
+                # Update last sync time and result using Set-DevDirectorySetting approach.
+                # We use Set-PSFConfig with DisableHandler since we'll manually persist.
                 $syncTime = Get-Date
-                Set-PSFConfig -Module "DevDirManager" -Name "System.LastSyncTime" -Value $syncTime
-                Set-PSFConfig -Module "DevDirManager" -Name "System.LastSyncResult" -Value "Success"
+                Set-PSFConfig -Module "DevDirManager" -Name "System.LastSyncTime" -Value $syncTime -DisableHandler
+                Set-PSFConfig -Module "DevDirManager" -Name "System.LastSyncResult" -Value "Success: $filteredCount repositories" -DisableHandler
 
-                # Persist updated sync status to config file.
+                # Persist sync results to JSON file.
                 $configPath = Get-DevDirectoryConfigPath
                 $configExport = [ordered]@{
-                    RepositoryListPath  = $settings.RepositoryListPath
-                    LocalDevDirectory   = $settings.LocalDevDirectory
-                    AutoSyncEnabled     = $settings.AutoSyncEnabled
-                    SyncIntervalMinutes = $settings.SyncIntervalMinutes
-                    DefaultSystemFilter = $settings.DefaultSystemFilter
+                    RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
+                    LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
+                    AutoSyncEnabled     = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
+                    SyncIntervalMinutes = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
                     LastSyncTime        = $syncTime.ToString("o")
-                    LastSyncResult      = "Success"
+                    LastSyncResult      = "Success: $filteredCount repositories"
                 }
                 $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8 -Force
 
@@ -190,38 +202,41 @@
                 }
             } catch {
                 # Update failure status in configuration.
-                Set-PSFConfig -Module "DevDirManager" -Name "System.LastSyncResult" -Value "Failed: $($_)"
+                $errorMessage = "Failed: $_"
+                Set-PSFConfig -Module "DevDirManager" -Name "System.LastSyncResult" -Value $errorMessage -DisableHandler
 
-                $configPath = Get-DevDirectoryConfigPath
-                if (Test-Path -Path $configPath) {
-                    try {
+                # Persist failure status to JSON file.
+                try {
+                    $configPath = Get-DevDirectoryConfigPath
+                    if (Test-Path -Path $configPath) {
                         $existingConfig = Get-Content -Path $configPath -Raw | ConvertFrom-Json
                         $configExport = [ordered]@{
                             RepositoryListPath  = $existingConfig.RepositoryListPath
                             LocalDevDirectory   = $existingConfig.LocalDevDirectory
                             AutoSyncEnabled     = $existingConfig.AutoSyncEnabled
                             SyncIntervalMinutes = $existingConfig.SyncIntervalMinutes
-                            DefaultSystemFilter = $existingConfig.DefaultSystemFilter
                             LastSyncTime        = $existingConfig.LastSyncTime
-                            LastSyncResult      = "Failed: $($_)"
+                            LastSyncResult      = $errorMessage
                         }
                         $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8 -Force
-                    } catch {
-                        # Ignore config update failures during error handling.
-                        Write-PSFMessage -Level Debug -Message "Failed to update config file during error handling: $($_)"
                     }
+                } catch {
+                    Write-PSFMessage -Level Debug -String "InvokeDevDirectorySync.ConfigUpdateFailed" -StringValues @($_) -Tag "InvokeDevDirectorySync", "Error"
                 }
 
                 throw
             } finally {
-                # Clean up temporary file.
+                # Clean up temporary file (always, even in WhatIf mode).
                 if (Test-Path -Path $tempFile) {
                     Remove-Item -Path $tempFile -Force -ErrorAction SilentlyContinue
                 }
             }
+        } else {
+            # WhatIf mode: Show what would be synced but don't modify LastSync settings.
+            Write-PSFMessage -Level Host -String "InvokeDevDirectorySync.WhatIfSummary" -StringValues @($filteredCount, $localDevDir) -Tag "InvokeDevDirectorySync", "WhatIf"
         }
 
-        #endregion Execute sync with filtering
+        #endregion Execute sync operation
     }
 
     end {

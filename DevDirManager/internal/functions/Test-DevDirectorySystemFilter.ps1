@@ -53,9 +53,9 @@
         even though it also matches the inclusion pattern "DEV-*".
 
     .NOTES
-        Version   : 1.0.0
+        Version   : 1.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-28
+        Date      : 2025-12-29
         Keywords  : Filter, System, Computer, Sync
 
     #>
@@ -82,13 +82,13 @@
 
         # Null or empty filter means match all systems.
         if ([string]::IsNullOrWhiteSpace($SystemFilter)) {
-            Write-PSFMessage -Level Debug -Message "SystemFilter is empty, matching all systems"
+            Write-PSFMessage -Level Debug -String "TestDevDirectorySystemFilter.EmptyFilter" -Tag "TestDevDirectorySystemFilter", "Filter"
             return $true
         }
 
         # Explicit wildcard "*" means match all systems.
         if ($SystemFilter.Trim() -eq "*") {
-            Write-PSFMessage -Level Debug -Message "SystemFilter is '*', matching all systems"
+            Write-PSFMessage -Level Debug -String "TestDevDirectorySystemFilter.WildcardFilter" -Tag "TestDevDirectorySystemFilter", "Filter"
             return $true
         }
 
@@ -99,7 +99,6 @@
         # Split the filter string by comma and trim each pattern.
         $patternList = $SystemFilter -split "," | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
 
-        $hasExclusion = $false
         $hasInclusion = $false
         $matchedExclusion = $false
         $matchedInclusion = $false
@@ -107,12 +106,11 @@
         foreach ($pattern in $patternList) {
             if ($pattern.StartsWith("!")) {
                 # This is an exclusion pattern (negation).
-                $hasExclusion = $true
                 $excludePattern = $pattern.Substring(1)
 
                 if ($ComputerName -like $excludePattern) {
                     $matchedExclusion = $true
-                    Write-PSFMessage -Level Debug -Message "Computer '$($ComputerName)' matches exclusion pattern '$($excludePattern)'"
+                    Write-PSFMessage -Level Debug -String "TestDevDirectorySystemFilter.MatchedExclusion" -StringValues @($ComputerName, $excludePattern) -Tag "TestDevDirectorySystemFilter", "Filter"
                 }
             } else {
                 # This is an inclusion pattern.
@@ -120,7 +118,7 @@
 
                 if ($ComputerName -like $pattern) {
                     $matchedInclusion = $true
-                    Write-PSFMessage -Level Debug -Message "Computer '$($ComputerName)' matches inclusion pattern '$($pattern)'"
+                    Write-PSFMessage -Level Debug -String "TestDevDirectorySystemFilter.MatchedInclusion" -StringValues @($ComputerName, $pattern) -Tag "TestDevDirectorySystemFilter", "Filter"
                 }
             }
         }
@@ -131,19 +129,18 @@
 
         # Exclusion patterns take precedence - if matched, always reject.
         if ($matchedExclusion) {
-            Write-PSFMessage -Level Debug -Message "Computer '$($ComputerName)' excluded by filter '$($SystemFilter)'"
+            Write-PSFMessage -Level Debug -String "TestDevDirectorySystemFilter.Excluded" -StringValues @($ComputerName, $SystemFilter) -Tag "TestDevDirectorySystemFilter", "Filter"
             return $false
         }
 
         # If inclusion patterns exist, must match at least one of them.
         if ($hasInclusion) {
-            $result = $matchedInclusion
-            Write-PSFMessage -Level Debug -Message "Computer '$($ComputerName)' inclusion check result: $($result)"
-            return $result
+            Write-PSFMessage -Level Debug -String "TestDevDirectorySystemFilter.InclusionResult" -StringValues @($ComputerName, $matchedInclusion) -Tag "TestDevDirectorySystemFilter", "Filter"
+            return $matchedInclusion
         }
 
         # Only exclusion patterns existed and none matched - allow the computer.
-        Write-PSFMessage -Level Debug -Message "Computer '$($ComputerName)' not excluded, allowing"
+        Write-PSFMessage -Level Debug -String "TestDevDirectorySystemFilter.NotExcluded" -StringValues @($ComputerName) -Tag "TestDevDirectorySystemFilter", "Filter"
         return $true
 
         #endregion Determine final result
