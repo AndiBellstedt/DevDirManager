@@ -186,8 +186,8 @@
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
                     Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $false -DisableHandler
-                    Write-PSFMessage -Level Error -Message "Failed to register scheduled task: $_" -Tag "SetDevDirectorySetting", "Error"
-                    throw
+                    Stop-PSFFunction -Message "Failed to register scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
+                    return
                 }
             } else {
                 # Unregister the scheduled task.
@@ -197,8 +197,8 @@
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
                     Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $true -DisableHandler
-                    Write-PSFMessage -Level Error -Message "Failed to unregister scheduled task: $_" -Tag "SetDevDirectorySetting", "Error"
-                    throw
+                    Stop-PSFFunction -Message "Failed to unregister scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
+                    return
                 }
             }
 
@@ -234,12 +234,10 @@
             Get-DevDirectorySetting
         }
 
-        Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.Complete" -Tag "SetDevDirectorySetting", "Complete"
-
         #endregion Return updated settings if PassThru
     }
 
     end {
-        # No cleanup needed.
+        Write-PSFMessage -Level Debug -String "SetDevDirectorySetting.Complete" -Tag "SetDevDirectorySetting", "Complete"
     }
 }

@@ -213,15 +213,21 @@ Set-DevDirManagerConfigItem -Name "System.LastSyncResult" -Value $lastSyncResult
 #region -- AutoSyncEnabled validation
 
 # Validate AutoSyncEnabled consistency with scheduled task.
-# If AutoSyncEnabled is true, the scheduled task should exist and be enabled.
-if ($autoSyncValue -eq $true) {
-    $taskName = $script:DevDirManagerScheduledTaskName
-    $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+# Check for configuration/task state inconsistencies.
+$taskName = $script:DevDirManagerScheduledTaskName
+$existingTask = Get-ScheduledTask -TaskPath "\" -TaskName $taskName -ErrorAction SilentlyContinue
 
+if ($autoSyncValue -eq $true) {
+    # AutoSyncEnabled is true - task should exist and be enabled.
     if (-not $existingTask) {
         Write-PSFMessage -Level Warning -String "DevDirSettingsImport.AutoSyncInconsistent.TaskMissing" -StringValues @($taskName) -Tag "DevDirSettingsImport", "Warning"
     } elseif ($existingTask.State -eq "Disabled") {
         Write-PSFMessage -Level Warning -String "DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled" -StringValues @($taskName) -Tag "DevDirSettingsImport", "Warning"
+    }
+} else {
+    # AutoSyncEnabled is false - task should not exist or should be disabled.
+    if ($existingTask -and $existingTask.State -ne "Disabled") {
+        Write-PSFMessage -Level Warning -String "DevDirSettingsImport.AutoSyncInconsistent.TaskExists" -StringValues @($taskName) -Tag "DevDirSettingsImport", "Warning"
     }
 }
 

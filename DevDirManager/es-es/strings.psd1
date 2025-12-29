@@ -243,8 +243,11 @@
 
     # Get-DevDirectorySetting
     'GetDevDirectorySetting.Start'                                       = "Recuperando configuración del sistema DevDirManager"
+    'GetDevDirectorySetting.FileNotFound'                                = "Archivo de configuración no encontrado: '{0}'. La configuración no ha sido inicializada. Ejecute primero Set-DevDirectorySetting."
+    'GetDevDirectorySetting.ReadFailed'                                  = "Error al leer el archivo de configuración '{0}': {1}"
     'GetDevDirectorySetting.ReturnSingleValue'                           = "Devolviendo valor de configuración único: '{0}'"
     'GetDevDirectorySetting.Complete'                                    = "Configuración del sistema recuperada para el equipo '{0}'"
+    'GetDevDirectorySetting.End'                                         = "Get-DevDirectorySetting completado"
 
     # Set-DevDirectorySetting
     'SetDevDirectorySetting.Start'                                       = "Configurando ajustes del sistema DevDirManager"
@@ -265,6 +268,9 @@
     'InvokeDevDirectorySync.FilterApplied'                               = "{0} de {1} repositorios coinciden con el filtro del sistema para '{2}'"
     'InvokeDevDirectorySync.NoMatchingRepositories'                      = "Ningún repositorio coincide con el filtro del sistema para el equipo '{0}'"
     'InvokeDevDirectorySync.Complete'                                    = "Sincronización completada: {0} repositorios sincronizados"
+    'InvokeDevDirectorySync.ShouldProcess.Target'                        = "{0} repositorios desde '{1}'"
+    'InvokeDevDirectorySync.ShouldProcess.Action'                        = "Sincronizar hacia '{0}'"
+    'InvokeDevDirectorySync.End'                                         = "Invoke-DevDirectorySync completado"
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Creando tarea programada '{0}'"
@@ -276,6 +282,8 @@
     'RegisterDevDirectoryScheduledSync.Complete'                         = "Registro de tarea programada completado"
     'RegisterDevDirectoryScheduledSync.TaskDescription'                  = "Sincronización automática de repositorios DevDirManager. Sincroniza repositorios desde la lista central configurada al directorio de desarrollo local."
     'RegisterDevDirectoryScheduledSync.AutoSyncEnabled'                  = "El ajuste AutoSyncEnabled se ha establecido en true."
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Target'             = "Tarea programada '{0}'"
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Action'             = "Registrar con intervalo de {0} minutos"
 
     # Unregister-DevDirectoryScheduledSync
     'UnregisterDevDirectoryScheduledSync.Start'                          = "Eliminando tarea programada '{0}'"
@@ -283,6 +291,8 @@
     'UnregisterDevDirectoryScheduledSync.Removed'                        = "Tarea programada '{0}' eliminada"
     'UnregisterDevDirectoryScheduledSync.Complete'                       = "Eliminación de tarea programada completada"
     'UnregisterDevDirectoryScheduledSync.AutoSyncDisabled'               = "El ajuste AutoSyncEnabled se ha establecido en false."
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Target'           = "Tarea programada '{0}'"
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Action'           = "Eliminar tarea programada"
 
     # DevDirSettingsImport (internal script)
     'DevDirSettingsImport.ConfigLoaded'                                  = "Configuración de DevDirManager cargada desde '{0}'"
@@ -290,6 +300,7 @@
     'DevDirSettingsImport.ConfigNotFound'                                = "No se encontró archivo de configuración en '{0}'. Usando valores predeterminados."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled es true, pero la tarea programada '{0}' no existe. Ejecute Register-DevDirectoryScheduledSync para crearla."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled es true, pero la tarea programada '{0}' está desactivada. Actívela o establezca AutoSyncEnabled en false."
+    'DevDirSettingsImport.AutoSyncInconsistent.TaskExists'               = "AutoSyncEnabled es false, pero la tarea programada '{0}' existe y está activada. Elimine la tarea o establezca AutoSyncEnabled en true."
 
     # Test-DevDirectorySystemFilter
     'TestDevDirectorySystemFilter.EmptyFilter'                           = "SystemFilter está vacío, todos los sistemas coinciden"

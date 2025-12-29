@@ -243,8 +243,11 @@
 
     # Get-DevDirectorySetting
     'GetDevDirectorySetting.Start'                                       = "Rufe DevDirManager-Systemeinstellungen ab"
+    'GetDevDirectorySetting.FileNotFound'                                = "Konfigurationsdatei nicht gefunden: '{0}'. Einstellungen wurden nicht initialisiert. Führen Sie zuerst Set-DevDirectorySetting aus."
+    'GetDevDirectorySetting.ReadFailed'                                  = "Fehler beim Lesen der Konfigurationsdatei '{0}': {1}"
     'GetDevDirectorySetting.ReturnSingleValue'                           = "Gebe einzelnen Einstellungswert zurück: '{0}'"
     'GetDevDirectorySetting.Complete'                                    = "Systemeinstellungen für Computer '{0}' abgerufen"
+    'GetDevDirectorySetting.End'                                         = "Get-DevDirectorySetting abgeschlossen"
 
     # Set-DevDirectorySetting
     'SetDevDirectorySetting.Start'                                       = "Konfiguriere DevDirManager-Systemeinstellungen"
@@ -265,6 +268,9 @@
     'InvokeDevDirectorySync.FilterApplied'                               = "{0} von {1} Repositories entsprechen dem Systemfilter für '{2}'"
     'InvokeDevDirectorySync.NoMatchingRepositories'                      = "Keine Repositories entsprechen dem Systemfilter für Computer '{0}'"
     'InvokeDevDirectorySync.Complete'                                    = "Synchronisierung abgeschlossen: {0} Repositories synchronisiert"
+    'InvokeDevDirectorySync.ShouldProcess.Target'                        = "{0} Repositories von '{1}'"
+    'InvokeDevDirectorySync.ShouldProcess.Action'                        = "Synchronisieren nach '{0}'"
+    'InvokeDevDirectorySync.End'                                         = "Invoke-DevDirectorySync abgeschlossen"
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Erstelle geplante Aufgabe '{0}'"
@@ -276,6 +282,8 @@
     'RegisterDevDirectoryScheduledSync.Complete'                         = "Registrierung der geplanten Aufgabe abgeschlossen"
     'RegisterDevDirectoryScheduledSync.TaskDescription'                  = "DevDirManager automatische Repository-Synchronisierung. Synchronisiert Repositories von der konfigurierten zentralen Liste in das lokale Entwicklungsverzeichnis."
     'RegisterDevDirectoryScheduledSync.AutoSyncEnabled'                  = "AutoSyncEnabled-Einstellung wurde auf true gesetzt."
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Target'             = "Geplante Aufgabe '{0}'"
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Action'             = "Registrieren mit {0}-Minuten-Intervall"
 
     # Unregister-DevDirectoryScheduledSync
     'UnregisterDevDirectoryScheduledSync.Start'                          = "Entferne geplante Aufgabe '{0}'"
@@ -283,6 +291,8 @@
     'UnregisterDevDirectoryScheduledSync.Removed'                        = "Geplante Aufgabe '{0}' entfernt"
     'UnregisterDevDirectoryScheduledSync.Complete'                       = "Entfernung der geplanten Aufgabe abgeschlossen"
     'UnregisterDevDirectoryScheduledSync.AutoSyncDisabled'               = "AutoSyncEnabled-Einstellung wurde auf false gesetzt."
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Target'           = "Geplante Aufgabe '{0}'"
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Action'           = "Geplante Aufgabe entfernen"
 
     # DevDirSettingsImport (internal script)
     'DevDirSettingsImport.ConfigLoaded'                                  = "DevDirManager-Konfiguration von '{0}' geladen"
@@ -290,6 +300,7 @@
     'DevDirSettingsImport.ConfigNotFound'                                = "Keine Konfigurationsdatei gefunden unter '{0}'. Verwende Standardwerte."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled ist true, aber geplante Aufgabe '{0}' existiert nicht. Führen Sie Register-DevDirectoryScheduledSync aus, um sie zu erstellen."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled ist true, aber geplante Aufgabe '{0}' ist deaktiviert. Aktivieren Sie sie oder setzen Sie AutoSyncEnabled auf false."
+    'DevDirSettingsImport.AutoSyncInconsistent.TaskExists'               = "AutoSyncEnabled ist false, aber geplante Aufgabe '{0}' existiert und ist aktiviert. Entfernen Sie die Aufgabe oder setzen Sie AutoSyncEnabled auf true."
 
     # Test-DevDirectorySystemFilter
     'TestDevDirectorySystemFilter.EmptyFilter'                           = "SystemFilter ist leer, alle Systeme werden berücksichtigt"

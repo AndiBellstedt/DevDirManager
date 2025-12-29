@@ -152,9 +152,11 @@
 
         #region -- Execute sync operation
 
-        $syncTarget = "Sync $filteredCount repositories to '$localDevDir'"
+        # Get localized ShouldProcess text.
+        $shouldProcessTarget = Get-PSFLocalizedString -Module "DevDirManager" -Name "InvokeDevDirectorySync.ShouldProcess.Target"
+        $shouldProcessAction = (Get-PSFLocalizedString -Module "DevDirManager" -Name "InvokeDevDirectorySync.ShouldProcess.Action") -f $filteredCount, $localDevDir
 
-        if ($PSCmdlet.ShouldProcess($localDevDir, $syncTarget)) {
+        if ($PSCmdlet.ShouldProcess($shouldProcessTarget, $shouldProcessAction)) {
             # Create temporary file with filtered repositories for sync.
             $tempFile = [System.IO.Path]::GetTempFileName()
             $tempFile = [System.IO.Path]::ChangeExtension($tempFile, ".json")
@@ -240,6 +242,6 @@
     }
 
     end {
-        # No cleanup needed.
+        Write-PSFMessage -Level Debug -String "InvokeDevDirectorySync.End" -Tag "InvokeDevDirectorySync", "End"
     }
 }

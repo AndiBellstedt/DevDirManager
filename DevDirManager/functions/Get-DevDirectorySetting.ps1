@@ -99,8 +99,10 @@
             try {
                 $configFromFile = Get-Content -Path $configPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
             } catch {
-                Write-PSFMessage -Level Warning -String "GetDevDirectorySetting.FileReadFailed" -StringValues @($configPath, $_) -Tag "GetDevDirectorySetting", "Error"
+                Write-PSFMessage -Level Error -String "GetDevDirectorySetting.ReadFailed" -StringValues @($configPath, $_) -Tag "GetDevDirectorySetting", "Error"
             }
+        } else {
+            Write-PSFMessage -Level Error -String "GetDevDirectorySetting.FileNotFound" -StringValues @($configPath) -Tag "GetDevDirectorySetting", "Error"
         }
 
         #endregion Load configuration from JSON file
@@ -169,7 +171,7 @@
 
         if ($PSBoundParameters.ContainsKey("Name") -and -not [string]::IsNullOrWhiteSpace($Name)) {
             # Return only the single requested value.
-            Write-PSFMessage -Level Debug -String "GetDevDirectorySetting.ReturnSingleValue" -StringValues @($Name) -Tag "GetDevDirectorySetting", "SingleValue"
+            Write-PSFMessage -Level Verbose -String "GetDevDirectorySetting.ReturnSingleValue" -StringValues @($Name) -Tag "GetDevDirectorySetting", "SingleValue"
             $configValues[$Name]
         } else {
             # Return the full settings object.
@@ -184,7 +186,7 @@
                 LastSyncResult      = $configValues.LastSyncResult
             }
 
-            Write-PSFMessage -Level Debug -String "GetDevDirectorySetting.Complete" -StringValues @($env:COMPUTERNAME) -Tag "GetDevDirectorySetting", "Complete"
+            Write-PSFMessage -Level Verbose -String "GetDevDirectorySetting.Complete" -StringValues @($env:COMPUTERNAME) -Tag "GetDevDirectorySetting", "Complete"
             $settingObject
         }
 
@@ -192,6 +194,6 @@
     }
 
     end {
-        # No cleanup needed.
+        Write-PSFMessage -Level Debug -String "GetDevDirectorySetting.End" -Tag "GetDevDirectorySetting", "End"
     }
 }

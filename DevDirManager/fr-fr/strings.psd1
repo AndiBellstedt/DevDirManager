@@ -243,8 +243,11 @@
 
     # Get-DevDirectorySetting
     'GetDevDirectorySetting.Start'                                       = "Récupération des paramètres système DevDirManager"
+    'GetDevDirectorySetting.FileNotFound'                                = "Fichier de configuration non trouvé : '{0}'. Les paramètres n'ont pas été initialisés. Exécutez d'abord Set-DevDirectorySetting."
+    'GetDevDirectorySetting.ReadFailed'                                  = "Échec de la lecture du fichier de configuration '{0}' : {1}"
     'GetDevDirectorySetting.ReturnSingleValue'                           = "Retour de la valeur du paramètre unique : '{0}'"
     'GetDevDirectorySetting.Complete'                                    = "Paramètres système récupérés pour l'ordinateur '{0}'"
+    'GetDevDirectorySetting.End'                                         = "Get-DevDirectorySetting terminé"
 
     # Set-DevDirectorySetting
     'SetDevDirectorySetting.Start'                                       = "Configuration des paramètres système DevDirManager"
@@ -265,6 +268,9 @@
     'InvokeDevDirectorySync.FilterApplied'                               = "{0} sur {1} référentiels correspondent au filtre système pour '{2}'"
     'InvokeDevDirectorySync.NoMatchingRepositories'                      = "Aucun référentiel ne correspond au filtre système pour l'ordinateur '{0}'"
     'InvokeDevDirectorySync.Complete'                                    = "Synchronisation terminée : {0} référentiels synchronisés"
+    'InvokeDevDirectorySync.ShouldProcess.Target'                        = "{0} référentiels depuis '{1}'"
+    'InvokeDevDirectorySync.ShouldProcess.Action'                        = "Synchroniser vers '{0}'"
+    'InvokeDevDirectorySync.End'                                         = "Invoke-DevDirectorySync terminé"
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Création de la tâche planifiée '{0}'"
@@ -276,6 +282,8 @@
     'RegisterDevDirectoryScheduledSync.Complete'                         = "Enregistrement de la tâche planifiée terminé"
     'RegisterDevDirectoryScheduledSync.TaskDescription'                  = "Synchronisation automatique des référentiels DevDirManager. Synchronise les référentiels depuis la liste centrale configurée vers le répertoire de développement local."
     'RegisterDevDirectoryScheduledSync.AutoSyncEnabled'                  = "Le paramètre AutoSyncEnabled a été défini sur true."
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Target'             = "Tâche planifiée '{0}'"
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Action'             = "Enregistrer avec un intervalle de {0} minutes"
 
     # Unregister-DevDirectoryScheduledSync
     'UnregisterDevDirectoryScheduledSync.Start'                          = "Suppression de la tâche planifiée '{0}'"
@@ -283,6 +291,8 @@
     'UnregisterDevDirectoryScheduledSync.Removed'                        = "Tâche planifiée '{0}' supprimée"
     'UnregisterDevDirectoryScheduledSync.Complete'                       = "Suppression de la tâche planifiée terminée"
     'UnregisterDevDirectoryScheduledSync.AutoSyncDisabled'               = "Le paramètre AutoSyncEnabled a été défini sur false."
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Target'           = "Tâche planifiée '{0}'"
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Action'           = "Supprimer la tâche planifiée"
 
     # DevDirSettingsImport (internal script)
     'DevDirSettingsImport.ConfigLoaded'                                  = "Configuration DevDirManager chargée depuis '{0}'"
@@ -290,6 +300,7 @@
     'DevDirSettingsImport.ConfigNotFound'                                = "Aucun fichier de configuration trouvé à '{0}'. Utilisation des valeurs par défaut."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled est true, mais la tâche planifiée '{0}' n'existe pas. Exécutez Register-DevDirectoryScheduledSync pour la créer."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled est true, mais la tâche planifiée '{0}' est désactivée. Activez-la ou définissez AutoSyncEnabled sur false."
+    'DevDirSettingsImport.AutoSyncInconsistent.TaskExists'               = "AutoSyncEnabled est false, mais la tâche planifiée '{0}' existe et est activée. Supprimez la tâche ou définissez AutoSyncEnabled sur true."
 
     # Test-DevDirectorySystemFilter
     'TestDevDirectorySystemFilter.EmptyFilter'                           = "SystemFilter est vide, tous les systèmes correspondent"

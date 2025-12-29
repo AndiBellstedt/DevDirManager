@@ -56,7 +56,7 @@
     process {
         #region -- Check if task exists
 
-        $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+        $existingTask = Get-ScheduledTask -TaskPath "\" -TaskName $taskName -ErrorAction SilentlyContinue
 
         if (-not $existingTask) {
             Write-PSFMessage -Level Warning -String "UnregisterDevDirectoryScheduledSync.NotFound" -StringValues @($taskName) -Tag "UnregisterDevDirectoryScheduledSync", "NotFound"
@@ -70,8 +70,12 @@
 
         #region -- Remove the scheduled task
 
-        if ($PSCmdlet.ShouldProcess($taskName, "Remove scheduled task")) {
-            Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+        # Get localized ShouldProcess text.
+        $shouldProcessTarget = Get-PSFLocalizedString -Module "DevDirManager" -Name "UnregisterDevDirectoryScheduledSync.ShouldProcess.Target"
+        $shouldProcessAction = (Get-PSFLocalizedString -Module "DevDirManager" -Name "UnregisterDevDirectoryScheduledSync.ShouldProcess.Action") -f $taskName
+
+        if ($PSCmdlet.ShouldProcess($shouldProcessTarget, $shouldProcessAction)) {
+            Unregister-ScheduledTask -TaskPath "\" -TaskName $taskName -Confirm:$false
 
             Write-PSFMessage -Level Host -String "UnregisterDevDirectoryScheduledSync.Removed" -StringValues @($taskName) -Tag "UnregisterDevDirectoryScheduledSync", "Removed"
 

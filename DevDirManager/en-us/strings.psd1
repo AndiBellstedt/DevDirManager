@@ -239,8 +239,11 @@
 
     # Get-DevDirectorySetting
     'GetDevDirectorySetting.Start'                                       = "Retrieving DevDirManager system settings"
+    'GetDevDirectorySetting.FileNotFound'                                = "Configuration file not found: '{0}'. Settings have not been initialized. Run Set-DevDirectorySetting first."
+    'GetDevDirectorySetting.ReadFailed'                                  = "Failed to read configuration file '{0}': {1}"
     'GetDevDirectorySetting.ReturnSingleValue'                           = "Returning single setting value: '{0}'"
     'GetDevDirectorySetting.Complete'                                    = "Retrieved system settings for computer '{0}'"
+    'GetDevDirectorySetting.End'                                         = "Get-DevDirectorySetting completed"
 
     # Set-DevDirectorySetting
     'SetDevDirectorySetting.Start'                                       = "Configuring DevDirManager system settings"
@@ -261,6 +264,9 @@
     'InvokeDevDirectorySync.FilterApplied'                               = "{0} of {1} repositories match system filter for '{2}'"
     'InvokeDevDirectorySync.NoMatchingRepositories'                      = "No repositories match the system filter for computer '{0}'"
     'InvokeDevDirectorySync.Complete'                                    = "Sync completed: {0} repositories synchronized"
+    'InvokeDevDirectorySync.ShouldProcess.Target'                        = "{0} repositories from '{1}'"
+    'InvokeDevDirectorySync.ShouldProcess.Action'                        = "Sync to '{0}'"
+    'InvokeDevDirectorySync.End'                                         = "Invoke-DevDirectorySync completed"
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Creating scheduled task '{0}'"
@@ -272,6 +278,8 @@
     'RegisterDevDirectoryScheduledSync.Complete'                         = "Scheduled task registration completed"
     'RegisterDevDirectoryScheduledSync.TaskDescription'                  = "DevDirManager automatic repository synchronization. Syncs repositories from the configured central list to the local development directory."
     'RegisterDevDirectoryScheduledSync.AutoSyncEnabled'                  = "AutoSyncEnabled setting has been set to true."
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Target'             = "Scheduled Task '{0}'"
+    'RegisterDevDirectoryScheduledSync.ShouldProcess.Action'             = "Register with {0} minute interval"
 
     # Unregister-DevDirectoryScheduledSync
     'UnregisterDevDirectoryScheduledSync.Start'                          = "Removing scheduled task '{0}'"
@@ -279,6 +287,8 @@
     'UnregisterDevDirectoryScheduledSync.Removed'                        = "Scheduled task '{0}' removed"
     'UnregisterDevDirectoryScheduledSync.Complete'                       = "Scheduled task removal completed"
     'UnregisterDevDirectoryScheduledSync.AutoSyncDisabled'               = "AutoSyncEnabled setting has been set to false."
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Target'           = "Scheduled Task '{0}'"
+    'UnregisterDevDirectoryScheduledSync.ShouldProcess.Action'           = "Remove scheduled task"
 
     # DevDirSettingsImport (internal script)
     'DevDirSettingsImport.ConfigLoaded'                                  = "Loaded DevDirManager configuration from '{0}'"
@@ -286,6 +296,7 @@
     'DevDirSettingsImport.ConfigNotFound'                                = "No configuration file found at '{0}'. Using defaults."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled is true, but scheduled task '{0}' does not exist. Run Register-DevDirectoryScheduledSync to create it."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled is true, but scheduled task '{0}' is disabled. Enable it or set AutoSyncEnabled to false."
+    'DevDirSettingsImport.AutoSyncInconsistent.TaskExists'               = "AutoSyncEnabled is false, but scheduled task '{0}' exists and is enabled. Remove the task or set AutoSyncEnabled to true."
 
     # Test-DevDirectorySystemFilter
     'TestDevDirectorySystemFilter.EmptyFilter'                           = "SystemFilter is empty, matching all systems"

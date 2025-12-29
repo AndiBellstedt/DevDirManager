@@ -103,7 +103,7 @@
 
         #region -- Check for existing task
 
-        $existingTask = Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
+        $existingTask = Get-ScheduledTask -TaskPath "\" -TaskName $taskName -ErrorAction SilentlyContinue
         if ($existingTask -and -not $Force) {
             Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.Exists") -StringValues @($taskName) -EnableException $true -Category ResourceExists -Tag "RegisterDevDirectoryScheduledSync", "Exists"
             return
@@ -124,7 +124,10 @@
             if ($PSVersionTable.PSVersion.Major -ge 6) {
                 $psExecutable = (Get-Process -Id $PID).Path
             } else {
-                $psExecutable = Join-Path -Path $PSHOME -ChildPath "powershell.exe"
+                $psExecutable = [Environment]::CommandLine
+                if ([string]::IsNullOrWhiteSpace($psExecutable)) {
+                    $psExecutable = Join-Path -Path $PSHOME -ChildPath "powershell.exe"
+                }
             }
         }
 
@@ -165,15 +168,19 @@
         # Get localized task description.
         $taskDescription = Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.TaskDescription"
 
-        if ($PSCmdlet.ShouldProcess($taskName, "Register scheduled task")) {
+        # Get localized ShouldProcess text.
+        $shouldProcessTarget = Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.ShouldProcess.Target"
+        $shouldProcessAction = (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.ShouldProcess.Action") -f $taskName, $syncInterval
+
+        if ($PSCmdlet.ShouldProcess($shouldProcessTarget, $shouldProcessAction)) {
             # Remove existing task if Force is specified.
             if ($existingTask -and $Force) {
                 Write-PSFMessage -Level Verbose -String "RegisterDevDirectoryScheduledSync.RemovingExisting" -StringValues @($taskName) -Tag "RegisterDevDirectoryScheduledSync", "Remove"
-                Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
+                Unregister-ScheduledTask -TaskPath "\" -TaskName $taskName -Confirm:$false
             }
 
-            # Register the new task.
-            $task = Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $triggerList -Principal $principal -Settings $taskSettings -Description $taskDescription
+            # Register the new task in the root task path.
+            $task = Register-ScheduledTask -TaskPath "\" -TaskName $taskName -Action $action -Trigger $triggerList -Principal $principal -Settings $taskSettings -Description $taskDescription
 
             Write-PSFMessage -Level Host -String "RegisterDevDirectoryScheduledSync.Created" -StringValues @($taskName, $syncInterval) -Tag "RegisterDevDirectoryScheduledSync", "Created"
 
