@@ -298,6 +298,8 @@
     'DevDirSettingsImport.ConfigLoaded'                                  = "DevDirManager-Konfiguration von '{0}' geladen"
     'DevDirSettingsImport.ConfigLoadFailed'                              = "Fehler beim Laden der Konfiguration von '{0}': {1}"
     'DevDirSettingsImport.ConfigNotFound'                                = "Keine Konfigurationsdatei gefunden unter '{0}'. Verwende Standardwerte."
+    'DevDirSettingsImport.CreateDefaultConfig'                           = "Erstelle Standard-Konfigurationsdatei unter '{0}'"
+    'DevDirSettingsImport.ConfigFileCreated'                             = "Konfigurationsdatei erfolgreich erstellt unter '{0}'"
     'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled ist true, aber geplante Aufgabe '{0}' existiert nicht. Führen Sie Register-DevDirectoryScheduledSync aus, um sie zu erstellen."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled ist true, aber geplante Aufgabe '{0}' ist deaktiviert. Aktivieren Sie sie oder setzen Sie AutoSyncEnabled auf false."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskExists'               = "AutoSyncEnabled ist false, aber geplante Aufgabe '{0}' existiert und ist aktiviert. Entfernen Sie die Aufgabe oder setzen Sie AutoSyncEnabled auf true."

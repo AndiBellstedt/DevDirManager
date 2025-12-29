@@ -298,6 +298,8 @@
     'DevDirSettingsImport.ConfigLoaded'                                  = "Configuración de DevDirManager cargada desde '{0}'"
     'DevDirSettingsImport.ConfigLoadFailed'                              = "Error al cargar la configuración desde '{0}': {1}"
     'DevDirSettingsImport.ConfigNotFound'                                = "No se encontró archivo de configuración en '{0}'. Usando valores predeterminados."
+    'DevDirSettingsImport.CreateDefaultConfig'                           = "Creando archivo de configuración predeterminado en '{0}'"
+    'DevDirSettingsImport.ConfigFileCreated'                             = "Archivo de configuración creado exitosamente en '{0}'"
     'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled es true, pero la tarea programada '{0}' no existe. Ejecute Register-DevDirectoryScheduledSync para crearla."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled es true, pero la tarea programada '{0}' está desactivada. Actívela o establezca AutoSyncEnabled en false."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskExists'               = "AutoSyncEnabled es false, pero la tarea programada '{0}' existe y está activada. Elimine la tarea o establezca AutoSyncEnabled en true."

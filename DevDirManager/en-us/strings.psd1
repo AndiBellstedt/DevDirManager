@@ -294,6 +294,8 @@
     'DevDirSettingsImport.ConfigLoaded'                                  = "Loaded DevDirManager configuration from '{0}'"
     'DevDirSettingsImport.ConfigLoadFailed'                              = "Failed to load configuration from '{0}': {1}"
     'DevDirSettingsImport.ConfigNotFound'                                = "No configuration file found at '{0}'. Using defaults."
+    'DevDirSettingsImport.CreateDefaultConfig'                           = "Creating default configuration file at '{0}'"
+    'DevDirSettingsImport.ConfigFileCreated'                             = "Configuration file created successfully at '{0}'"
     'DevDirSettingsImport.AutoSyncInconsistent.TaskMissing'              = "AutoSyncEnabled is true, but scheduled task '{0}' does not exist. Run Register-DevDirectoryScheduledSync to create it."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskDisabled'             = "AutoSyncEnabled is true, but scheduled task '{0}' is disabled. Enable it or set AutoSyncEnabled to false."
     'DevDirSettingsImport.AutoSyncInconsistent.TaskExists'               = "AutoSyncEnabled is false, but scheduled task '{0}' exists and is enabled. Remove the task or set AutoSyncEnabled to true."

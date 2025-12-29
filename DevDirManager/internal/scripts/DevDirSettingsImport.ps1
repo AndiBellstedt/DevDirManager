@@ -210,6 +210,44 @@ Set-DevDirManagerConfigItem -Name "System.LastSyncResult" -Value $lastSyncResult
 #endregion Load configuration from JSON file
 
 
+#region -- Manual configuration file creation
+
+# Create JSON configuration file with current values if it doesn't exist.
+# PSFramework handlers are only executed when values CHANGE, not during -Initialize.
+# Therefore, we must manually create the file during module load if it's missing.
+if (-not (Test-Path -Path $script:DevDirManagerConfigPath -PathType Leaf)) {
+    Write-PSFMessage -Level Verbose -String "DevDirSettingsImport.CreateDefaultConfig" -StringValues @($script:DevDirManagerConfigPath) -Tag "DevDirSettingsImport", "Initialize"
+
+    # Ensure directory exists.
+    $configDirectory = Split-Path -Path $script:DevDirManagerConfigPath -Parent
+    if (-not (Test-Path -Path $configDirectory -PathType Container)) {
+        $null = New-Item -Path $configDirectory -ItemType Directory -Force
+    }
+
+    # Build configuration object from current PSFConfig values.
+    $configExport = [ordered]@{
+        RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
+        LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
+        AutoSyncEnabled     = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
+        SyncIntervalMinutes = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
+        LastSyncTime        = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncTime"
+        LastSyncResult      = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult"
+    }
+
+    # Convert datetime to string for JSON serialization.
+    if ($configExport.LastSyncTime -is [datetime]) {
+        $configExport.LastSyncTime = $configExport.LastSyncTime.ToString("o")
+    }
+
+    # Write configuration to JSON file.
+    $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $script:DevDirManagerConfigPath -Encoding UTF8 -Force
+
+    Write-PSFMessage -Level Verbose -String "DevDirSettingsImport.ConfigFileCreated" -StringValues @($script:DevDirManagerConfigPath) -Tag "DevDirSettingsImport", "Initialize"
+}
+
+#endregion Manual configuration file creation
+
+
 #region -- AutoSyncEnabled validation
 
 # Validate AutoSyncEnabled consistency with scheduled task.
