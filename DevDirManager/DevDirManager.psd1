@@ -3,7 +3,7 @@
     RootModule           = 'DevDirManager.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '1.4.2'
+    ModuleVersion        = '1.5.0'
 
     # ID used to uniquely identify this module
     GUID                 = '6d7f0d28-926a-49ba-8a4f-d648b6ab6dff'
@@ -45,11 +45,16 @@
     FunctionsToExport    = @(
         'Export-DevDirectoryList'
         'Get-DevDirectory'
+        'Get-DevDirectorySetting'
         'Import-DevDirectoryList'
+        'Invoke-DevDirectorySync'
         'Publish-DevDirectoryList'
+        'Register-DevDirectoryScheduledSync'
         'Restore-DevDirectory'
+        'Set-DevDirectorySetting'
         'Show-DevDirectoryDashboard'
         'Sync-DevDirectoryList'
+        'Unregister-DevDirectoryScheduledSync'
     )
 
     # Cmdlets to export from this module

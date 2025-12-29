@@ -1,5 +1,32 @@
 ﻿# Changelog
 
+## [1.5.0] - 2025-06-23
+
+### Overview
+This release introduces system-level configuration management and automated sync capabilities. You can now configure centralized repository lists, filter repositories based on computer names using pattern matching, and schedule automatic synchronization via Windows Task Scheduler. No breaking changes.
+
+### Added
+- **System Configuration Management**
+  - **Get-DevDirectorySetting**: Retrieve current system configuration settings
+  - **Set-DevDirectorySetting**: Configure and persist system-wide settings including repository list path, target path, system filter, and sync interval
+  - Configuration is stored in the PowerShell data folder (`%LOCALAPPDATA%\Microsoft\PowerShell\` or `%LOCALAPPDATA%\Microsoft\Windows\PowerShell\` depending on PowerShell version)
+
+- **Automated Sync Capability**
+  - **Invoke-DevDirectorySync**: Execute synchronization using system configuration with automatic filtering
+  - **Register-DevDirectoryScheduledSync**: Create a Windows scheduled task for automated repository synchronization
+  - **Unregister-DevDirectoryScheduledSync**: Remove the scheduled sync task
+
+- **System Filter Feature**
+  - Filter repositories based on computer names using pattern matching
+  - Supports wildcards (`*`, `DEV-*`), exclusion patterns (`!SERVER-*`), and multiple patterns with comma separation (`DEV-*,LAPTOP-*`)
+  - Enables partial syncing across different development machines based on their names
+
+### Technical Details
+- Configuration automatically loaded during module import
+- Settings persist across PowerShell sessions via JSON file
+- Compatible with Windows PowerShell 5.1 and PowerShell 7+
+- Localization support for English, German, French, and Spanish
+
 ## [1.4.2] - 2025-12-27
 
 ### Overview
