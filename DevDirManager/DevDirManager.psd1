@@ -47,7 +47,7 @@
         'Get-DevDirectory'
         'Get-DevDirectorySetting'
         'Import-DevDirectoryList'
-        'Invoke-DevDirectorySync'
+        'Invoke-DevDirectorySyncSchedule'
         'Publish-DevDirectoryList'
         'Register-DevDirectoryScheduledSync'
         'Restore-DevDirectory'

@@ -251,26 +251,30 @@
 
     # Set-DevDirectorySetting
     'SetDevDirectorySetting.Start'                                       = "Konfiguriere DevDirManager-Systemeinstellungen"
+    'SetDevDirectorySetting.PathNormalized'                              = "{0} normalisiert zu: '{1}'"
+    'SetDevDirectorySetting.PathTraversalError'                          = "{0} enthält unsichere Pfad-Traversierungssequenz (..): '{1}'"
     'SetDevDirectorySetting.PathValidation'                              = "Validiere Pfad: '{0}'"
     'SetDevDirectorySetting.PathNotFound'                                = "Warnung: Pfad '{0}' existiert nicht"
     'SetDevDirectorySetting.ConfigUpdated'                               = "Konfiguration aktualisiert: {0} = '{1}'"
     'SetDevDirectorySetting.DirectoryCreated'                            = "Konfigurationsverzeichnis erstellt: '{0}'"
     'SetDevDirectorySetting.Persisted'                                   = "Einstellungen gespeichert nach '{0}'"
-    'SetDevDirectorySetting.Complete'                                    = "Systemeinstellungen erfolgreich konfiguriert"
+    'SetDevDirectorySetting.Complete'                                    = "Systemeinstellungen erfolgreich konfiguriert. Einstellungen gespeichert nach '{0}'"
     'SetDevDirectorySetting.ShouldProcess.Target'                        = "DevDirManager-Systemkonfiguration"
     'SetDevDirectorySetting.ShouldProcess.Action'                        = "Einstellung '{0}' auf '{1}' setzen"
+    'SetDevDirectorySetting.ReadFailed'                                  = "Fehler beim Lesen der Konfigurationsdatei '{0}': {1}"
 
-    # Invoke-DevDirectorySync
-    'InvokeDevDirectorySync.Start'                                       = "Starte systemkonfigurierte Synchronisierung für Computer '{0}'"
-    'InvokeDevDirectorySync.NotConfigured.RepositoryListPath'            = "RepositoryListPath ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
-    'InvokeDevDirectorySync.NotConfigured.LocalDevDirectory'             = "LocalDevDirectory ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
-    'InvokeDevDirectorySync.RepositoryListNotFound'                      = "Repository-Listendatei nicht gefunden: '{0}'"
-    'InvokeDevDirectorySync.FilterApplied'                               = "{0} von {1} Repositories entsprechen dem Systemfilter für '{2}'"
-    'InvokeDevDirectorySync.NoMatchingRepositories'                      = "Keine Repositories entsprechen dem Systemfilter für Computer '{0}'"
-    'InvokeDevDirectorySync.Complete'                                    = "Synchronisierung abgeschlossen: {0} Repositories synchronisiert"
-    'InvokeDevDirectorySync.ShouldProcess.Target'                        = "{0} Repositories von '{1}'"
-    'InvokeDevDirectorySync.ShouldProcess.Action'                        = "Synchronisieren nach '{0}'"
-    'InvokeDevDirectorySync.End'                                         = "Invoke-DevDirectorySync abgeschlossen"
+    # Invoke-DevDirectorySyncSchedule
+    'InvokeDevDirectorySyncSchedule.Start'                               = "Starte systemkonfigurierte Synchronisierung für Computer '{0}'"
+    'InvokeDevDirectorySyncSchedule.NotConfigured.RepositoryListPath'    = "RepositoryListPath ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
+    'InvokeDevDirectorySyncSchedule.NotConfigured.LocalDevDirectory'     = "LocalDevDirectory ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
+    'InvokeDevDirectorySyncSchedule.RepositoryListNotFound'              = "Repository-Listendatei nicht gefunden: '{0}'"
+    'InvokeDevDirectorySyncSchedule.FilterApplied'                       = "{0} von {1} Repositories entsprechen dem Systemfilter für '{2}'"
+    'InvokeDevDirectorySyncSchedule.NoMatchingRepositories'              = "Keine Repositories entsprechen dem Systemfilter für Computer '{0}'"
+    'InvokeDevDirectorySyncSchedule.Complete'                            = "Synchronisierung abgeschlossen: {0} Repositories synchronisiert"
+    'InvokeDevDirectorySyncSchedule.ConfigUpdateFailed'                  = "Fehler beim Aktualisieren der Konfiguration mit Fehlerstatus: {0}"
+    'InvokeDevDirectorySyncSchedule.ShouldProcess.Target'                = "{0} Repositories von '{1}'"
+    'InvokeDevDirectorySyncSchedule.ShouldProcess.Action'                = "Synchronisieren nach '{0}'"
+    'InvokeDevDirectorySyncSchedule.End'                                 = "Invoke-DevDirectorySyncSchedule abgeschlossen"
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Erstelle geplante Aufgabe '{0}'"
@@ -278,6 +282,9 @@
     'RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory'  = "LocalDevDirectory ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
     'RegisterDevDirectoryScheduledSync.Exists'                           = "Geplante Aufgabe '{0}' existiert bereits. Verwenden Sie -Force zum Überschreiben."
     'RegisterDevDirectoryScheduledSync.RemovingExisting'                 = "Entferne vorhandene geplante Aufgabe '{0}'"
+    'RegisterDevDirectoryScheduledSync.UnregisterFailed'                 = "Fehler beim Entfernen der vorhandenen geplanten Aufgabe '{0}'"
+    'RegisterDevDirectoryScheduledSync.RegisterFailed'                   = "Fehler beim Registrieren der geplanten Aufgabe '{0}'"
+    'RegisterDevDirectoryScheduledSync.TaskNotReturned'                  = "Geplante Aufgabe '{0}' wurde nicht erfolgreich erstellt"
     'RegisterDevDirectoryScheduledSync.Created'                          = "Geplante Aufgabe '{0}' erstellt: wird alle {1} Minuten ausgeführt"
     'RegisterDevDirectoryScheduledSync.Complete'                         = "Registrierung der geplanten Aufgabe abgeschlossen"
     'RegisterDevDirectoryScheduledSync.TaskDescription'                  = "DevDirManager automatische Repository-Synchronisierung. Synchronisiert Repositories von der konfigurierten zentralen Liste in das lokale Entwicklungsverzeichnis."
@@ -288,11 +295,23 @@
     # Unregister-DevDirectoryScheduledSync
     'UnregisterDevDirectoryScheduledSync.Start'                          = "Entferne geplante Aufgabe '{0}'"
     'UnregisterDevDirectoryScheduledSync.NotFound'                       = "Geplante Aufgabe '{0}' nicht gefunden"
+    'UnregisterDevDirectoryScheduledSync.UnregisterFailed'               = "Fehler beim Entfernen der geplanten Aufgabe '{0}'"
     'UnregisterDevDirectoryScheduledSync.Removed'                        = "Geplante Aufgabe '{0}' entfernt"
     'UnregisterDevDirectoryScheduledSync.Complete'                       = "Entfernung der geplanten Aufgabe abgeschlossen"
     'UnregisterDevDirectoryScheduledSync.AutoSyncDisabled'               = "AutoSyncEnabled-Einstellung wurde auf false gesetzt."
     'UnregisterDevDirectoryScheduledSync.ShouldProcess.Target'           = "Geplante Aufgabe '{0}'"
     'UnregisterDevDirectoryScheduledSync.ShouldProcess.Action'           = "Geplante Aufgabe entfernen"
+
+    # Write-ConfigFileWithRetry (internal helper)
+    'WriteConfigFileWithRetry.Start'                                     = "Schreibe Konfigurationsdatei: '{0}'"
+    'WriteConfigFileWithRetry.AcquiringLock'                             = "Erwerbe exklusive Sperre auf '{0}' (Versuch {1})"
+    'WriteConfigFileWithRetry.LockAcquired'                              = "Exklusive Sperre auf '{0}' erworben"
+    'WriteConfigFileWithRetry.Success'                                   = "Konfigurationsdatei '{0}' erfolgreich geschrieben bei Versuch {1}"
+    'WriteConfigFileWithRetry.IOError'                                   = "Dateischreibversuch {0} fehlgeschlagen: {1}"
+    'WriteConfigFileWithRetry.Retrying'                                  = "Wiederhole in {0}ms ({1} Versuche verbleibend)"
+    'WriteConfigFileWithRetry.UnexpectedError'                           = "Unerwarteter Fehler beim Dateischreiben: {0}"
+    'WriteConfigFileWithRetry.AllAttemptsFailed'                         = "Fehler beim Schreiben der Konfigurationsdatei nach {0} Versuchen. Die Datei ist möglicherweise von einem anderen Prozess gesperrt."
+    'WriteConfigFileWithRetry.Complete'                                  = "Write-ConfigFileWithRetry für '{0}' abgeschlossen"
 
     # DevDirSettingsImport (internal script)
     'DevDirSettingsImport.ConfigLoaded'                                  = "DevDirManager-Konfiguration von '{0}' geladen"

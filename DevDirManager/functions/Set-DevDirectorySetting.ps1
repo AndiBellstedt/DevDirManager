@@ -7,13 +7,14 @@
         Sets the system-level configuration for automated synchronization including
         the central repository list path, local development directory, and sync options.
 
-        Settings are persisted to a JSON file within the PowerShell data folder
-        automatically via the PSFramework configuration handler system:
+        Settings are persisted directly to a JSON file within the PowerShell data folder:
         - Windows PowerShell 5.1: %LOCALAPPDATA%\Microsoft\Windows\PowerShell\DevDirManagerConfiguration.json
         - PowerShell 7+: %LOCALAPPDATA%\Microsoft\PowerShell\DevDirManagerConfiguration.json
 
         When AutoSyncEnabled is modified, the scheduled task is automatically
         registered or unregistered to maintain consistency.
+
+        Use -Reset to restore all settings to their default values.
 
     .PARAMETER RepositoryListPath
         Path to the central repository list file (JSON, CSV, or XML).
@@ -34,6 +35,11 @@
         Interval in minutes between automatic sync operations (for scheduled task).
         Must be a positive integer between 1 and 1440 (24 hours).
         Default: 360 (6 hours).
+
+    .PARAMETER Reset
+        Resets all settings to their default values. This creates a new configuration
+        file with default values, replacing any existing configuration.
+        Cannot be combined with other setting parameters.
 
     .PARAMETER PassThru
         Returns the updated configuration object after saving.
@@ -60,14 +66,19 @@
         Disables automatic sync and unregisters the scheduled task.
 
     .EXAMPLE
+        PS C:\> Set-DevDirectorySetting -Reset
+
+        Resets all settings to default values, creating a fresh configuration.
+
+    .EXAMPLE
         PS C:\> Set-DevDirectorySetting -RepositoryListPath "C:\Backup\repos.json" -WhatIf
 
         Shows what would be saved without making changes.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 2.1.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-29
+        Date      : 2025-12-30
         Keywords  : Configuration, Settings, Sync
 
     .LINK
@@ -76,26 +87,31 @@
     #>
     [CmdletBinding(
         SupportsShouldProcess = $true,
-        ConfirmImpact = "Medium"
+        ConfirmImpact = "Medium",
+        DefaultParameterSetName = "Default"
     )]
     [OutputType([PSCustomObject])]
     param(
-        [Parameter(ValueFromPipelineByPropertyName = $true)]
+        [Parameter(ParameterSetName = "Default", ValueFromPipelineByPropertyName = $true)]
         [string]
         $RepositoryListPath,
 
-        [Parameter(ValueFromPipelineByPropertyName = $true)]
+        [Parameter(ParameterSetName = "Default", ValueFromPipelineByPropertyName = $true)]
         [string]
         $LocalDevDirectory,
 
-        [Parameter(ValueFromPipelineByPropertyName = $true)]
+        [Parameter(ParameterSetName = "Default", ValueFromPipelineByPropertyName = $true)]
         [bool]
         $AutoSyncEnabled,
 
-        [Parameter(ValueFromPipelineByPropertyName = $true)]
+        [Parameter(ParameterSetName = "Default", ValueFromPipelineByPropertyName = $true)]
         [ValidateRange(1, 1440)]
         [int]
         $SyncIntervalMinutes,
+
+        [Parameter(ParameterSetName = "Reset", Mandatory = $true)]
+        [switch]
+        $Reset,
 
         [Parameter()]
         [switch]
@@ -104,12 +120,108 @@
 
     begin {
         Write-PSFMessage -Level Debug -String "SetDevDirectorySetting.Start" -Tag "SetDevDirectorySetting", "Start"
+
+        #region -- Define default configuration values
+
+        # These are the hard-coded defaults for all settings.
+        $script:defaultConfig = [ordered]@{
+            RepositoryListPath  = ""
+            LocalDevDirectory   = ""
+            AutoSyncEnabled     = $false
+            SyncIntervalMinutes = 360
+            LastSyncTime        = $null
+            LastSyncResult      = ""
+        }
+
+        #endregion Define default configuration values
     }
 
     process {
+        # Get the settings file path from PSFConfig (this is static, set during module load).
+        $settingsPath = Get-PSFConfigValue -FullName "DevDirManager.SettingsPath"
+        $settingsDir = Split-Path -Path $settingsPath -Parent
+
+        #region -- Handle Reset parameter set
+
+        if ($PSCmdlet.ParameterSetName -eq "Reset") {
+            $target = Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.ShouldProcess.Target"
+            $action = "Reset all settings to default values"
+
+            if ($PSCmdlet.ShouldProcess($target, $action)) {
+                # Ensure directory exists.
+                if (-not (Test-Path -Path $settingsDir -PathType Container)) {
+                    $null = New-Item -Path $settingsDir -ItemType Directory -Force
+                    Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.DirectoryCreated" -StringValues @($settingsDir) -Tag "SetDevDirectorySetting", "Directory"
+                }
+
+                # Write default configuration.
+                $jsonContent = $script:defaultConfig | ConvertTo-Json -Depth 3
+                Write-ConfigFileWithRetry -Path $settingsPath -Content $jsonContent
+
+                Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.Complete" -StringValues @($settingsPath) -Tag "SetDevDirectorySetting", "Complete"
+            }
+
+            if ($PassThru) {
+                Get-DevDirectorySetting
+            }
+            return
+        }
+
+        #endregion Handle Reset parameter set
+
+        #region -- Load current configuration or create defaults
+
+        $currentConfig = $null
+
+        if (Test-Path -Path $settingsPath -PathType Leaf) {
+            try {
+                $jsonContent = Get-Content -Path $settingsPath -Raw -Encoding UTF8
+                $currentConfig = $jsonContent | ConvertFrom-Json
+
+                # Convert to ordered hashtable for easier manipulation.
+                $configData = [ordered]@{}
+                foreach ($prop in $currentConfig.PSObject.Properties) {
+                    $configData[$prop.Name] = $prop.Value
+                }
+                $currentConfig = $configData
+            } catch {
+                Write-PSFMessage -Level Warning -String "SetDevDirectorySetting.ReadFailed" -StringValues @($settingsPath, $_.Exception.Message) -Tag "SetDevDirectorySetting", "Warning"
+                # Start with defaults if file is corrupted.
+                $currentConfig = $script:defaultConfig.Clone()
+            }
+        } else {
+            # No existing config - start with defaults.
+            $currentConfig = $script:defaultConfig.Clone()
+        }
+
+        # Ensure all required keys exist (in case old config is missing new keys).
+        foreach ($key in $script:defaultConfig.Keys) {
+            if (-not $currentConfig.Contains($key)) {
+                $currentConfig[$key] = $script:defaultConfig[$key]
+            }
+        }
+
+        #endregion Load current configuration or create defaults
+
         #region -- Validate paths if provided
 
+        # Security validation: Check for path traversal patterns in provided paths.
+        # The module's UnsafeRelativePathPattern detects path traversal (..) which is a security concern.
+        $pathTraversalPattern = [regex]::new('\.{2}')
+
         if ($PSBoundParameters.ContainsKey("RepositoryListPath") -and -not [string]::IsNullOrWhiteSpace($RepositoryListPath)) {
+            # Normalize relative paths to absolute paths using .NET GetFullPath.
+            # This handles paths like "./" or "../" and converts them to fully qualified paths.
+            $RepositoryListPath = [System.IO.Path]::GetFullPath($RepositoryListPath)
+            $PSBoundParameters["RepositoryListPath"] = $RepositoryListPath
+            Write-PSFMessage -Level Debug -String "SetDevDirectorySetting.PathNormalized" -StringValues @("RepositoryListPath", $RepositoryListPath) -Tag "SetDevDirectorySetting", "Normalization"
+
+            # Validate security: reject paths containing path traversal sequences after normalization.
+            if ($pathTraversalPattern.IsMatch($RepositoryListPath)) {
+                Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.PathTraversalError") -StringValues @("RepositoryListPath", $RepositoryListPath) -EnableException $true -Category SecurityError -Tag "SetDevDirectorySetting", "Security"
+                return
+            }
+
             Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.PathValidation" -StringValues @($RepositoryListPath) -Tag "SetDevDirectorySetting", "Validation"
             if (-not (Test-Path -Path $RepositoryListPath -PathType Leaf)) {
                 Write-PSFMessage -Level Warning -String "SetDevDirectorySetting.PathNotFound" -StringValues @($RepositoryListPath) -Tag "SetDevDirectorySetting", "Warning"
@@ -117,6 +229,18 @@
         }
 
         if ($PSBoundParameters.ContainsKey("LocalDevDirectory") -and -not [string]::IsNullOrWhiteSpace($LocalDevDirectory)) {
+            # Normalize relative paths to absolute paths using .NET GetFullPath.
+            # This handles paths like "./" or "../" and converts them to fully qualified paths.
+            $LocalDevDirectory = [System.IO.Path]::GetFullPath($LocalDevDirectory)
+            $PSBoundParameters["LocalDevDirectory"] = $LocalDevDirectory
+            Write-PSFMessage -Level Debug -String "SetDevDirectorySetting.PathNormalized" -StringValues @("LocalDevDirectory", $LocalDevDirectory) -Tag "SetDevDirectorySetting", "Normalization"
+
+            # Validate security: reject paths containing path traversal sequences after normalization.
+            if ($pathTraversalPattern.IsMatch($LocalDevDirectory)) {
+                Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.PathTraversalError") -StringValues @("LocalDevDirectory", $LocalDevDirectory) -EnableException $true -Category SecurityError -Tag "SetDevDirectorySetting", "Security"
+                return
+            }
+
             Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.PathValidation" -StringValues @($LocalDevDirectory) -Tag "SetDevDirectorySetting", "Validation"
             if (-not (Test-Path -Path $LocalDevDirectory -PathType Container)) {
                 Write-PSFMessage -Level Warning -String "SetDevDirectorySetting.PathNotFound" -StringValues @($LocalDevDirectory) -Tag "SetDevDirectorySetting", "Warning"
@@ -125,35 +249,35 @@
 
         #endregion Validate paths if provided
 
-        #region -- Update PSFramework configuration
+        #region -- Apply parameter changes to configuration
 
-        # Map parameter names to PSFramework configuration keys.
+        # Map parameter names to configuration keys.
         $parameterMapping = @{
-            "RepositoryListPath"  = "System.RepositoryListPath"
-            "LocalDevDirectory"   = "System.LocalDevDirectory"
-            "AutoSyncEnabled"     = "System.AutoSyncEnabled"
-            "SyncIntervalMinutes" = "System.SyncIntervalMinutes"
+            "RepositoryListPath"  = "RepositoryListPath"
+            "LocalDevDirectory"   = "LocalDevDirectory"
+            "AutoSyncEnabled"     = "AutoSyncEnabled"
+            "SyncIntervalMinutes" = "SyncIntervalMinutes"
         }
 
         # Track if AutoSyncEnabled is being changed.
         $autoSyncChanging = $false
         $newAutoSyncValue = $null
-
-        # Track if any configuration needs manual persistence (since handlers are removed).
-        $needsPersistence = $false
+        $oldAutoSyncValue = $currentConfig["AutoSyncEnabled"]
 
         if ($PSBoundParameters.ContainsKey("AutoSyncEnabled")) {
-            $currentAutoSync = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
-            if ($currentAutoSync -ne $AutoSyncEnabled) {
+            if ($oldAutoSyncValue -ne $AutoSyncEnabled) {
                 $autoSyncChanging = $true
                 $newAutoSyncValue = $AutoSyncEnabled
             }
         }
 
+        # Track if any changes are made.
+        $hasChanges = $false
+
         # Process each parameter that was provided.
         foreach ($paramName in $parameterMapping.Keys) {
             if ($PSBoundParameters.ContainsKey($paramName)) {
-                $psfKey = $parameterMapping[$paramName]
+                $configKey = $parameterMapping[$paramName]
                 $value = $PSBoundParameters[$paramName]
 
                 # ShouldProcess check for each setting change.
@@ -162,30 +286,26 @@
                 $action = $action -f $paramName, $value
 
                 if ($PSCmdlet.ShouldProcess($target, $action)) {
-                    # Update the PSFConfig value (handlers are removed - manual persistence is required).
-                    Set-PSFConfig -Module "DevDirManager" -Name $psfKey -Value $value
-
+                    $currentConfig[$configKey] = $value
                     Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.ConfigUpdated" -StringValues @($paramName, $value) -Tag "SetDevDirectorySetting", "Update"
-
-                    # Mark that configuration needs manual persistence.
-                    $needsPersistence = $true
+                    $hasChanges = $true
                 }
             }
         }
 
-        #endregion Update PSFramework configuration
+        #endregion Apply parameter changes to configuration
 
         #region -- Handle AutoSyncEnabled changes (register/unregister scheduled task)
 
-        if ($autoSyncChanging -and -not $WhatIfPreference) {
+        if ($autoSyncChanging -and -not $WhatIfPreference -and $hasChanges) {
             if ($newAutoSyncValue -eq $true) {
                 # Register the scheduled task.
                 try {
                     Register-DevDirectoryScheduledSync -Force
-                    Write-PSFMessage -Level Important -String "SetDevDirectorySetting.AutoSyncEnabled.Registered" -Tag "SetDevDirectorySetting", "ScheduledTask"
+                    Write-PSFMessage -Level Important -Message "Scheduled task registered for automatic synchronization" -Tag "SetDevDirectorySetting", "ScheduledTask"
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
-                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $false
+                    $currentConfig["AutoSyncEnabled"] = $false
                     Stop-PSFFunction -Message "Failed to register scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
                     return
                 }
@@ -193,10 +313,10 @@
                 # Unregister the scheduled task.
                 try {
                     Unregister-DevDirectoryScheduledSync
-                    Write-PSFMessage -Level Important -String "SetDevDirectorySetting.AutoSyncEnabled.Unregistered" -Tag "SetDevDirectorySetting", "ScheduledTask"
+                    Write-PSFMessage -Level Important -Message "Scheduled task unregistered" -Tag "SetDevDirectorySetting", "ScheduledTask"
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
-                    Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $true
+                    $currentConfig["AutoSyncEnabled"] = $true
                     Stop-PSFFunction -Message "Failed to unregister scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
                     return
                 }
@@ -207,36 +327,29 @@
 
         #region -- Persist configuration to JSON file
 
-        # Manual persistence is required since PSFramework handlers are removed.
-        # This is done AFTER all configuration changes and task management is complete.
-        if ($needsPersistence -and -not $WhatIfPreference) {
-            $configPath = Get-DevDirectoryConfigPath
-            $configDir = Split-Path -Path $configPath -Parent
-
+        if ($hasChanges -and -not $WhatIfPreference) {
             # Ensure directory exists.
-            if (-not (Test-Path -Path $configDir -PathType Container)) {
-                $null = New-Item -Path $configDir -ItemType Directory -Force
+            if (-not (Test-Path -Path $settingsDir -PathType Container)) {
+                $null = New-Item -Path $settingsDir -ItemType Directory -Force
+                Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.DirectoryCreated" -StringValues @($settingsDir) -Tag "SetDevDirectorySetting", "Directory"
             }
 
-            # Build configuration export object from current PSFConfig values.
-            $configExport = [ordered]@{
-                RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
-                LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
-                AutoSyncEnabled     = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
-                SyncIntervalMinutes = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
-                LastSyncTime        = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncTime"
-                LastSyncResult      = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult"
+            # Convert datetime to ISO 8601 string for JSON serialization if present.
+            $exportConfig = [ordered]@{}
+            foreach ($key in $currentConfig.Keys) {
+                $value = $currentConfig[$key]
+                if ($value -is [datetime]) {
+                    $exportConfig[$key] = $value.ToString("o")
+                } else {
+                    $exportConfig[$key] = $value
+                }
             }
 
-            # Convert datetime to ISO 8601 string for JSON serialization.
-            if ($configExport.LastSyncTime -is [datetime]) {
-                $configExport.LastSyncTime = $configExport.LastSyncTime.ToString("o")
-            }
+            # Write configuration to JSON file with retry logic.
+            $jsonContent = $exportConfig | ConvertTo-Json -Depth 3
+            Write-ConfigFileWithRetry -Path $settingsPath -Content $jsonContent
 
-            # Write configuration to JSON file.
-            $configExport | ConvertTo-Json -Depth 3 | Set-Content -Path $configPath -Encoding UTF8 -Force
-
-            Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.ConfigPersisted" -StringValues @($configPath) -Tag "SetDevDirectorySetting", "Persistence"
+            Write-PSFMessage -Level Verbose -String "SetDevDirectorySetting.Persisted" -StringValues @($settingsPath) -Tag "SetDevDirectorySetting", "Persistence"
         }
 
         #endregion Persist configuration to JSON file

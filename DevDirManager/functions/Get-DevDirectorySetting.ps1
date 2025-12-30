@@ -11,9 +11,7 @@
         - Windows PowerShell 5.1: %LOCALAPPDATA%\Microsoft\Windows\PowerShell\DevDirManagerConfiguration.json
         - PowerShell 7+: %LOCALAPPDATA%\Microsoft\PowerShell\DevDirManagerConfiguration.json
 
-        This function reads directly from the JSON file to ensure consistency.
-        If any discrepancy is detected between the file and in-memory configuration,
-        a warning is displayed and the file values take precedence.
+        This function reads directly from the JSON file.
 
     .PARAMETER Name
         Optional. Retrieves a specific setting by name.
@@ -54,9 +52,9 @@
         Returns all settings and displays them in list format for detailed view.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 2.0.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-29
+        Date      : 2025-12-30
         Keywords  : Configuration, Settings, Sync
 
     .LINK
@@ -92,75 +90,47 @@
     process {
         #region -- Load configuration from JSON file
 
-        $configPath = Get-DevDirectoryConfigPath
-        $configFromFile = $null
+        # Get the settings file path from PSFConfig (static path set during module load).
+        $settingsPath = Get-PSFConfigValue -FullName "DevDirManager.SettingsPath"
 
-        if (Test-Path -Path $configPath -PathType Leaf) {
-            try {
-                $configFromFile = Get-Content -Path $configPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-            } catch {
-                Write-PSFMessage -Level Error -String "GetDevDirectorySetting.ReadFailed" -StringValues @($configPath, $_) -Tag "GetDevDirectorySetting", "Error"
-            }
-        } else {
-            Write-PSFMessage -Level Error -String "GetDevDirectorySetting.FileNotFound" -StringValues @($configPath) -Tag "GetDevDirectorySetting", "Error"
+        if (-not (Test-Path -Path $settingsPath -PathType Leaf)) {
+            Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "GetDevDirectorySetting.FileNotFound") -StringValues @($settingsPath) -EnableException $true -Category ObjectNotFound -Tag "GetDevDirectorySetting", "Error"
+            return
+        }
+
+        try {
+            $configFromFile = Get-Content -Path $settingsPath -Raw -Encoding UTF8 -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        } catch {
+            Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "GetDevDirectorySetting.ReadFailed") -StringValues @($settingsPath, $_.Exception.Message) -EnableException $true -ErrorRecord $_ -Tag "GetDevDirectorySetting", "Error"
+            return
         }
 
         #endregion Load configuration from JSON file
 
-        #region -- Build configuration values from file (with fallback to PSFConfig)
+        #region -- Build configuration values from file
 
-        # Read values from file, falling back to PSFConfig if not in file.
+        # Build the configuration values hashtable from the JSON file.
+        # Due to proper error handling above, $configFromFile is guaranteed to exist and be valid.
         $configValues = @{
-            RepositoryListPath  = if ($configFromFile -and $null -ne $configFromFile.RepositoryListPath) { $configFromFile.RepositoryListPath } else { Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath" }
-            LocalDevDirectory   = if ($configFromFile -and $null -ne $configFromFile.LocalDevDirectory) { $configFromFile.LocalDevDirectory } else { Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory" }
-            AutoSyncEnabled     = if ($configFromFile -and $null -ne $configFromFile.AutoSyncEnabled) { [bool]$configFromFile.AutoSyncEnabled } else { Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled" }
-            SyncIntervalMinutes = if ($configFromFile -and $null -ne $configFromFile.SyncIntervalMinutes) { [int]$configFromFile.SyncIntervalMinutes } else { Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes" }
+            RepositoryListPath  = $configFromFile.RepositoryListPath
+            LocalDevDirectory   = $configFromFile.LocalDevDirectory
+            AutoSyncEnabled     = [bool]$configFromFile.AutoSyncEnabled
+            SyncIntervalMinutes = [int]$configFromFile.SyncIntervalMinutes
             LastSyncTime        = $null
-            LastSyncResult      = if ($configFromFile -and $null -ne $configFromFile.LastSyncResult) { $configFromFile.LastSyncResult } else { Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult" }
+            LastSyncResult      = $configFromFile.LastSyncResult
         }
 
-        # Handle LastSyncTime datetime conversion.
-        if ($configFromFile -and $configFromFile.LastSyncTime -is [string] -and -not [string]::IsNullOrWhiteSpace($configFromFile.LastSyncTime)) {
+        # Handle LastSyncTime datetime conversion from ISO 8601 string.
+        if ($configFromFile.LastSyncTime -is [string] -and -not [string]::IsNullOrWhiteSpace($configFromFile.LastSyncTime)) {
             try {
                 $configValues.LastSyncTime = [datetime]::Parse($configFromFile.LastSyncTime)
             } catch {
+                Write-PSFMessage -Level Error -Message "Failed to parse LastSyncTime: $($configFromFile.LastSyncTime)" -Tag "GetDevDirectorySetting", "DateParse"
                 $configValues.LastSyncTime = $null
             }
-        } else {
-            $configValues.LastSyncTime = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncTime"
         }
 
-        #endregion Build configuration values from file (with fallback to PSFConfig)
-
-        #region -- Check for inconsistencies and update PSFConfig if needed
-
-        # Compare file values with in-memory PSFConfig values and update if different.
-        $psfConfigValues = @{
-            RepositoryListPath  = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
-            LocalDevDirectory   = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
-            AutoSyncEnabled     = Get-PSFConfigValue -FullName "DevDirManager.System.AutoSyncEnabled"
-            SyncIntervalMinutes = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
-            LastSyncTime        = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncTime"
-            LastSyncResult      = Get-PSFConfigValue -FullName "DevDirManager.System.LastSyncResult"
-        }
-
-        foreach ($key in $configValues.Keys) {
-            $fileValue = $configValues[$key]
-            $memValue = $psfConfigValues[$key]
-
-            # Normalize nulls for comparison.
-            $fileNormalized = if ($null -eq $fileValue) { "" } else { $fileValue }
-            $memNormalized = if ($null -eq $memValue) { "" } else { $memValue }
-
-            if ($fileNormalized -ne $memNormalized) {
-                Write-PSFMessage -Level Warning -String "GetDevDirectorySetting.Inconsistency" -StringValues @($key, $memNormalized, $fileNormalized) -Tag "GetDevDirectorySetting", "Inconsistency"
-
-                # Update PSFConfig with file value (disable handler to avoid circular write).
-                Set-PSFConfig -Module "DevDirManager" -Name "System.$key" -Value $fileValue -DisableHandler
-            }
-        }
-
-        #endregion Check for inconsistencies and update PSFConfig if needed
+        #endregion Build configuration values from file
 
         #region -- Return requested data
 
@@ -174,6 +144,7 @@
             $settingObject = [PSCustomObject]@{
                 PSTypeName          = "DevDirManager.SystemSetting"
                 ComputerName        = $env:COMPUTERNAME
+                SettingsPath        = $settingsPath
                 RepositoryListPath  = $configValues.RepositoryListPath
                 LocalDevDirectory   = $configValues.LocalDevDirectory
                 AutoSyncEnabled     = $configValues.AutoSyncEnabled

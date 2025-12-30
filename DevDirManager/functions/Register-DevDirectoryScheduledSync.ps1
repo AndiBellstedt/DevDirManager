@@ -48,9 +48,9 @@
         Shows what scheduled task would be created without actually creating it.
 
     .NOTES
-        Version   : 1.1.0
+        Version   : 1.2.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-29
+        Date      : 2025-12-30
         Keywords  : ScheduledTask, Sync, Automation
 
         Security Note: The -ExecutionPolicy parameter is intentionally omitted from
@@ -79,15 +79,15 @@
 
     begin {
         # Get the task name from PSFConfig (set during module import).
-        $taskName = Get-PSFConfigValue -FullName "DevDirManager.Internal.ScheduledTaskName"
+        $taskName = Get-PSFConfigValue -FullName "DevDirManager.ScheduledTaskName"
 
         Write-PSFMessage -Level Debug -String "RegisterDevDirectoryScheduledSync.Start" -StringValues @($taskName) -Tag "RegisterDevDirectoryScheduledSync", "Start"
 
-        #region -- Validate system configuration
+        #region -- Validate system configuration using Get-DevDirectorySetting
 
-        $repoListPath = Get-PSFConfigValue -FullName "DevDirManager.System.RepositoryListPath"
-        $localDevDir = Get-PSFConfigValue -FullName "DevDirManager.System.LocalDevDirectory"
-        $syncInterval = Get-PSFConfigValue -FullName "DevDirManager.System.SyncIntervalMinutes"
+        $repoListPath = Get-DevDirectorySetting -Name RepositoryListPath
+        $localDevDir = Get-DevDirectorySetting -Name LocalDevDirectory
+        $syncInterval = Get-DevDirectorySetting -Name SyncIntervalMinutes
 
         if ([string]::IsNullOrWhiteSpace($repoListPath)) {
             Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath") -EnableException $true -Category InvalidOperation -Tag "RegisterDevDirectoryScheduledSync", "Configuration"
@@ -134,7 +134,7 @@
         # Build the command to execute.
         # Note: ExecutionPolicy is intentionally omitted for security reasons.
         # The execution policy should be configured at the system or user level.
-        $syncCommand = "Import-Module DevDirManager -Force; Invoke-DevDirectorySync"
+        $syncCommand = "Import-Module DevDirManager -Force; Invoke-DevDirectorySyncSchedule"
         $arguments = "-NoProfile -NonInteractive -WindowStyle Hidden -Command `"$($syncCommand)`""
 
         # Create the action.
@@ -176,18 +176,33 @@
             # Remove existing task if Force is specified.
             if ($existingTask -and $Force) {
                 Write-PSFMessage -Level Verbose -String "RegisterDevDirectoryScheduledSync.RemovingExisting" -StringValues @($taskName) -Tag "RegisterDevDirectoryScheduledSync", "Remove"
-                Unregister-ScheduledTask -TaskPath "\" -TaskName $taskName -Confirm:$false
+                try {
+                    Unregister-ScheduledTask -TaskPath "\" -TaskName $taskName -Confirm:$false -ErrorAction Stop
+                } catch {
+                    Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.UnregisterFailed") -StringValues @($taskName) -EnableException $true -ErrorRecord $_ -Tag "RegisterDevDirectoryScheduledSync", "Error"
+                    return
+                }
             }
 
             # Register the new task in the root task path.
-            $task = Register-ScheduledTask -TaskPath "\" -TaskName $taskName -Action $action -Trigger $triggerList -Principal $principal -Settings $taskSettings -Description $taskDescription
+            try {
+                $task = Register-ScheduledTask -TaskPath "\" -TaskName $taskName -Action $action -Trigger $triggerList -Principal $principal -Settings $taskSettings -Description $taskDescription -ErrorAction Stop
+            } catch {
+                Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.RegisterFailed") -StringValues @($taskName) -EnableException $true -ErrorRecord $_ -Tag "RegisterDevDirectoryScheduledSync", "Error"
+                return
+            }
 
-            Write-PSFMessage -Level Host -String "RegisterDevDirectoryScheduledSync.Created" -StringValues @($taskName, $syncInterval) -Tag "RegisterDevDirectoryScheduledSync", "Created"
+            # Verify task was created.
+            if (-not $task) {
+                Stop-PSFFunction -Message (Get-PSFLocalizedString -Module "DevDirManager" -Name "RegisterDevDirectoryScheduledSync.TaskNotReturned") -StringValues @($taskName) -EnableException $true -Category InvalidResult -Tag "RegisterDevDirectoryScheduledSync", "Error"
+                return
+            }
 
-            # Update AutoSyncEnabled to true in PSFConfig (disable handler to prevent recursion).
-            Set-PSFConfig -Module "DevDirManager" -Name "System.AutoSyncEnabled" -Value $true -DisableHandler
+            Write-PSFMessage -Level Host -String "RegisterDevDirectoryScheduledSync.Created" -StringValues @($taskName, $syncInterval) -Tag "RegisterDevDirectoryScheduledSync", "Created", "AutoSync"
 
-            Write-PSFMessage -Level Important -String "RegisterDevDirectoryScheduledSync.AutoSyncEnabled" -Tag "RegisterDevDirectoryScheduledSync", "AutoSync"
+            # Update AutoSyncEnabled setting to true.
+            Set-DevDirectorySetting -AutoSyncEnabled $true
+            Write-PSFMessage -Level Verbose -String "RegisterDevDirectoryScheduledSync.AutoSyncEnabled" -Tag "RegisterDevDirectoryScheduledSync", "Settings"
 
             # Return the created task.
             $task
