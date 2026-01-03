@@ -134,7 +134,7 @@
 
             # Clean up resources.
             if ($lockFileStream) {
-                try { $lockFileStream.Close(); $lockFileStream.Dispose() } catch { }
+                try { $lockFileStream.Close(); $lockFileStream.Dispose() } catch { Write-PSFMessage -Level Debug -String "Failed to dispose lock file stream" -ErrorRecord $_ }
                 $lockFileStream = $null
             }
             if ($tempPath -and (Test-Path -Path $tempPath -PathType Leaf)) {
@@ -153,7 +153,7 @@
             Write-PSFMessage -Level Error -String "WriteConfigFileWithRetry.UnexpectedError" -StringValues @($_.Exception.Message) -Tag "WriteConfigFileWithRetry", "Error" -ErrorRecord $_
 
             if ($lockFileStream) {
-                try { $lockFileStream.Close(); $lockFileStream.Dispose() } catch { }
+                try { $lockFileStream.Close(); $lockFileStream.Dispose() } catch { Write-PSFMessage -Level Debug -String "Failed to dispose lock file stream" -ErrorRecord $_ }
                 $lockFileStream = $null
             }
             if ($tempPath -and (Test-Path -Path $tempPath -PathType Leaf)) {
