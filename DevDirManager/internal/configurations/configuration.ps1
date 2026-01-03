@@ -64,14 +64,14 @@ Set-PSFConfig -Module 'DevDirManager' -Name 'Import.IndividualFiles' -Value $fal
 $_settingsPath = Get-PSFConfigValue -FullName "DevDirManager.SettingsPath"
 
 if (-not (Test-Path -Path $_settingsPath -PathType Leaf)) {
-    Write-PSFMessage -Level Verbose -String "DevDirSettingsImport.CreateDefaultConfig" -StringValues @($_settingsPath) -Tag "Configuration", "Initialize"
+    Write-PSFMessage -Level Verbose -ModuleName "DevDirManager" -String "DevDirSettingsImport.CreateDefaultConfig" -StringValues @($_settingsPath) -Tag "Configuration", "Initialize"
 
     # Call Set-DevDirectorySetting with -Reset to create the file with defaults.
     Set-DevDirectorySetting -Reset
 
-    Write-PSFMessage -Level Verbose -String "DevDirSettingsImport.ConfigFileCreated" -StringValues @($_settingsPath) -Tag "Configuration", "Initialize"
+    Write-PSFMessage -Level Verbose -ModuleName "DevDirManager" -String "DevDirSettingsImport.ConfigFileCreated" -StringValues @($_settingsPath) -Tag "Configuration", "Initialize"
 } else {
-    Write-PSFMessage -Level Debug -String "DevDirSettingsImport.ConfigLoaded" -StringValues @($_settingsPath) -Tag "Configuration", "Load"
+    Write-PSFMessage -Level Debug -ModuleName "DevDirManager" -String "DevDirSettingsImport.ConfigLoaded" -StringValues @($_settingsPath) -Tag "Configuration", "Load"
 }
 
 # Clean up temporary variable.

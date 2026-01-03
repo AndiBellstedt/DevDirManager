@@ -197,16 +197,12 @@
                     <ListEntry>
                         <ListItems>
                             <ListItem>
+                                <Label>SettingsPath</Label>
+                                <PropertyName>SettingsPath</PropertyName>
+                            </ListItem>
+                            <ListItem>
                                 <Label>ComputerName</Label>
                                 <PropertyName>ComputerName</PropertyName>
-                            </ListItem>
-                            <ListItem>
-                                <Label>RepositoryListPath</Label>
-                                <PropertyName>RepositoryListPath</PropertyName>
-                            </ListItem>
-                            <ListItem>
-                                <Label>LocalDevDirectory</Label>
-                                <PropertyName>LocalDevDirectory</PropertyName>
                             </ListItem>
                             <ListItem>
                                 <Label>AutoSyncEnabled</Label>
@@ -215,6 +211,14 @@
                             <ListItem>
                                 <Label>SyncIntervalMinutes</Label>
                                 <PropertyName>SyncIntervalMinutes</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>RepositoryListPath</Label>
+                                <PropertyName>RepositoryListPath</PropertyName>
+                            </ListItem>
+                            <ListItem>
+                                <Label>LocalDevDirectory</Label>
+                                <PropertyName>LocalDevDirectory</PropertyName>
                             </ListItem>
                             <ListItem>
                                 <Label>LastSyncTime</Label>
@@ -238,15 +242,6 @@
                 <AutoSize/>
                 <TableHeaders>
                     <TableColumnHeader>
-                        <Label>ComputerName</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
-                        <Label>RepositoryListPath</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
-                        <Label>LocalDevDirectory</Label>
-                    </TableColumnHeader>
-                    <TableColumnHeader>
                         <Label>AutoSync</Label>
                     </TableColumnHeader>
                     <TableColumnHeader>
@@ -255,19 +250,25 @@
                     <TableColumnHeader>
                         <Label>LastSync</Label>
                     </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>RepositoryListPath</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>LocalDevDirectory</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>LastSyncResult</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>ComputerName</Label>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Label>SettingsPath</Label>
+                    </TableColumnHeader>
                 </TableHeaders>
                 <TableRowEntries>
                     <TableRowEntry>
                         <TableColumnItems>
-                            <TableColumnItem>
-                                <PropertyName>ComputerName</PropertyName>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>RepositoryListPath</PropertyName>
-                            </TableColumnItem>
-                            <TableColumnItem>
-                                <PropertyName>LocalDevDirectory</PropertyName>
-                            </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>AutoSyncEnabled</PropertyName>
                             </TableColumnItem>
@@ -276,6 +277,21 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>LastSyncTime</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>RepositoryListPath</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>LocalDevDirectory</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>LastSyncResult</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>ComputerName</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>SettingsPath</PropertyName>
                             </TableColumnItem>
                         </TableColumnItems>
                     </TableRowEntry>

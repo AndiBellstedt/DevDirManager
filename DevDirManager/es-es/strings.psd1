@@ -261,12 +261,17 @@
     'SetDevDirectorySetting.Complete'                                    = "Ajustes del sistema configurados exitosamente. Configuración guardada en '{0}'"
     'SetDevDirectorySetting.ShouldProcess.Target'                        = "Configuración del sistema DevDirManager"
     'SetDevDirectorySetting.ShouldProcess.Action'                        = "Establecer configuración '{0}' a '{1}'"
+    'SetDevDirectorySetting.ShouldProcess.Reset'                         = "Restablecer todas las configuraciones a valores predeterminados"
     'SetDevDirectorySetting.ReadFailed'                                  = "Error al leer el archivo de configuración '{0}': {1}"
+    'SetDevDirectorySetting.ScheduledTaskRegistered'                     = "Tarea programada registrada para sincronización automática."
+    'SetDevDirectorySetting.ScheduledTaskRegisterFailed'                 = "Error al registrar la tarea programada: {0}"
+    'SetDevDirectorySetting.ScheduledTaskUnregistered'                   = "Tarea programada desregistrada."
+    'SetDevDirectorySetting.ScheduledTaskUnregisterFailed'               = "Error al desregistrar la tarea programada: {0}"
 
     # Invoke-DevDirectorySyncSchedule
     'InvokeDevDirectorySyncSchedule.Start'                               = "Iniciando sincronización configurada por el sistema para el equipo '{0}'"
-    'InvokeDevDirectorySyncSchedule.NotConfigured.RepositoryListPath'    = "RepositoryListPath no está configurado. Ejecute primero Set-DevDirectorySetting."
-    'InvokeDevDirectorySyncSchedule.NotConfigured.LocalDevDirectory'     = "LocalDevDirectory no está configurado. Ejecute primero Set-DevDirectorySetting."
+    'InvokeDevDirectorySyncSchedule.NotConfigured.RepositoryListPath'    = "RepositoryListPath no está configurado. Ejecute 'Set-DevDirectorySetting -RepositoryListPath <ruta>' para configurar la ruta del archivo de lista de repositorios."
+    'InvokeDevDirectorySyncSchedule.NotConfigured.LocalDevDirectory'     = "LocalDevDirectory no está configurado. Ejecute 'Set-DevDirectorySetting -LocalDevDirectory <ruta>' para configurar el directorio de desarrollo local."
     'InvokeDevDirectorySyncSchedule.RepositoryListNotFound'              = "Archivo de lista de repositorios no encontrado: '{0}'"
     'InvokeDevDirectorySyncSchedule.FilterApplied'                       = "{0} de {1} repositorios coinciden con el filtro del sistema para '{2}'"
     'InvokeDevDirectorySyncSchedule.NoMatchingRepositories'              = "Ningún repositorio coincide con el filtro del sistema para el equipo '{0}'"
@@ -278,8 +283,8 @@
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Creando tarea programada '{0}'"
-    'RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath' = "RepositoryListPath no está configurado. Ejecute primero Set-DevDirectorySetting."
-    'RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory'  = "LocalDevDirectory no está configurado. Ejecute primero Set-DevDirectorySetting."
+    'RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath' = "RepositoryListPath no está configurado. Ejecute 'Set-DevDirectorySetting -RepositoryListPath <ruta>' para configurar la ruta del archivo de lista de repositorios."
+    'RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory'  = "LocalDevDirectory no está configurado. Ejecute 'Set-DevDirectorySetting -LocalDevDirectory <ruta>' para configurar el directorio de desarrollo local."
     'RegisterDevDirectoryScheduledSync.Exists'                           = "La tarea programada '{0}' ya existe. Use -Force para sobrescribir."
     'RegisterDevDirectoryScheduledSync.RemovingExisting'                 = "Eliminando tarea programada existente '{0}'"
     'RegisterDevDirectoryScheduledSync.UnregisterFailed'                 = "Error al eliminar la tarea programada existente '{0}'"

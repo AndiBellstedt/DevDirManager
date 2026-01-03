@@ -48,9 +48,9 @@
         Shows what scheduled task would be created without actually creating it.
 
     .NOTES
-        Version   : 1.2.0
+        Version   : 1.3.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-30
+        Date      : 2026-01-03
         Keywords  : ScheduledTask, Sync, Automation
 
         Security Note: The -ExecutionPolicy parameter is intentionally omitted from
@@ -200,9 +200,20 @@
 
             Write-PSFMessage -Level Host -String "RegisterDevDirectoryScheduledSync.Created" -StringValues @($taskName, $syncInterval) -Tag "RegisterDevDirectoryScheduledSync", "Created", "AutoSync"
 
-            # Update AutoSyncEnabled setting to true.
-            Set-DevDirectorySetting -AutoSyncEnabled $true
-            Write-PSFMessage -Level Verbose -String "RegisterDevDirectoryScheduledSync.AutoSyncEnabled" -Tag "RegisterDevDirectoryScheduledSync", "Settings"
+            # Update AutoSyncEnabled setting to true directly in config file.
+            # Note: We write directly to the config file instead of calling Set-DevDirectorySetting
+            # to avoid infinite recursion (Set-DevDirectorySetting calls this function when AutoSyncEnabled changes).
+            $settingsPath = Get-PSFConfigValue -FullName "DevDirManager.SettingsPath"
+            try {
+                $jsonContent = Get-Content -Path $settingsPath -Raw -Encoding UTF8
+                $currentSettings = $jsonContent | ConvertFrom-Json
+                $currentSettings.AutoSyncEnabled = $true
+                $updatedJson = $currentSettings | ConvertTo-Json -Depth 3
+                Write-ConfigFileWithRetry -Path $settingsPath -Content $updatedJson
+                Write-PSFMessage -Level Verbose -String "RegisterDevDirectoryScheduledSync.AutoSyncEnabled" -Tag "RegisterDevDirectoryScheduledSync", "Settings"
+            } catch {
+                Write-PSFMessage -Level Warning -Message "Failed to update AutoSyncEnabled in config file: $($_.Exception.Message)" -Tag "RegisterDevDirectoryScheduledSync", "Warning"
+            }
 
             # Return the created task.
             $task

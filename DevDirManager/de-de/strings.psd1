@@ -261,12 +261,17 @@
     'SetDevDirectorySetting.Complete'                                    = "Systemeinstellungen erfolgreich konfiguriert. Einstellungen gespeichert nach '{0}'"
     'SetDevDirectorySetting.ShouldProcess.Target'                        = "DevDirManager-Systemkonfiguration"
     'SetDevDirectorySetting.ShouldProcess.Action'                        = "Einstellung '{0}' auf '{1}' setzen"
+    'SetDevDirectorySetting.ShouldProcess.Reset'                         = "Alle Einstellungen auf Standardwerte zurücksetzen"
     'SetDevDirectorySetting.ReadFailed'                                  = "Fehler beim Lesen der Konfigurationsdatei '{0}': {1}"
+    'SetDevDirectorySetting.ScheduledTaskRegistered'                     = "Geplante Aufgabe für automatische Synchronisierung registriert."
+    'SetDevDirectorySetting.ScheduledTaskRegisterFailed'                 = "Fehler beim Registrieren der geplanten Aufgabe: {0}"
+    'SetDevDirectorySetting.ScheduledTaskUnregistered'                   = "Geplante Aufgabe deregistriert."
+    'SetDevDirectorySetting.ScheduledTaskUnregisterFailed'               = "Fehler beim Deregistrieren der geplanten Aufgabe: {0}"
 
     # Invoke-DevDirectorySyncSchedule
     'InvokeDevDirectorySyncSchedule.Start'                               = "Starte systemkonfigurierte Synchronisierung für Computer '{0}'"
-    'InvokeDevDirectorySyncSchedule.NotConfigured.RepositoryListPath'    = "RepositoryListPath ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
-    'InvokeDevDirectorySyncSchedule.NotConfigured.LocalDevDirectory'     = "LocalDevDirectory ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
+    'InvokeDevDirectorySyncSchedule.NotConfigured.RepositoryListPath'    = "RepositoryListPath ist nicht konfiguriert. Führen Sie 'Set-DevDirectorySetting -RepositoryListPath <Pfad>' aus, um den Pfad zur Repository-Listendatei zu konfigurieren."
+    'InvokeDevDirectorySyncSchedule.NotConfigured.LocalDevDirectory'     = "LocalDevDirectory ist nicht konfiguriert. Führen Sie 'Set-DevDirectorySetting -LocalDevDirectory <Pfad>' aus, um das lokale Entwicklungsverzeichnis zu konfigurieren."
     'InvokeDevDirectorySyncSchedule.RepositoryListNotFound'              = "Repository-Listendatei nicht gefunden: '{0}'"
     'InvokeDevDirectorySyncSchedule.FilterApplied'                       = "{0} von {1} Repositories entsprechen dem Systemfilter für '{2}'"
     'InvokeDevDirectorySyncSchedule.NoMatchingRepositories'              = "Keine Repositories entsprechen dem Systemfilter für Computer '{0}'"
@@ -278,8 +283,8 @@
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Erstelle geplante Aufgabe '{0}'"
-    'RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath' = "RepositoryListPath ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
-    'RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory'  = "LocalDevDirectory ist nicht konfiguriert. Führen Sie zuerst Set-DevDirectorySetting aus."
+    'RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath' = "RepositoryListPath ist nicht konfiguriert. Führen Sie 'Set-DevDirectorySetting -RepositoryListPath <Pfad>' aus, um den Pfad zur Repository-Listendatei zu konfigurieren."
+    'RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory'  = "LocalDevDirectory ist nicht konfiguriert. Führen Sie 'Set-DevDirectorySetting -LocalDevDirectory <Pfad>' aus, um das lokale Entwicklungsverzeichnis zu konfigurieren."
     'RegisterDevDirectoryScheduledSync.Exists'                           = "Geplante Aufgabe '{0}' existiert bereits. Verwenden Sie -Force zum Überschreiben."
     'RegisterDevDirectoryScheduledSync.RemovingExisting'                 = "Entferne vorhandene geplante Aufgabe '{0}'"
     'RegisterDevDirectoryScheduledSync.UnregisterFailed'                 = "Fehler beim Entfernen der vorhandenen geplanten Aufgabe '{0}'"

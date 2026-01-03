@@ -261,12 +261,17 @@
     'SetDevDirectorySetting.Complete'                                    = "Paramètres système configurés avec succès. Paramètres enregistrés dans '{0}'"
     'SetDevDirectorySetting.ShouldProcess.Target'                        = "Configuration système DevDirManager"
     'SetDevDirectorySetting.ShouldProcess.Action'                        = "Définir le paramètre '{0}' à '{1}'"
+    'SetDevDirectorySetting.ShouldProcess.Reset'                         = "Réinitialiser tous les paramètres aux valeurs par défaut"
     'SetDevDirectorySetting.ReadFailed'                                  = "Échec de la lecture du fichier de configuration '{0}': {1}"
+    'SetDevDirectorySetting.ScheduledTaskRegistered'                     = "Tâche planifiée enregistrée pour la synchronisation automatique."
+    'SetDevDirectorySetting.ScheduledTaskRegisterFailed'                 = "Échec de l'enregistrement de la tâche planifiée : {0}"
+    'SetDevDirectorySetting.ScheduledTaskUnregistered'                   = "Tâche planifiée désenregistrée."
+    'SetDevDirectorySetting.ScheduledTaskUnregisterFailed'               = "Échec du désenregistrement de la tâche planifiée : {0}"
 
     # Invoke-DevDirectorySyncSchedule
     'InvokeDevDirectorySyncSchedule.Start'                               = "Démarrage de la synchronisation configurée par le système pour l'ordinateur '{0}'"
-    'InvokeDevDirectorySyncSchedule.NotConfigured.RepositoryListPath'    = "RepositoryListPath n'est pas configuré. Exécutez d'abord Set-DevDirectorySetting."
-    'InvokeDevDirectorySyncSchedule.NotConfigured.LocalDevDirectory'     = "LocalDevDirectory n'est pas configuré. Exécutez d'abord Set-DevDirectorySetting."
+    'InvokeDevDirectorySyncSchedule.NotConfigured.RepositoryListPath'    = "RepositoryListPath n'est pas configuré. Exécutez 'Set-DevDirectorySetting -RepositoryListPath <chemin>' pour configurer le chemin du fichier de liste de référentiels."
+    'InvokeDevDirectorySyncSchedule.NotConfigured.LocalDevDirectory'     = "LocalDevDirectory n'est pas configuré. Exécutez 'Set-DevDirectorySetting -LocalDevDirectory <chemin>' pour configurer le répertoire de développement local."
     'InvokeDevDirectorySyncSchedule.RepositoryListNotFound'              = "Fichier de liste de référentiels non trouvé : '{0}'"
     'InvokeDevDirectorySyncSchedule.FilterApplied'                       = "{0} sur {1} référentiels correspondent au filtre système pour '{2}'"
     'InvokeDevDirectorySyncSchedule.NoMatchingRepositories'              = "Aucun référentiel ne correspond au filtre système pour l'ordinateur '{0}'"
@@ -278,8 +283,8 @@
 
     # Register-DevDirectoryScheduledSync
     'RegisterDevDirectoryScheduledSync.Start'                            = "Création de la tâche planifiée '{0}'"
-    'RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath' = "RepositoryListPath n'est pas configuré. Exécutez d'abord Set-DevDirectorySetting."
-    'RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory'  = "LocalDevDirectory n'est pas configuré. Exécutez d'abord Set-DevDirectorySetting."
+    'RegisterDevDirectoryScheduledSync.NotConfigured.RepositoryListPath' = "RepositoryListPath n'est pas configuré. Exécutez 'Set-DevDirectorySetting -RepositoryListPath <chemin>' pour configurer le chemin du fichier de liste de référentiels."
+    'RegisterDevDirectoryScheduledSync.NotConfigured.LocalDevDirectory'  = "LocalDevDirectory n'est pas configuré. Exécutez 'Set-DevDirectorySetting -LocalDevDirectory <chemin>' pour configurer le répertoire de développement local."
     'RegisterDevDirectoryScheduledSync.Exists'                           = "La tâche planifiée '{0}' existe déjà. Utilisez -Force pour l'écraser."
     'RegisterDevDirectoryScheduledSync.RemovingExisting'                 = "Suppression de la tâche planifiée existante '{0}'"
     'RegisterDevDirectoryScheduledSync.UnregisterFailed'                 = "Échec de la suppression de la tâche planifiée existante '{0}'"

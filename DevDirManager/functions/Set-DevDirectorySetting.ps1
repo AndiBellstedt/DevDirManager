@@ -76,9 +76,9 @@
         Shows what would be saved without making changes.
 
     .NOTES
-        Version   : 2.1.0
+        Version   : 2.2.0
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-30
+        Date      : 2026-01-03
         Keywords  : Configuration, Settings, Sync
 
     .LINK
@@ -145,7 +145,7 @@
 
         if ($PSCmdlet.ParameterSetName -eq "Reset") {
             $target = Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.ShouldProcess.Target"
-            $action = "Reset all settings to default values"
+            $action = Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.ShouldProcess.Reset"
 
             if ($PSCmdlet.ShouldProcess($target, $action)) {
                 # Ensure directory exists.
@@ -302,22 +302,24 @@
                 # Register the scheduled task.
                 try {
                     Register-DevDirectoryScheduledSync -Force
-                    Write-PSFMessage -Level Important -Message "Scheduled task registered for automatic synchronization" -Tag "SetDevDirectorySetting", "ScheduledTask"
+                    #Write-PSFMessage -Level Important -String "SetDevDirectorySetting.ScheduledTaskRegistered" -Tag "SetDevDirectorySetting", "ScheduledTask"
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
                     $currentConfig["AutoSyncEnabled"] = $false
-                    Stop-PSFFunction -Message "Failed to register scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
+                    $errorMessage = (Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.ScheduledTaskRegisterFailed") -f $_.Exception.Message
+                    Stop-PSFFunction -Message $errorMessage -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_ -Cmdlet $pscmdlet
                     return
                 }
             } else {
                 # Unregister the scheduled task.
                 try {
                     Unregister-DevDirectoryScheduledSync
-                    Write-PSFMessage -Level Important -Message "Scheduled task unregistered" -Tag "SetDevDirectorySetting", "ScheduledTask"
+                    #Write-PSFMessage -Level Important -String "SetDevDirectorySetting.ScheduledTaskUnregistered" -Tag "SetDevDirectorySetting", "ScheduledTask"
                 } catch {
                     # Rollback the AutoSyncEnabled setting on failure.
                     $currentConfig["AutoSyncEnabled"] = $true
-                    Stop-PSFFunction -Message "Failed to unregister scheduled task: $_" -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_
+                    $errorMessage = (Get-PSFLocalizedString -Module "DevDirManager" -Name "SetDevDirectorySetting.ScheduledTaskUnregisterFailed") -f $_.Exception.Message
+                    Stop-PSFFunction -Message $errorMessage -Tag "SetDevDirectorySetting", "Error" -EnableException $true -ErrorRecord $_ -Cmdlet $pscmdlet
                     return
                 }
             }
