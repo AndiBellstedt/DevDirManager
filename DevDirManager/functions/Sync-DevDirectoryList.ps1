@@ -210,17 +210,19 @@
             $userName = if ($entry.PSObject.Properties.Match("UserName")) { [string]$entry.UserName } else { $null }
             $userEmail = if ($entry.PSObject.Properties.Match("UserEmail")) { [string]$entry.UserEmail } else { $null }
             $statusDate = if ($entry.PSObject.Properties.Match("StatusDate")) { $entry.StatusDate } else { $null }
+            $isRemoteAccessible = if ($entry.PSObject.Properties.Match("IsRemoteAccessible")) { $entry.IsRemoteAccessible } else { $null }
 
             # Store a lightweight info object for later comparison with local repositories
             $info = [pscustomobject]@{
-                RelativePath     = $relative
-                RemoteUrl        = $remoteUrl
-                RemoteName       = $remoteName
-                OriginalRootPath = $originalRoot
-                OriginalFullPath = $originalFull
-                UserName         = $userName
-                UserEmail        = $userEmail
-                StatusDate       = $statusDate
+                RelativePath       = $relative
+                RemoteUrl          = $remoteUrl
+                RemoteName         = $remoteName
+                OriginalRootPath   = $originalRoot
+                OriginalFullPath   = $originalFull
+                UserName           = $userName
+                UserEmail          = $userEmail
+                StatusDate         = $statusDate
+                IsRemoteAccessible = $isRemoteAccessible
             }
 
             $fileEntriesInfo[$relative] = $info
@@ -339,10 +341,11 @@
                 } else {
                     # Include UserName and UserEmail in the clone object so Restore-DevDirectory can configure them
                     $repositoriesToClone.Add([pscustomobject]@{
-                            RelativePath = $relative
-                            RemoteUrl    = $remoteUrl
-                            UserName     = $info.UserName
-                            UserEmail    = $info.UserEmail
+                            RelativePath       = $relative
+                            RemoteUrl          = $remoteUrl
+                            UserName           = $info.UserName
+                            UserEmail          = $info.UserEmail
+                            IsRemoteAccessible = $info.IsRemoteAccessible
                         })
                 }
 
