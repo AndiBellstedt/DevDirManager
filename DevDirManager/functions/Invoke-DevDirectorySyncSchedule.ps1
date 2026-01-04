@@ -65,9 +65,9 @@
         Syncs repositories, skipping existing ones and showing git output.
 
     .NOTES
-        Version   : 2.0.1
+        Version   : 2.0.2
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-12-30
+        Date      : 2026-01-04
         Keywords  : Git, Sync, Repository, Automation
 
     .LINK
@@ -131,7 +131,7 @@
         #region -- Import and filter repositories
 
         # Import repository list from the configured path.
-        $allRepositoryList = Import-DevDirectoryList -FilePath $repoListPath
+        $allRepositoryList = Import-DevDirectoryList -Path $repoListPath
 
         # Apply system filter to each repository.
         # Each repository can have a SystemFilter property; if absent, defaults to "*" (all systems).
@@ -165,7 +165,7 @@
 
             try {
                 # Export filtered repositories to temporary file.
-                $filteredRepositoryList | Export-DevDirectoryList -FilePath $tempFile -Force
+                $filteredRepositoryList | Export-DevDirectoryList -Path $tempFile
 
                 # Build sync parameters.
                 $syncParams = @{
