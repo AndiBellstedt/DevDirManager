@@ -12,8 +12,11 @@
     $Exclude = ""
 )
 
+
 Write-PSFMessage -Level Important -Message "Starting Tests"
 
+
+#region -- Prepare Environment
 Write-PSFMessage -Level Important -Message "Importing Module"
 
 $global:testroot = $PSScriptRoot
@@ -37,8 +40,10 @@ $totalRun = 0
 $testresults = @()
 $config = [PesterConfiguration]::Default
 $config.TestResult.Enabled = $true
+#endregion Prepare Environment
 
-#region Run General Tests
+
+#region -- Run General Tests
 if ($TestGeneral) {
     Write-PSFMessage -Level Important -Message "Modules imported, proceeding with general tests"
     foreach ($file in (Get-ChildItem "$PSScriptRoot\general" | Where-Object Name -like "*.Tests.ps1")) {
@@ -65,11 +70,12 @@ if ($TestGeneral) {
         }
     }
 }
-#endregion Run General Tests
 
 $global:__pester_data.ScriptAnalyzer | Out-Host
+#endregion Run General Tests
 
-#region Test Commands
+
+#region -- Test Commands
 if ($TestFunctions) {
     Write-PSFMessage -Level Important -Message "Proceeding with individual tests"
     foreach ($file in (Get-ChildItem "$PSScriptRoot\functions" -Recurse -File | Where-Object Name -like "*Tests.ps1")) {
@@ -98,11 +104,17 @@ if ($TestFunctions) {
 }
 #endregion Test Commands
 
+
+#region -- Finalize Results
 $testresults | Sort-Object Describe, Context, Name, Result, Message | Format-List
 
-if ($totalFailed -eq 0) { Write-PSFMessage -Level Critical -Message "All <c='em'>$totalRun</c> tests executed without a single failure!" }
-else { Write-PSFMessage -Level Critical -Message "<c='em'>$totalFailed tests</c> out of <c='sub'>$totalRun</c> tests failed!" }
+if ($totalFailed -eq 0) {
+    Write-PSFMessage -Level Critical -Message "All <c='em'>$totalRun</c> tests executed without a single failure!"
+} else {
+    Write-PSFMessage -Level Critical -Message "<c='em'>$totalFailed tests</c> out of <c='sub'>$totalRun</c> tests failed!"
+}
 
 if ($totalFailed -gt 0) {
     throw "$totalFailed / $totalRun tests failed!"
 }
+#endregion Finalize Results
