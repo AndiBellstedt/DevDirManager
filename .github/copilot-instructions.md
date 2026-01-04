@@ -1,4 +1,8 @@
-﻿# Project specific instructions for GitHub Copilot for the project DevDirManager
+﻿# General information, first things first
+- always read the full instruction file
+- always check for additional personal instruction files and respect them as well
+
+# Project specific instructions for GitHub Copilot for the project DevDirManager
 - This project utilize PSFramework
 - This project is based on a module template from PSFramework Collective, to understand the concept, read more about it [here](https://psframework.org/docs/PSModuleDevelopment/Templates/overview)
 - This project utilize the template 'PSFProject', read the readme.md files in the various subfolders to understand how the template works
