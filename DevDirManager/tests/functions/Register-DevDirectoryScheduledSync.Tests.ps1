@@ -6,14 +6,14 @@ Describe 'Register-DevDirectoryScheduledSync' -Tag 'Unit', 'Automation' {
             $parameters = $command.Parameters
         }
 
-        Context "Parameter: RunAtLogon" {
+        Context "Register-DevDirectoryScheduledSync - Parameter: RunAtLogon" {
             BeforeAll { $p = $parameters['RunAtLogon'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
             It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
 
-        Context "Parameter: Force" {
+        Context "Register-DevDirectoryScheduledSync - Parameter: Force" {
             BeforeAll { $p = $parameters['Force'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }

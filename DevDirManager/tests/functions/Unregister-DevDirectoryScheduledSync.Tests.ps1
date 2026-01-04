@@ -1,6 +1,7 @@
 Describe 'Unregister-DevDirectoryScheduledSync' -Tag 'Unit', 'Automation' {
 
     Context "Parameter Contract" {
+
         BeforeAll {
             $command = Get-Command -Name 'Unregister-DevDirectoryScheduledSync'
             $parameters = $command.Parameters
@@ -13,6 +14,7 @@ Describe 'Unregister-DevDirectoryScheduledSync' -Tag 'Unit', 'Automation' {
             $specificParams = $parameters.Keys | Where-Object { $_ -notin $commonParams }
             $specificParams | Should -BeNullOrEmpty
         }
+
     }
 
     Context 'Functionality' {

@@ -6,7 +6,7 @@ Describe 'Get-DevDirectorySetting' -Tag 'Unit', 'Configuration' {
             $parameters = $command.Parameters
         }
 
-        Context "Parameter: Name" {
+        Context "Get-DevDirectorySetting - Parameter: Name" {
             BeforeAll { $p = $parameters['Name'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [string]" { $p.ParameterType.FullName | Should -Be 'System.String' }

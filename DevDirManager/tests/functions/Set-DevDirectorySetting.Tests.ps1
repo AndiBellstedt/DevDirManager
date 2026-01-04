@@ -1,66 +1,71 @@
 Describe 'Set-DevDirectorySetting' -Tag 'Unit', 'Configuration' {
 
     Context "Parameter Contract" {
+
         BeforeAll {
             $command = Get-Command -Name 'Set-DevDirectorySetting'
             $parameters = $command.Parameters
         }
 
-        Context "Parameter: RepositoryListPath" {
+        Context "Set-DevDirectorySetting - Parameter: RepositoryListPath" {
             BeforeAll { $p = $parameters['RepositoryListPath'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [string]" { $p.ParameterType.FullName | Should -Be 'System.String' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
-            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).ValueFromPipelineByPropertyName | Should -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
+            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).ValueFromPipelineByPropertyName | Should -Contain $true }
         }
 
-        Context "Parameter: LocalDevDirectory" {
+        Context "Set-DevDirectorySetting - Parameter: LocalDevDirectory" {
             BeforeAll { $p = $parameters['LocalDevDirectory'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [string]" { $p.ParameterType.FullName | Should -Be 'System.String' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
-            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).ValueFromPipelineByPropertyName | Should -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
+            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).ValueFromPipelineByPropertyName | Should -Contain $true }
         }
 
-        Context "Parameter: AutoSyncEnabled" {
+        Context "Set-DevDirectorySetting - Parameter: AutoSyncEnabled" {
             BeforeAll { $p = $parameters['AutoSyncEnabled'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [bool]" { $p.ParameterType.FullName | Should -Be 'System.Boolean' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
-            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).ValueFromPipelineByPropertyName | Should -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
+            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).ValueFromPipelineByPropertyName | Should -Contain $true }
         }
 
-        Context "Parameter: SyncIntervalMinutes" {
+        Context "Set-DevDirectorySetting - Parameter: SyncIntervalMinutes" {
             BeforeAll { $p = $parameters['SyncIntervalMinutes'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [int]" { $p.ParameterType.FullName | Should -Be 'System.Int32' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
-            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).ValueFromPipelineByPropertyName | Should -Contain $true }
-            It "Has ValidateRange" { $p.Attributes.Where({$_ -is [System.Management.Automation.ValidateRangeAttribute]}) | Should -Not -BeNullOrEmpty }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
+            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).ValueFromPipelineByPropertyName | Should -Contain $true }
+            It "Has ValidateRange" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ValidateRangeAttribute] }) | Should -Not -BeNullOrEmpty }
         }
 
-        Context "Parameter: Reset" {
+        Context "Set-DevDirectorySetting - Parameter: Reset" {
             BeforeAll { $p = $parameters['Reset'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
-            It "Is Mandatory in Reset set" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Contain $true }
+            It "Is Mandatory in Reset set" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Contain $true }
         }
 
-        Context "Parameter: PassThru" {
+        Context "Set-DevDirectorySetting - Parameter: PassThru" {
             BeforeAll { $p = $parameters['PassThru'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
+
     }
 
     Context 'Parameter Validation' {
+
         It 'Validates SyncIntervalMinutes range' {
             { Set-DevDirectorySetting -SyncIntervalMinutes 0 } | Should -Throw
         }
+
     }
 
     Context 'Functionality' {
+
         BeforeAll {
             # Mock all external dependencies to prevent any real operations.
             Mock 'Get-PSFConfigValue' -ModuleName 'DevDirManager' {
@@ -108,6 +113,7 @@ Describe 'Set-DevDirectorySetting' -Tag 'Unit', 'Configuration' {
             Set-DevDirectorySetting -AutoSyncEnabled $false -Confirm:$false
             Should -Invoke -CommandName 'Unregister-DevDirectoryScheduledSync' -Times 1 -ModuleName 'DevDirManager'
         }
+
     }
 
 }

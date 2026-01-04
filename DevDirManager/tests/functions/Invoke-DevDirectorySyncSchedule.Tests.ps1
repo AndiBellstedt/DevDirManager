@@ -6,28 +6,28 @@ Describe 'Invoke-DevDirectorySyncSchedule' -Tag 'Unit', 'Automation' {
             $parameters = $command.Parameters
         }
 
-        Context "Parameter: Force" {
+        Context "Invoke-DevDirectorySyncSchedule - Parameter: Force" {
             BeforeAll { $p = $parameters['Force'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
             It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
 
-        Context "Parameter: SkipExisting" {
+        Context "Invoke-DevDirectorySyncSchedule - Parameter: SkipExisting" {
             BeforeAll { $p = $parameters['SkipExisting'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
             It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
 
-        Context "Parameter: ShowGitOutput" {
+        Context "Invoke-DevDirectorySyncSchedule - Parameter: ShowGitOutput" {
             BeforeAll { $p = $parameters['ShowGitOutput'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
             It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
 
-        Context "Parameter: PassThru" {
+        Context "Invoke-DevDirectorySyncSchedule - Parameter: PassThru" {
             BeforeAll { $p = $parameters['PassThru'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
