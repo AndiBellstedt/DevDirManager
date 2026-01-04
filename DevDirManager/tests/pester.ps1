@@ -27,7 +27,9 @@ Import-Module "$PSScriptRoot\..\DevDirManager.psm1" -Force
 Import-Module Pester
 
 Write-PSFMessage -Level Important -Message "Creating test result folder"
-$null = New-Item -Path "$PSScriptRoot\..\.." -Name TestResults -ItemType Directory -Force
+$testResultsPath = Join-Path "$PSScriptRoot\..\.." "TestResults"
+$testResultsPath = Join-Path $testResultsPath "PS$($PSVersionTable.PSVersion.Major)"
+$null = New-Item -Path $testResultsPath -ItemType Directory -Force
 
 $totalFailed = 0
 $totalRun = 0
@@ -44,7 +46,7 @@ if ($TestGeneral) {
         if ($file.Name -like $Exclude) { continue }
 
         Write-PSFMessage -Level Significant -Message "  Executing <c='em'>$($file.Name)</c>"
-        $config.TestResult.OutputPath = Join-Path "$PSScriptRoot\..\..\TestResults" "TEST-$($file.BaseName).xml"
+        $config.TestResult.OutputPath = Join-Path $testResultsPath "TEST-$($file.BaseName).xml"
         $config.Run.Path = $file.FullName
         $config.Run.PassThru = $true
         $config.Output.Verbosity = $Output
@@ -75,7 +77,7 @@ if ($TestFunctions) {
         if ($file.Name -like $Exclude) { continue }
 
         Write-PSFMessage -Level Significant -Message "  Executing <c='em'>$($file.Name)</c>"
-        $config.TestResult.OutputPath = Join-Path "$PSScriptRoot\..\..\TestResults" "TEST-$($file.BaseName).xml"
+        $config.TestResult.OutputPath = Join-Path $testResultsPath "TEST-$($file.BaseName).xml"
         $config.Run.Path = $file.FullName
         $config.Run.PassThru = $true
         $config.Output.Verbosity = $Output
