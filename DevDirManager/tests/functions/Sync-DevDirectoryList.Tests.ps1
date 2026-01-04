@@ -101,12 +101,12 @@
 
         It "Should handle PSDrive as DirectoryPath with -WhatIf" {
             $psdrivePath = "$($script:PSDriveName):\SyncRoot"
-            { Sync-DevDirectoryList -DirectoryPath $psdrivePath -RepositoryListPath $script:SyncListPath -WhatIf -InformationAction SilentlyContinue } | Should -Not -Throw
+            { Sync-DevDirectoryList -DirectoryPath $psdrivePath -RepositoryListPath $script:SyncListPath -WhatIf -InformationAction SilentlyContinue *>$null } | Should -Not -Throw
         }
 
         It "Should handle PSDrive as RepositoryListPath with -WhatIf" {
             $psdriveListPath = "$($script:PSDriveName):\sync-list.json"
-            { Sync-DevDirectoryList -DirectoryPath $script:SyncRoot -RepositoryListPath $psdriveListPath -WhatIf -InformationAction SilentlyContinue } | Should -Not -Throw
+            { Sync-DevDirectoryList -DirectoryPath $script:SyncRoot -RepositoryListPath $psdriveListPath -WhatIf -InformationAction SilentlyContinue *>$null } | Should -Not -Throw
         }
 
     }
@@ -118,7 +118,7 @@
             $list = Import-DevDirectoryList -Path $script:SyncListPath
             $list.Count | Should -Be 2
 
-            $whatIfOutput = Sync-DevDirectoryList -DirectoryPath $script:SyncRoot -RepositoryListPath $script:SyncListPath -WhatIf -InformationVariable infoVar -WarningVariable warnVar -Verbose 2>&1
+            $whatIfOutput = Sync-DevDirectoryList -DirectoryPath $script:SyncRoot -RepositoryListPath $script:SyncListPath -WhatIf -InformationVariable infoVar -InformationAction SilentlyContinue -WarningVariable warnVar -WarningAction SilentlyContinue 2>&1
             $allOutput = ($infoVar + $warnVar + $whatIfOutput) | Out-String
 
             # Debug output if empty

@@ -66,12 +66,12 @@
 
             It "Should throw on non-existent path" {
                 $nonExist = Join-Path $TestDrive ("DoesNotExist_" + (Get-Random))
-                { Resolve-NormalizedPath -Path $nonExist -ErrorAction Stop } | Should -Throw
+                { Resolve-NormalizedPath -Path $nonExist -ErrorAction Stop -WarningAction SilentlyContinue } | Should -Throw
             }
 
-            It "Should throw on empty path" { { Resolve-NormalizedPath -Path '' -ErrorAction Stop } | Should -Throw }
+            It "Should throw on empty path" { { Resolve-NormalizedPath -Path '' -ErrorAction Stop -WarningAction SilentlyContinue } | Should -Throw }
 
-            It "Should throw on whitespace-only path" { { Resolve-NormalizedPath -Path '   ' -ErrorAction Stop } | Should -Throw }
+            It "Should throw on whitespace-only path" { { Resolve-NormalizedPath -Path '   ' -ErrorAction Stop -WarningAction SilentlyContinue } | Should -Throw }
 
         }
     }
