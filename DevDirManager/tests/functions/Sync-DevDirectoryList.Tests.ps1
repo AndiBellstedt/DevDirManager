@@ -10,46 +10,46 @@
             BeforeAll { $p = $parameters['DirectoryPath'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [string]" { $p.ParameterType.FullName | Should -Be 'System.String' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
-            It "Has ValidateNotNullOrEmpty" { $p.Attributes.Where({$_ -is [System.Management.Automation.ValidateNotNullOrEmptyAttribute]}) | Should -Not -BeNullOrEmpty }
-            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).ValueFromPipelineByPropertyName | Should -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
+            It "Has ValidateNotNullOrEmpty" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ValidateNotNullOrEmptyAttribute] }) | Should -Not -BeNullOrEmpty }
+            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).ValueFromPipelineByPropertyName | Should -Contain $true }
         }
 
         Context "Parameter: RepositoryListPath" {
             BeforeAll { $p = $parameters['RepositoryListPath'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [string]" { $p.ParameterType.FullName | Should -Be 'System.String' }
-            It "Is Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Contain $true }
-            It "Has ValidateNotNullOrEmpty" { $p.Attributes.Where({$_ -is [System.Management.Automation.ValidateNotNullOrEmptyAttribute]}) | Should -Not -BeNullOrEmpty }
-            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).ValueFromPipelineByPropertyName | Should -Contain $true }
+            It "Is Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Contain $true }
+            It "Has ValidateNotNullOrEmpty" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ValidateNotNullOrEmptyAttribute] }) | Should -Not -BeNullOrEmpty }
+            It "Accepts ValueFromPipelineByPropertyName" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).ValueFromPipelineByPropertyName | Should -Contain $true }
         }
 
         Context "Parameter: Force" {
             BeforeAll { $p = $parameters['Force'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
 
         Context "Parameter: SkipExisting" {
             BeforeAll { $p = $parameters['SkipExisting'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
 
         Context "Parameter: ShowGitOutput" {
             BeforeAll { $p = $parameters['ShowGitOutput'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
 
         Context "Parameter: PassThru" {
             BeforeAll { $p = $parameters['PassThru'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [switch]" { $p.ParameterType.FullName | Should -Be 'System.Management.Automation.SwitchParameter' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
         }
     }
 
@@ -74,7 +74,7 @@
                 FullPath           = (Join-Path $script:SyncRoot "Repo1")
                 RemoteUrl          = "https://github.com/PowerShell/PowerShell.git"
                 RemoteName         = "origin"
-                StatusDate         = (Get-Date)
+                StatusDate         = [DateTime]::Now
                 IsRemoteAccessible = $true
             }
             [PSCustomObject]@{
@@ -84,7 +84,7 @@
                 FullPath           = (Join-Path $script:SyncRoot "Repo2")
                 RemoteUrl          = "https://github.com/nonexistent/repo.git"
                 RemoteName         = "origin"
-                StatusDate         = (Get-Date)
+                StatusDate         = [DateTime]::Now
                 IsRemoteAccessible = $false
             }
         )

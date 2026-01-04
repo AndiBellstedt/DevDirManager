@@ -10,17 +10,17 @@
             BeforeAll { $p = $parameters['Path'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [string]" { $p.ParameterType.FullName | Should -Be 'System.String' }
-            It "Is Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Contain $true }
-            It "Has ValidateNotNullOrEmpty" { $p.Attributes.Where({$_ -is [System.Management.Automation.ValidateNotNullOrEmptyAttribute]}) | Should -Not -BeNullOrEmpty }
+            It "Is Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Contain $true }
+            It "Has ValidateNotNullOrEmpty" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ValidateNotNullOrEmptyAttribute] }) | Should -Not -BeNullOrEmpty }
         }
 
         Context "Parameter: Format" {
             BeforeAll { $p = $parameters['Format'] }
             It "Exists" { $p | Should -Not -BeNullOrEmpty }
             It "Is of type [string]" { $p.ParameterType.FullName | Should -Be 'System.String' }
-            It "Is not Mandatory" { $p.Attributes.Where({$_ -is [System.Management.Automation.ParameterAttribute]}).Mandatory | Should -Not -Contain $true }
+            It "Is not Mandatory" { $p.Attributes.Where({ $_ -is [System.Management.Automation.ParameterAttribute] }).Mandatory | Should -Not -Contain $true }
             It "Has ValidateSet" {
-                $set = $p.Attributes.Where({$_ -is [System.Management.Automation.ValidateSetAttribute]})
+                $set = $p.Attributes.Where({ $_ -is [System.Management.Automation.ValidateSetAttribute] })
                 $set | Should -Not -BeNullOrEmpty
                 $set.ValidValues | Should -Contain "CSV"
                 $set.ValidValues | Should -Contain "JSON"
@@ -44,7 +44,7 @@
                 RemoteUrl          = 'https://github.com/user/repo1.git'
                 UserName           = 'User1'
                 UserEmail          = 'user1@test.com'
-                StatusDate         = Get-Date
+                StatusDate         = [DateTime]::Now
                 IsRemoteAccessible = $true
             }
         )
@@ -68,7 +68,7 @@
             $path = Join-Path $script:TestRoot "test.csv"
             $script:TestRepositories | Export-DevDirectoryList -Path $path -Format CSV
 
-            $imported = Import-DevDirectoryList -Path $path -Format CSV
+            $imported = @(Import-DevDirectoryList -Path $path -Format CSV)
             $imported.Count | Should -Be $script:TestRepositories.Count
             $imported[0].RemoteUrl | Should -Be $script:TestRepositories[0].RemoteUrl
         }
@@ -79,7 +79,7 @@
             $path = Join-Path $script:TestRoot "test.json"
             $script:TestRepositories | Export-DevDirectoryList -Path $path -Format JSON
 
-            $imported = Import-DevDirectoryList -Path $path -Format JSON
+            $imported = @(Import-DevDirectoryList -Path $path -Format JSON)
             $imported.Count | Should -Be $script:TestRepositories.Count
             $imported[0].RemoteUrl | Should -Be $script:TestRepositories[0].RemoteUrl
         }
@@ -90,7 +90,7 @@
             $path = Join-Path $script:TestRoot "test.xml"
             $script:TestRepositories | Export-DevDirectoryList -Path $path -Format XML
 
-            $imported = Import-DevDirectoryList -Path $path -Format XML
+            $imported = @(Import-DevDirectoryList -Path $path -Format XML)
             $imported.Count | Should -Be $script:TestRepositories.Count
             $imported[0].RemoteUrl | Should -Be $script:TestRepositories[0].RemoteUrl
         }
@@ -102,7 +102,7 @@
             $script:TestRepositories | Export-DevDirectoryList -Path $path
 
             $psdrivePath = "$($script:PSDriveName):\psdrive.json"
-            $imported = Import-DevDirectoryList -Path $psdrivePath
+            $imported = @(Import-DevDirectoryList -Path $psdrivePath)
             $imported.Count | Should -Be $script:TestRepositories.Count
         }
     }
