@@ -33,3 +33,4 @@ jobs:
               shell: pwsh
               env:
                   APIKEY: ${{ secrets.ApiKey }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
