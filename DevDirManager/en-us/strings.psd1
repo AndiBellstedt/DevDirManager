@@ -345,4 +345,56 @@
     # Generic / Shared
     'RepositoryList.UsingDefaultFormat'                                  = "Using configured default format '{0}' for file '{1}'."
     'GetDevDirectoryStatusDate.GitFolderMissing'                         = 'No .git folder found at {0}.'
+
+    # Show-DevDirectoryDashboard - Settings Tab
+    'ShowDevDirectoryDashboard.SettingsTabHeader'                        = "Settings"
+    'ShowDevDirectoryDashboard.Settings.ConfigSection'                   = "Configuration"
+    'ShowDevDirectoryDashboard.Settings.RepoListPathLabel'               = "Repository list:"
+    'ShowDevDirectoryDashboard.Settings.LocalDevDirLabel'                = "Local dev folder:"
+    'ShowDevDirectoryDashboard.Settings.AutomationSection'               = "Automation"
+    'ShowDevDirectoryDashboard.Settings.AutoSyncEnabled'                 = "Enable automatic sync"
+    'ShowDevDirectoryDashboard.Settings.SyncIntervalLabel'               = "Sync interval:"
+    'ShowDevDirectoryDashboard.Settings.SyncIntervalUnit'                = "minutes"
+    'ShowDevDirectoryDashboard.Settings.RegisterSyncButton'              = "Register Scheduled Task"
+    'ShowDevDirectoryDashboard.Settings.UnregisterSyncButton'            = "Unregister Scheduled Task"
+    'ShowDevDirectoryDashboard.Settings.StatusSection'                   = "Status"
+    'ShowDevDirectoryDashboard.Settings.ComputerNameLabel'               = "Computer name:"
+    'ShowDevDirectoryDashboard.Settings.TaskStatusLabel'                 = "Scheduled task:"
+    'ShowDevDirectoryDashboard.Settings.LastSyncTimeLabel'               = "Last sync:"
+    'ShowDevDirectoryDashboard.Settings.LastSyncResultLabel'             = "Last result:"
+    'ShowDevDirectoryDashboard.Settings.QuickSyncButton'                 = "Quick Sync"
+    'ShowDevDirectoryDashboard.Settings.SaveButton'                      = "Save Settings"
+    'ShowDevDirectoryDashboard.Settings.ResetButton'                     = "Reset to Defaults"
+    'ShowDevDirectoryDashboard.Settings.NeverSynced'                     = "Never"
+    'ShowDevDirectoryDashboard.Settings.TaskRegistered'                  = "Registered ({0})"
+    'ShowDevDirectoryDashboard.Settings.TaskNotRegistered'               = "Not registered"
+
+    # Show-DevDirectoryDashboard - SystemFilter Column
+    'ShowDevDirectoryDashboard.Column.SystemFilter'                      = "System filter"
+
+    # Show-DevDirectoryDashboard - Settings Tab Status Messages
+    'ShowDevDirectoryDashboard.Status.SavingSettings'                    = "Saving settings..."
+    'ShowDevDirectoryDashboard.Status.SettingsSaved'                     = "Settings saved successfully."
+    'ShowDevDirectoryDashboard.Status.ResettingSettings'                 = "Resetting settings to defaults..."
+    'ShowDevDirectoryDashboard.Status.SettingsReset'                     = "Settings reset to defaults."
+    'ShowDevDirectoryDashboard.Status.RegisteringTask'                   = "Registering scheduled task..."
+    'ShowDevDirectoryDashboard.Status.TaskRegistered'                    = "Scheduled task registered."
+    'ShowDevDirectoryDashboard.Status.UnregisteringTask'                 = "Unregistering scheduled task..."
+    'ShowDevDirectoryDashboard.Status.TaskUnregistered'                  = "Scheduled task unregistered."
+    'ShowDevDirectoryDashboard.Status.QuickSyncStarted'                  = "Starting quick sync for {0}..."
+    'ShowDevDirectoryDashboard.Status.QuickSyncComplete'                 = "Quick sync complete. Repositories synchronized: {0}"
+
+    # Show-DevDirectoryDashboard - Settings Tab Messages
+    'ShowDevDirectoryDashboard.Message.InvalidSyncInterval'              = "Sync interval must be a number between 1 and 1440 minutes."
+    'ShowDevDirectoryDashboard.Message.ConfirmReset'                     = "Are you sure you want to reset all settings to their default values?"
+    'ShowDevDirectoryDashboard.Message.TaskRegistered'                   = "The scheduled sync task has been registered successfully."
+    'ShowDevDirectoryDashboard.Message.TaskUnregistered'                 = "The scheduled sync task has been removed."
+    'ShowDevDirectoryDashboard.Message.QuickSyncComplete'                = "Quick sync completed successfully. {0} repositories synchronized."
+
+    # Show-DevDirectoryDashboard - Settings Tab Log Strings
+    'ShowDevDirectoryDashboard.SettingsSaved'                            = "Settings saved via dashboard."
+    'ShowDevDirectoryDashboard.SettingsReset'                            = "Settings reset to defaults via dashboard."
+    'ShowDevDirectoryDashboard.TaskRegistered'                           = "Scheduled task registered via dashboard."
+    'ShowDevDirectoryDashboard.TaskUnregistered'                         = "Scheduled task unregistered via dashboard."
+    'ShowDevDirectoryDashboard.QuickSyncCompleted'                       = "Quick sync completed via dashboard. Repositories: {0}"
 }

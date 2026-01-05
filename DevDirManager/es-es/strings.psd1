@@ -345,4 +345,56 @@
     'TestDevDirectorySystemFilter.Excluded'                              = "El equipo '{0}' excluido por el filtro '{1}'"
     'TestDevDirectorySystemFilter.InclusionResult'                       = "Resultado de verificación de inclusión del equipo '{0}': {1}"
     'TestDevDirectorySystemFilter.NotExcluded'                           = "El equipo '{0}' no excluido, permitido"
+
+    # Show-DevDirectoryDashboard - Settings Tab
+    'ShowDevDirectoryDashboard.SettingsTabHeader'                        = "Configuración"
+    'ShowDevDirectoryDashboard.Settings.ConfigSection'                   = "Configuración"
+    'ShowDevDirectoryDashboard.Settings.RepoListPathLabel'               = "Lista de repos:"
+    'ShowDevDirectoryDashboard.Settings.LocalDevDirLabel'                = "Carpeta dev local:"
+    'ShowDevDirectoryDashboard.Settings.AutomationSection'               = "Automatización"
+    'ShowDevDirectoryDashboard.Settings.AutoSyncEnabled'                 = "Habilitar sincronización automática"
+    'ShowDevDirectoryDashboard.Settings.SyncIntervalLabel'               = "Intervalo de sync:"
+    'ShowDevDirectoryDashboard.Settings.SyncIntervalUnit'                = "minutos"
+    'ShowDevDirectoryDashboard.Settings.RegisterSyncButton'              = "Crear tarea programada"
+    'ShowDevDirectoryDashboard.Settings.UnregisterSyncButton'            = "Eliminar tarea programada"
+    'ShowDevDirectoryDashboard.Settings.StatusSection'                   = "Estado"
+    'ShowDevDirectoryDashboard.Settings.ComputerNameLabel'               = "Nombre del equipo:"
+    'ShowDevDirectoryDashboard.Settings.TaskStatusLabel'                 = "Tarea programada:"
+    'ShowDevDirectoryDashboard.Settings.LastSyncTimeLabel'               = "Última sync:"
+    'ShowDevDirectoryDashboard.Settings.LastSyncResultLabel'             = "Último resultado:"
+    'ShowDevDirectoryDashboard.Settings.QuickSyncButton'                 = "Sync rápido"
+    'ShowDevDirectoryDashboard.Settings.SaveButton'                      = "Guardar"
+    'ShowDevDirectoryDashboard.Settings.ResetButton'                     = "Restablecer"
+    'ShowDevDirectoryDashboard.Settings.NeverSynced'                     = "Nunca"
+    'ShowDevDirectoryDashboard.Settings.TaskRegistered'                  = "Registrada ({0})"
+    'ShowDevDirectoryDashboard.Settings.TaskNotRegistered'               = "No registrada"
+
+    # Show-DevDirectoryDashboard - SystemFilter Column
+    'ShowDevDirectoryDashboard.Column.SystemFilter'                      = "Filtro de sistema"
+
+    # Show-DevDirectoryDashboard - Settings Tab Status Messages
+    'ShowDevDirectoryDashboard.Status.SavingSettings'                    = "Guardando configuración..."
+    'ShowDevDirectoryDashboard.Status.SettingsSaved'                     = "Configuración guardada correctamente."
+    'ShowDevDirectoryDashboard.Status.ResettingSettings'                 = "Restableciendo configuración predeterminada..."
+    'ShowDevDirectoryDashboard.Status.SettingsReset'                     = "Configuración restablecida a valores predeterminados."
+    'ShowDevDirectoryDashboard.Status.RegisteringTask'                   = "Creando tarea programada..."
+    'ShowDevDirectoryDashboard.Status.TaskRegistered'                    = "Tarea programada creada."
+    'ShowDevDirectoryDashboard.Status.UnregisteringTask'                 = "Eliminando tarea programada..."
+    'ShowDevDirectoryDashboard.Status.TaskUnregistered'                  = "Tarea programada eliminada."
+    'ShowDevDirectoryDashboard.Status.QuickSyncStarted'                  = "Iniciando sync rápido para {0}..."
+    'ShowDevDirectoryDashboard.Status.QuickSyncComplete'                 = "Sync rápido completado. Repositorios sincronizados: {0}"
+
+    # Show-DevDirectoryDashboard - Settings Tab Messages
+    'ShowDevDirectoryDashboard.Message.InvalidSyncInterval'              = "El intervalo de sync debe ser un número entre 1 y 1440 minutos."
+    'ShowDevDirectoryDashboard.Message.ConfirmReset'                     = "¿Está seguro de que desea restablecer toda la configuración a los valores predeterminados?"
+    'ShowDevDirectoryDashboard.Message.TaskRegistered'                   = "La tarea de sincronización programada se ha creado correctamente."
+    'ShowDevDirectoryDashboard.Message.TaskUnregistered'                 = "La tarea de sincronización programada se ha eliminado."
+    'ShowDevDirectoryDashboard.Message.QuickSyncComplete'                = "Sync rápido completado correctamente. {0} repositorios sincronizados."
+
+    # Show-DevDirectoryDashboard - Settings Tab Log Strings
+    'ShowDevDirectoryDashboard.SettingsSaved'                            = "Configuración guardada a través del panel."
+    'ShowDevDirectoryDashboard.SettingsReset'                            = "Configuración restablecida a través del panel."
+    'ShowDevDirectoryDashboard.TaskRegistered'                           = "Tarea programada creada a través del panel."
+    'ShowDevDirectoryDashboard.TaskUnregistered'                         = "Tarea programada eliminada a través del panel."
+    'ShowDevDirectoryDashboard.QuickSyncCompleted'                       = "Sync rápido completado a través del panel. Repositorios: {0}"
 }
