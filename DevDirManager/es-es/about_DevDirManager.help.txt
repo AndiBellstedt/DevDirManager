@@ -68,12 +68,28 @@ FUNCIONES PRINCIPALES
         panel presenta:
 
         - IU con reconocimiento de tema (modo claro/oscuro automático)
-        - Interfaz con pestañas con operaciones de Explorar & Exportar, Importar & Restaurar y Sincronizar
+        - Interfaz con pestañas con cuatro áreas principales:
+          * Explorar & Exportar: Escanear directorios y exportar listas de repositorios
+          * Importar & Restaurar: Cargar listas y clonar repositorios
+          * Sincronizar: Sincronizar directorios con listas de repositorios
+          * Configuración: Configurar ajustes del sistema y automatización
+        - Diseño profesional con alineación consistente de controles
+        - Controles agrupados lógicamente sobre cuadrículas para flujo intuitivo
         - Retroalimentación visual en tiempo real durante operaciones de larga duración
+        - Columna SystemFilter mostrada en todas las cuadrículas para visibilidad
+        - Pre-llenado automático de rutas desde configuración del sistema guardada
         - Columnas de cuadrícula de datos redimensionables y reordenables
         - Sincronización automática de rutas de lista de repositorios entre pestañas
         - Visualización de logotipo en encabezado
         - Localización completa (inglés, español, francés, alemán)
+
+        Características de la pestaña Configuración:
+        - Configurar ruta de lista de repositorios y carpeta de desarrollo local
+        - Activar/desactivar sincronización automática con intervalo configurable
+        - Registrar/desregistrar tareas programadas de Windows para sincronización
+        - Ver estado: nombre del equipo, estado de tarea, última sincronización y resultado
+        - Botón Sincronización Rápida para sincronización inmediata
+        - Botones Guardar Configuración y Restablecer Valores Predeterminados
 
         Parámetros:
         - RootPath: Ruta opcional para rellenar previamente la pestaña Descubrir
@@ -87,6 +103,7 @@ FUNCIONES PRINCIPALES
         - Descubrimiento y gestión interactiva de repositorios
         - Operaciones rápidas de exportación/importación sin sintaxis de línea de comandos
         - Verificación visual de colecciones de repositorios
+        - Configurar y monitorear operaciones de sincronización automatizadas
         - Usuarios que prefieren interfaces gráficas sobre comandos de PowerShell
 
     Descubrimiento de Repositorios
@@ -161,6 +178,25 @@ FUNCIONES PRINCIPALES
         Convierte automáticamente archivos CSV y XML a JSON para compatibilidad
         con Gist. Requiere un Token de Acceso Personal de GitHub con alcance gist.
 
+    Gestión de Filtros
+    ------------------
+    Set-DevDirectoryFilter
+        Establece o borra la propiedad SystemFilter en objetos de repositorio. Esto
+        permite el filtrado por repositorio durante las operaciones Restore-DevDirectory
+        y Sync-DevDirectoryList basado en coincidencia de patrones de nombre de equipo.
+
+        Parámetros:
+        - InputObject: Objetos de repositorio a modificar (admite entrada de pipeline)
+        - SystemFilter: Patrón para coincidir con $env:COMPUTERNAME (ej. 'DEV-*', '!SERVER-*')
+        - Clear: Elimina el SystemFilter (establece a $null, significa "coincidir con todos")
+        - PassThru: Devuelve los objetos de repositorio modificados
+
+        Sintaxis de patrones:
+        - Comodines: 'DEV-*' coincide con cualquier equipo que comience con 'DEV-'
+        - Exclusión: '!SERVER-*' excluye equipos que comienzan con 'SERVER-'
+        - Múltiples patrones: 'DEV-*,LAPTOP-*' coincide con cualquiera de los patrones
+        - Vacío/null: Coincide con todos los sistemas (sin filtrado)
+
 SOPORTE DE FORMATO DE ARCHIVO
     DevDirManager admite tres formatos de archivo para inventarios de repositorios:
 
@@ -205,14 +241,20 @@ TIPOS PERSONALIZADOS
         - UserName [string]: git user.name local del repositorio (desde .git/config)
         - UserEmail [string]: git user.email local del repositorio (desde .git/config)
         - StatusDate [datetime]: Fecha de commit más reciente o fecha de actividad del repositorio
+        - IsRemoteAccessible [bool]: Si la URL remota es accesible ($null si se omitió)
+        - SystemFilter [string]: Patrón de filtro por repositorio para coincidencia de nombre de equipo
 
         La vista de formato personalizada muestra: RelativePath, RemoteName, RemoteUrl,
-        UserName, UserEmail, StatusDate
+        IsRemoteAccessible, SystemFilter, UserName, UserEmail, StatusDate
 
         Nota: UserName y UserEmail se extraen exclusivamente del archivo local
         .git/config del repositorio. Los valores de configuración git global y del
         sistema se ignoran intencionalmente para garantizar un seguimiento preciso
         de identidad por repositorio.
+
+        Patrón SystemFilter: Cuando se establece, el repositorio solo se incluye durante
+        Restore-DevDirectory o Sync-DevDirectoryList si el patrón coincide con
+        $env:COMPUTERNAME. Admite comodines y patrones de exclusión.
 
     DevDirManager.CloneResult
         Representa el resultado de una operación de clonación de repositorio. Contiene:
@@ -320,6 +362,31 @@ EJEMPLOS
         Clona repositorios a D:\Projects. Si los metadatos del repositorio incluyen
         propiedades UserName y UserEmail, estas se configuran automáticamente en cada
         repositorio clonado usando 'git config --local user.name' y 'git config --local user.email'.
+
+    Ejemplo 16: Establecer un filtro de sistema en repositorios
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -SystemFilter 'DEV-*' -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Carga repositorios desde un archivo JSON, establece un filtro para que solo se
+        sincronicen en equipos cuyos nombres comiencen con 'DEV-', y guarda la lista
+        actualizada de vuelta al archivo.
+
+    Ejemplo 17: Establecer diferentes filtros para repositorios específicos
+        PS C:\> $repos = Import-DevDirectoryList -Path C:\Temp\repos.json
+        PS C:\> $repos | Where-Object RelativePath -like 'Work*' | Set-DevDirectoryFilter -SystemFilter 'WORK-PC'
+        PS C:\> $repos | Where-Object RelativePath -like 'Personal*' | Set-DevDirectoryFilter -SystemFilter 'HOME-*'
+        PS C:\> $repos | Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Asigna diferentes patrones SystemFilter a diferentes grupos de repositorios
+        basados en sus rutas, permitiendo control granular sobre qué repos se sincronizan dónde.
+
+    Ejemplo 18: Limpiar filtros de sistema de todos los repositorios
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -Clear -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Elimina el SystemFilter de todos los repositorios, haciendo que se sincronicen en todos los sistemas.
 
 PATRONES DE FLUJO DE TRABAJO
     Flujos de trabajo comunes de DevDirManager:
@@ -493,6 +560,7 @@ VEA TAMBIÉN
     Import-DevDirectoryList
     Restore-DevDirectory
     Sync-DevDirectoryList
+    Set-DevDirectoryFilter
     Publish-DevDirectoryList
     about_PSFramework_Configuration
     Get-PSFConfig

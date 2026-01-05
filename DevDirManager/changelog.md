@@ -1,5 +1,76 @@
 ﻿# Changelog
 
+## [1.5.1] - 2026-01-05
+
+### Overview
+This release adds per-repository system filtering, a new Settings tab in the dashboard, and pre-fill functionality from saved settings. You can now assign a `SystemFilter` pattern directly to individual repositories, manage system configuration through the UI, and enjoy automatic path pre-fill across all tabs. No breaking changes.
+
+### Added
+- **Per-Repository System Filter**
+  - **Set-DevDirectoryFilter**: New cmdlet to set or clear `SystemFilter` patterns on repository objects
+  - Repository objects now include a `SystemFilter` property that can be stored in repository list files (CSV, JSON, XML)
+  - Restore-DevDirectory and Sync-DevDirectoryList now evaluate per-repo `SystemFilter` during operations
+  - Supports wildcards (`*`, `DEV-*`), exclusion patterns (`!SERVER-*`), and multiple patterns with comma separation
+  - Empty or null `SystemFilter` means "match all systems" (no filtering)
+  - Skipped repositories are logged with verbose messages for observability
+
+- **Settings Tab in Dashboard**
+  - New fourth tab in the dashboard for managing system configuration
+  - Configure repository list path and local development folder directly in the UI
+  - Enable/disable automatic sync and set sync interval
+  - Register/unregister Windows scheduled tasks with one click
+  - View sync status: computer name, task registration status, last sync time and result
+  - Quick Sync button to run synchronization using saved settings
+  - Save Settings and Reset to Defaults buttons
+  - Compact horizontal design fits within default window size without scrollbar
+
+- **Pre-fill from Settings**
+  - Discover tab: Path pre-filled from LocalDevDirectory setting
+  - Export tab: Output file path pre-filled from RepositoryListPath setting
+  - Import tab: Repository list path and restore destination pre-filled from settings
+  - Sync tab: Directory and list path pre-filled from settings
+
+- **SystemFilter Column in Dashboard**
+  - All data grids (Discover, Import, Sync) now display the SystemFilter column
+  - Shows per-repository filter patterns for visibility
+
+### Changed
+- **Get-DevDirectory**: Output objects now include the `SystemFilter` property (initialized to `$null`)
+- **Format views**: Table and list views now display the `SystemFilter` column
+
+### Technical Details
+- Uses the existing `Test-DevDirectorySystemFilter` internal function for pattern evaluation
+- Filter patterns are preserved during sync merge operations
+- Settings loaded on-demand when Settings tab is selected
+- Localization support for English, German, French, and Spanish
+
+## [1.5.0] - 2025-12-29
+
+### Overview
+This release introduces system-level configuration management and automated sync capabilities. You can now configure centralized repository lists, filter repositories based on computer names using pattern matching, and schedule automatic synchronization via Windows Task Scheduler. No breaking changes.
+
+### Added
+- **System Configuration Management**
+  - **Get-DevDirectorySetting**: Retrieve current system configuration settings
+  - **Set-DevDirectorySetting**: Configure and persist system-wide settings including repository list path, target path, system filter, and sync interval
+  - Configuration is stored in the PowerShell data folder (`%LOCALAPPDATA%\Microsoft\PowerShell\` or `%LOCALAPPDATA%\Microsoft\Windows\PowerShell\` depending on PowerShell version)
+
+- **Automated Sync Capability**
+  - **Invoke-DevDirectorySync**: Execute synchronization using system configuration with automatic filtering
+  - **Register-DevDirectoryScheduledSync**: Create a Windows scheduled task for automated repository synchronization
+  - **Unregister-DevDirectoryScheduledSync**: Remove the scheduled sync task
+
+- **System Filter Feature**
+  - Filter repositories based on computer names using pattern matching
+  - Supports wildcards (`*`, `DEV-*`), exclusion patterns (`!SERVER-*`), and multiple patterns with comma separation (`DEV-*,LAPTOP-*`)
+  - Enables partial syncing across different development machines based on their names
+
+### Technical Details
+- Configuration automatically loaded during module import
+- Settings persist across PowerShell sessions via JSON file
+- Compatible with Windows PowerShell 5.1 and PowerShell 7+
+- Localization support for English, German, French, and Spanish
+
 ## [1.4.2] - 2025-12-27
 
 ### Overview

@@ -7,11 +7,21 @@
             Builds and displays a comprehensive WPF-based graphical user interface for managing Git repositories with DevDirManager.
 
             The dashboard provides a modern, theme-aware interface with automatic light/dark mode detection based on Windows system settings.
-            It features three main operational tabs that consolidate all DevDirManager functionality:
+            It features four main operational tabs that consolidate all DevDirManager functionality:
 
             - Discover & Export: Scan directories to discover Git repositories and export their metadata to JSON, CSV, or XML files
             - Import & Restore: Load repository lists from files and restore (clone) repositories to a target destination
             - Sync: Synchronize a directory's repositories with a reference list, creating missing repositories and validating existing ones
+            - Settings: Configure system-wide settings for automated synchronization, manage scheduled tasks, and perform quick sync operations
+
+            The Settings tab provides access to:
+            - Repository list path and local development directory configuration
+            - Automatic sync scheduling with configurable intervals
+            - Windows Task Scheduler integration (register/unregister scheduled sync tasks)
+            - Quick Sync functionality using system settings with per-repository SystemFilter support
+            - Status information including computer name, last sync time, and sync results
+
+            All grids now display the SystemFilter column, showing which repositories have computer-specific filter patterns configured.
 
             The dashboard includes real-time visual feedback during long-running operations, automatic path synchronization between tabs,
             and comprehensive localization support for English, Spanish, French, and German languages.
@@ -56,10 +66,10 @@
             Constructs the dashboard without displaying it, programmatically sets the source path to "C:\Development", triggers the scan operation, and then displays the window with results already loaded.
 
         .NOTES
-            Version   : 1.2.1
+            Version   : 1.3.2
             Author    : Andi Bellstedt, Copilot
-            Date      : 2025-12-27
-            Keywords  : Dashboard, UI, WPF, Repository, Management
+            Date      : 2026-01-05
+            Keywords  : Dashboard, UI, WPF, Repository, Management, Settings, Automation
 
         .LINK
             https://github.com/AndiBellstedt/DevDirManager
@@ -232,6 +242,7 @@
             DiscoverScanButton               = $window.FindName('DiscoverScanButton')
             DiscoverGrid                     = $window.FindName('DiscoverGrid')
             DiscoverRelativePathColumn       = $window.FindName('DiscoverRelativePathColumn')
+            DiscoverSystemFilterColumn       = $window.FindName('DiscoverSystemFilterColumn')
             DiscoverRemoteNameColumn         = $window.FindName('DiscoverRemoteNameColumn')
             DiscoverRemoteUrlColumn          = $window.FindName('DiscoverRemoteUrlColumn')
             DiscoverIsRemoteAccessibleColumn = $window.FindName('DiscoverIsRemoteAccessibleColumn')
@@ -252,6 +263,7 @@
             ImportLoadButton                 = $window.FindName('ImportLoadButton')
             ImportGrid                       = $window.FindName('ImportGrid')
             ImportRelativePathColumn         = $window.FindName('ImportRelativePathColumn')
+            ImportSystemFilterColumn         = $window.FindName('ImportSystemFilterColumn')
             ImportRemoteUrlColumn            = $window.FindName('ImportRemoteUrlColumn')
             ImportIsRemoteAccessibleColumn   = $window.FindName('ImportIsRemoteAccessibleColumn')
             ImportUserNameColumn             = $window.FindName('ImportUserNameColumn')
@@ -278,10 +290,36 @@
             SyncWhatIfCheckBox               = $window.FindName('SyncWhatIfCheckBox')
             SyncGrid                         = $window.FindName('SyncGrid')
             SyncRelativePathColumn           = $window.FindName('SyncRelativePathColumn')
+            SyncSystemFilterColumn           = $window.FindName('SyncSystemFilterColumn')
             SyncRemoteUrlColumn              = $window.FindName('SyncRemoteUrlColumn')
             SyncIsRemoteAccessibleColumn     = $window.FindName('SyncIsRemoteAccessibleColumn')
             SyncStatusDateColumn             = $window.FindName('SyncStatusDateColumn')
             SyncSummaryText                  = $window.FindName('SyncSummaryText')
+            # Settings Tab Controls
+            SettingsTabHeader                = $window.FindName('SettingsTabHeader')
+            SettingsRepoListPathLabel        = $window.FindName('SettingsRepoListPathLabel')
+            SettingsRepoListPathBox          = $window.FindName('SettingsRepoListPathBox')
+            SettingsRepoListPathBrowseButton = $window.FindName('SettingsRepoListPathBrowseButton')
+            SettingsLocalDevDirLabel         = $window.FindName('SettingsLocalDevDirLabel')
+            SettingsLocalDevDirBox           = $window.FindName('SettingsLocalDevDirBox')
+            SettingsLocalDevDirBrowseButton  = $window.FindName('SettingsLocalDevDirBrowseButton')
+            SettingsAutoSyncEnabledCheckBox  = $window.FindName('SettingsAutoSyncEnabledCheckBox')
+            SettingsSyncIntervalLabel        = $window.FindName('SettingsSyncIntervalLabel')
+            SettingsSyncIntervalBox          = $window.FindName('SettingsSyncIntervalBox')
+            SettingsSyncIntervalUnitLabel    = $window.FindName('SettingsSyncIntervalUnitLabel')
+            SettingsRegisterSyncButton       = $window.FindName('SettingsRegisterSyncButton')
+            SettingsUnregisterSyncButton     = $window.FindName('SettingsUnregisterSyncButton')
+            SettingsComputerNameLabel        = $window.FindName('SettingsComputerNameLabel')
+            SettingsComputerNameValue        = $window.FindName('SettingsComputerNameValue')
+            SettingsTaskStatusLabel          = $window.FindName('SettingsTaskStatusLabel')
+            SettingsTaskStatusValue          = $window.FindName('SettingsTaskStatusValue')
+            SettingsLastSyncTimeLabel        = $window.FindName('SettingsLastSyncTimeLabel')
+            SettingsLastSyncTimeValue        = $window.FindName('SettingsLastSyncTimeValue')
+            SettingsLastSyncResultLabel      = $window.FindName('SettingsLastSyncResultLabel')
+            SettingsLastSyncResultValue      = $window.FindName('SettingsLastSyncResultValue')
+            SettingsQuickSyncButton          = $window.FindName('SettingsQuickSyncButton')
+            SettingsSaveButton               = $window.FindName('SettingsSaveButton')
+            SettingsResetButton              = $window.FindName('SettingsResetButton')
         }
 
         $state = [ordered]@{
@@ -374,6 +412,7 @@
         $controls.DiscoverBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
         $controls.DiscoverScanButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ScanButton')[0]
         $controls.DiscoverRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.DiscoverSystemFilterColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.SystemFilter')[0]
         $controls.DiscoverRemoteNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteName')[0]
         $controls.DiscoverRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
         $controls.DiscoverIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
@@ -389,6 +428,7 @@
         $controls.ImportBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
         $controls.ImportLoadButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.ImportLoadButton')[0]
         $controls.ImportRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.ImportSystemFilterColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.SystemFilter')[0]
         $controls.ImportRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
         $controls.ImportIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
         $controls.ImportUserNameColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.UserName')[0]
@@ -410,9 +450,29 @@
         $controls.SyncShowGitOutputCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncShowGitOutput')[0]
         $controls.SyncWhatIfCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.SyncWhatIf')[0]
         $controls.SyncRelativePathColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RelativePath')[0]
+        $controls.SyncSystemFilterColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.SystemFilter')[0]
         $controls.SyncRemoteUrlColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.RemoteUrl')[0]
         $controls.SyncIsRemoteAccessibleColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.IsRemoteAccessible')[0]
         $controls.SyncStatusDateColumn.Header = $getLocalized.Invoke('ShowDevDirectoryDashboard.Column.StatusDate')[0]
+
+        # Settings Tab Localization
+        $controls.SettingsTabHeader.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.SettingsTabHeader')[0]
+        $controls.SettingsRepoListPathLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.RepoListPathLabel')[0]
+        $controls.SettingsRepoListPathBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.SettingsLocalDevDirLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.LocalDevDirLabel')[0]
+        $controls.SettingsLocalDevDirBrowseButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.BrowseButton')[0]
+        $controls.SettingsAutoSyncEnabledCheckBox.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.AutoSyncEnabled')[0]
+        $controls.SettingsSyncIntervalLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.SyncIntervalLabel')[0]
+        $controls.SettingsSyncIntervalUnitLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.SyncIntervalUnit')[0]
+        $controls.SettingsRegisterSyncButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.RegisterSyncButton')[0]
+        $controls.SettingsUnregisterSyncButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.UnregisterSyncButton')[0]
+        $controls.SettingsComputerNameLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.ComputerNameLabel')[0]
+        $controls.SettingsTaskStatusLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.TaskStatusLabel')[0]
+        $controls.SettingsLastSyncTimeLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.LastSyncTimeLabel')[0]
+        $controls.SettingsLastSyncResultLabel.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.LastSyncResultLabel')[0]
+        $controls.SettingsQuickSyncButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.QuickSyncButton')[0]
+        $controls.SettingsSaveButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.SaveButton')[0]
+        $controls.SettingsResetButton.Content = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.ResetButton')[0]
 
         $setStatus.Invoke('ShowDevDirectoryDashboard.Status.Ready', @()[0])
         $controls.DiscoverSummaryText.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.DiscoverSummaryTemplate', @(0)[0])
@@ -436,6 +496,36 @@
         } catch {
             Write-PSFMessage -Level Warning -Message "Failed to load UI logo/icon: $($_.Exception.Message)" -Tag 'Asset', 'Logo' -PScmdlet $PSCmdlet
         }
+
+        #region -- Pre-fill tabs from settings file
+        # If settings exist, pre-populate the Discover, Import, and Sync tabs with default values.
+        try {
+            $settingsPath = Get-PSFConfigValue -FullName "DevDirManager.SettingsPath"
+            if (Test-Path -Path $settingsPath -PathType Leaf) {
+                $preSettings = Get-DevDirectorySetting -ErrorAction SilentlyContinue
+
+                # Pre-fill LocalDevDirectory (used in Discover tab path, Import restore destination, and Sync directory).
+                if ($preSettings.LocalDevDirectory -and -not $RootPath) {
+                    $controls.DiscoverPathBox.Text = $preSettings.LocalDevDirectory
+                }
+                if ($preSettings.LocalDevDirectory) {
+                    $controls.RestoreDestinationBox.Text = $preSettings.LocalDevDirectory
+                    $controls.SyncDirectoryBox.Text = $preSettings.LocalDevDirectory
+                }
+
+                # Pre-fill RepositoryListPath (used in Export, Import and Sync tabs).
+                if ($preSettings.RepositoryListPath) {
+                    $controls.ExportPathBox.Text = $preSettings.RepositoryListPath
+                    $controls.ImportPathBox.Text = $preSettings.RepositoryListPath
+                    $controls.SyncListPathBox.Text = $preSettings.RepositoryListPath
+                }
+
+                Write-PSFMessage -Level Verbose -Message "Pre-filled tabs from settings: LocalDevDirectory='$($preSettings.LocalDevDirectory)', RepositoryListPath='$($preSettings.RepositoryListPath)'" -Tag 'ShowDevDirectoryDashboard', 'Settings'
+            }
+        } catch {
+            Write-PSFMessage -Level Warning -Message "Failed to pre-fill tabs from settings: $($_.Exception.Message)" -Tag 'ShowDevDirectoryDashboard', 'Settings'
+        }
+        #endregion Pre-fill tabs from settings file
 
         if ($RootPath) {
             $controls.DiscoverPathBox.Text = $RootPath
@@ -827,6 +917,251 @@
                         }
                     })[0]
             })
+
+        #region -- Settings Tab Functionality
+
+        # Helper function to load current settings into the Settings tab controls.
+        $loadSettingsToUI = {
+            try {
+                # Check if settings file exists by trying to get settings.
+                $settingsPath = Get-PSFConfigValue -FullName "DevDirManager.SettingsPath"
+                $settingsExist = Test-Path -Path $settingsPath -PathType Leaf
+
+                if ($settingsExist) {
+                    $currentSettings = Get-DevDirectorySetting
+                    $controls.SettingsRepoListPathBox.Text = if ($currentSettings.RepositoryListPath) { $currentSettings.RepositoryListPath } else { '' }
+                    $controls.SettingsLocalDevDirBox.Text = if ($currentSettings.LocalDevDirectory) { $currentSettings.LocalDevDirectory } else { '' }
+                    $controls.SettingsAutoSyncEnabledCheckBox.IsChecked = $currentSettings.AutoSyncEnabled
+                    $controls.SettingsSyncIntervalBox.Text = [string]$currentSettings.SyncIntervalMinutes
+
+                    # Status info.
+                    $controls.SettingsLastSyncTimeValue.Text = if ($currentSettings.LastSyncTime) {
+                        $currentSettings.LastSyncTime.ToString('yyyy-MM-dd HH:mm:ss')
+                    } else {
+                        $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.NeverSynced')[0]
+                    }
+                    $controls.SettingsLastSyncResultValue.Text = if ($currentSettings.LastSyncResult) {
+                        $currentSettings.LastSyncResult
+                    } else {
+                        '—'
+                    }
+                } else {
+                    # Defaults when no settings file exists.
+                    $controls.SettingsRepoListPathBox.Text = ''
+                    $controls.SettingsLocalDevDirBox.Text = ''
+                    $controls.SettingsAutoSyncEnabledCheckBox.IsChecked = $false
+                    $controls.SettingsSyncIntervalBox.Text = '360'
+                    $controls.SettingsLastSyncTimeValue.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.NeverSynced')[0]
+                    $controls.SettingsLastSyncResultValue.Text = '—'
+                }
+
+                # Computer name (always available).
+                $controls.SettingsComputerNameValue.Text = $env:COMPUTERNAME
+
+                # Check scheduled task status.
+                $taskName = Get-PSFConfigValue -FullName "DevDirManager.ScheduledTaskName"
+                $existingTask = Get-ScheduledTask -TaskPath "\" -TaskName $taskName -ErrorAction SilentlyContinue
+                if ($existingTask) {
+                    $taskState = $existingTask.State
+                    $controls.SettingsTaskStatusValue.Text = $formatLocalized.Invoke('ShowDevDirectoryDashboard.Settings.TaskRegistered', @($taskState))[0]
+                } else {
+                    $controls.SettingsTaskStatusValue.Text = $getLocalized.Invoke('ShowDevDirectoryDashboard.Settings.TaskNotRegistered')[0]
+                }
+            } catch {
+                Write-PSFMessage -Level Warning -Message "Failed to load settings: $($_.Exception.Message)" -Tag 'ShowDevDirectoryDashboard', 'Settings'
+            }
+        }
+
+        # Load settings when Settings tab is selected.
+        $controls.MainTabControl.Add_SelectionChanged({
+                # Event handler parameters are implicitly available but unused here.
+                # Only respond to tab changes on MainTabControl itself.
+                if ($args[1].OriginalSource -eq $controls.MainTabControl) {
+                    $selectedTab = $controls.MainTabControl.SelectedItem
+                    $tabHeader = $selectedTab.Header
+                    if ($tabHeader -and $tabHeader.Name -eq 'SettingsTabHeader') {
+                        $loadSettingsToUI.Invoke()
+                    }
+                }
+            })
+
+        # Browse buttons for Settings tab.
+        $controls.SettingsRepoListPathBrowseButton.Add_Click({
+                $selected = $pickOpenFile.Invoke($controls.SettingsRepoListPathBox.Text)[0]
+                if ($selected) {
+                    $controls.SettingsRepoListPathBox.Text = $selected
+                }
+            })
+
+        $controls.SettingsLocalDevDirBrowseButton.Add_Click({
+                $selected = $pickFolder.Invoke($controls.SettingsLocalDevDirBox.Text)[0]
+                if ($selected) {
+                    $controls.SettingsLocalDevDirBox.Text = $selected
+                }
+            })
+
+        # Save Settings button.
+        $controls.SettingsSaveButton.Add_Click({
+                $runAsync.Invoke($controls.SettingsSaveButton, {
+                        try {
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SavingSettings', @())
+
+                            $saveParams = @{}
+
+                            $repoListPath = $controls.SettingsRepoListPathBox.Text
+                            if (-not [string]::IsNullOrWhiteSpace($repoListPath)) {
+                                $saveParams.RepositoryListPath = $repoListPath
+                            }
+
+                            $localDevDir = $controls.SettingsLocalDevDirBox.Text
+                            if (-not [string]::IsNullOrWhiteSpace($localDevDir)) {
+                                $saveParams.LocalDevDirectory = $localDevDir
+                            }
+
+                            $saveParams.AutoSyncEnabled = [bool]$controls.SettingsAutoSyncEnabledCheckBox.IsChecked
+
+                            $intervalText = $controls.SettingsSyncIntervalBox.Text
+                            if (-not [string]::IsNullOrWhiteSpace($intervalText)) {
+                                $intervalValue = 0
+                                if ([int]::TryParse($intervalText, [ref]$intervalValue) -and $intervalValue -ge 1 -and $intervalValue -le 1440) {
+                                    $saveParams.SyncIntervalMinutes = $intervalValue
+                                } else {
+                                    [System.Windows.MessageBox]::Show(
+                                        $window,
+                                        $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.InvalidSyncInterval')[0],
+                                        $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0],
+                                        [System.Windows.MessageBoxButton]::OK,
+                                        [System.Windows.MessageBoxImage]::Warning
+                                    ) | Out-Null
+                                    return
+                                }
+                            }
+
+                            if ($saveParams.Count -gt 0) {
+                                Set-DevDirectorySetting @saveParams -ErrorAction Stop
+                            }
+
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SettingsSaved', @())
+                            $loadSettingsToUI.Invoke()
+
+                            Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.SettingsSaved' -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                        } catch {
+                            Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                            [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                        }
+                    })[0]
+            })
+
+        # Reset Settings button.
+        $controls.SettingsResetButton.Add_Click({
+                $result = [System.Windows.MessageBox]::Show(
+                    $window,
+                    $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.ConfirmReset')[0],
+                    $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0],
+                    [System.Windows.MessageBoxButton]::YesNo,
+                    [System.Windows.MessageBoxImage]::Question
+                )
+
+                if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+                    $runAsync.Invoke($controls.SettingsResetButton, {
+                            try {
+                                $setStatus.Invoke('ShowDevDirectoryDashboard.Status.ResettingSettings', @())
+                                Set-DevDirectorySetting -Reset -ErrorAction Stop
+                                $setStatus.Invoke('ShowDevDirectoryDashboard.Status.SettingsReset', @())
+                                $loadSettingsToUI.Invoke()
+                                Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.SettingsReset' -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                            } catch {
+                                Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                                $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                                [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                            }
+                        })[0]
+                }
+            })
+
+        # Register Scheduled Sync button.
+        $controls.SettingsRegisterSyncButton.Add_Click({
+                $runAsync.Invoke($controls.SettingsRegisterSyncButton, {
+                        try {
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.RegisteringTask', @())
+                            Register-DevDirectoryScheduledSync -Force -ErrorAction Stop
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.TaskRegistered', @())
+                            $loadSettingsToUI.Invoke()
+
+                            [System.Windows.MessageBox]::Show(
+                                $window,
+                                $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.TaskRegistered')[0],
+                                $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0],
+                                [System.Windows.MessageBoxButton]::OK,
+                                [System.Windows.MessageBoxImage]::Information
+                            ) | Out-Null
+
+                            Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.TaskRegistered' -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                        } catch {
+                            Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                            [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                        }
+                    })[0]
+            })
+
+        # Unregister Scheduled Sync button.
+        $controls.SettingsUnregisterSyncButton.Add_Click({
+                $runAsync.Invoke($controls.SettingsUnregisterSyncButton, {
+                        try {
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.UnregisteringTask', @())
+                            Unregister-DevDirectoryScheduledSync -ErrorAction Stop
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.TaskUnregistered', @())
+                            $loadSettingsToUI.Invoke()
+
+                            [System.Windows.MessageBox]::Show(
+                                $window,
+                                $getLocalized.Invoke('ShowDevDirectoryDashboard.Message.TaskUnregistered')[0],
+                                $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0],
+                                [System.Windows.MessageBoxButton]::OK,
+                                [System.Windows.MessageBoxImage]::Information
+                            ) | Out-Null
+
+                            Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.TaskUnregistered' -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                        } catch {
+                            Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                            [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                        }
+                    })[0]
+            })
+
+        # Quick Sync button - uses system configuration to sync.
+        $controls.SettingsQuickSyncButton.Add_Click({
+                $runAsync.Invoke($controls.SettingsQuickSyncButton, {
+                        try {
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.QuickSyncStarted', @($env:COMPUTERNAME))
+
+                            $syncResult = Invoke-DevDirectorySyncSchedule -PassThru -ErrorAction Stop
+
+                            $syncCount = ($syncResult | Measure-Object).Count
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.QuickSyncComplete', @($syncCount))
+                            $loadSettingsToUI.Invoke()
+
+                            [System.Windows.MessageBox]::Show(
+                                $window,
+                                $formatLocalized.Invoke('ShowDevDirectoryDashboard.Message.QuickSyncComplete', @($syncCount))[0],
+                                $getLocalized.Invoke('ShowDevDirectoryDashboard.InfoTitle')[0],
+                                [System.Windows.MessageBoxButton]::OK,
+                                [System.Windows.MessageBoxImage]::Information
+                            ) | Out-Null
+
+                            Write-PSFMessage -Level Verbose -String 'ShowDevDirectoryDashboard.QuickSyncCompleted' -StringValues @($syncCount) -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                        } catch {
+                            Write-PSFMessage -Level Error -Message $_.Exception.Message -ErrorRecord $_ -Tag 'ShowDevDirectoryDashboard', 'Settings'
+                            $setStatus.Invoke('ShowDevDirectoryDashboard.Status.OperationFailed', @($_.Exception.Message)[0])
+                            [System.Windows.MessageBox]::Show($window, $_.Exception.Message, $getLocalized.Invoke('ShowDevDirectoryDashboard.ErrorTitle')[0], [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error) | Out-Null
+                        }
+                    })[0]
+            })
+
+        #endregion Settings Tab Functionality
 
         if ($showWindowResolved) {
             $null = $window.ShowDialog()

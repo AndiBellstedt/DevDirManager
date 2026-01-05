@@ -83,4 +83,32 @@
             <TypeName>PSFramework.Serialization.SerializationTypeConverter</TypeName>
         </TypeConverter>
     </Type>
+
+    <!-- DevDirManager.SystemSetting -->
+    <Type>
+        <Name>Deserialized.DevDirManager.SystemSetting</Name>
+        <Members>
+            <PropertySet>
+                <Name>TargetTypeForDeserialization</Name>
+                <ReferencedProperties>
+                    <Name>DevDirManager.SystemSetting</Name>
+                </ReferencedProperties>
+            </PropertySet>
+        </Members>
+    </Type>
+    <Type>
+        <Name>DevDirManager.SystemSetting</Name>
+        <Members>
+            <CodeProperty IsHidden="true">
+                <Name>SerializationData</Name>
+                <GetCodeReference>
+                    <TypeName>PSFramework.Serialization.SerializationTypeConverter</TypeName>
+                    <MethodName>GetSerializationData</MethodName>
+                </GetCodeReference>
+            </CodeProperty>
+        </Members>
+        <TypeConverter>
+            <TypeName>PSFramework.Serialization.SerializationTypeConverter</TypeName>
+        </TypeConverter>
+    </Type>
 </Types>

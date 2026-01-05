@@ -326,6 +326,7 @@
                                 <DataGrid x:Name="DiscoverGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True" ColumnHeaderHeight="34">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn x:Name="DiscoverRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="DiscoverSystemFilterColumn" Binding="{Binding SystemFilter}" Width="Auto" MinWidth="100" />
                                         <DataGridTextColumn x:Name="DiscoverRemoteNameColumn" Binding="{Binding RemoteName}" Width="Auto" MinWidth="100" />
                                         <DataGridTextColumn x:Name="DiscoverRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
                                         <DataGridTextColumn x:Name="DiscoverIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
@@ -394,6 +395,7 @@
                                 <DataGrid x:Name="ImportGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn x:Name="ImportRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="ImportSystemFilterColumn" Binding="{Binding SystemFilter}" Width="Auto" MinWidth="100" />
                                         <DataGridTextColumn x:Name="ImportRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
                                         <DataGridTextColumn x:Name="ImportIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
                                         <DataGridTextColumn x:Name="ImportUserNameColumn" Binding="{Binding UserName}" Width="Auto" MinWidth="120" />
@@ -458,6 +460,7 @@
                                 <DataGrid x:Name="SyncGrid" GridLinesVisibility="None" CanUserResizeColumns="True" CanUserReorderColumns="True">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn x:Name="SyncRelativePathColumn" Binding="{Binding RelativePath}" Width="Auto" MinWidth="100" />
+                                        <DataGridTextColumn x:Name="SyncSystemFilterColumn" Binding="{Binding SystemFilter}" Width="Auto" MinWidth="100" />
                                         <DataGridTextColumn x:Name="SyncRemoteUrlColumn" Binding="{Binding RemoteUrl}" Width="*" MinWidth="200" />
                                         <DataGridTextColumn x:Name="SyncIsRemoteAccessibleColumn" Binding="{Binding IsRemoteAccessible}" Width="Auto" MinWidth="120" />
                                         <DataGridTextColumn x:Name="SyncStatusDateColumn" Binding="{Binding StatusDate}" Width="Auto" MinWidth="140" />
@@ -466,6 +469,101 @@
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
+                </TabItem>
+
+                <!-- Settings Tab -->
+                <TabItem>
+                    <TabItem.Header>
+                        <TextBlock x:Name="SettingsTabHeader" />
+                    </TabItem.Header>
+                    <StackPanel Margin="28,20">
+                        <!-- Configuration & Automation Section (Combined) -->
+                        <Border Background="{DynamicResource Brush.Surface}" CornerRadius="8" Padding="16,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="220" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <!-- Row 0: Repository List Path + Auto-Sync Enabled -->
+                                <TextBlock x:Name="SettingsRepoListPathLabel" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
+                                <TextBox x:Name="SettingsRepoListPathBox" Grid.Row="0" Grid.Column="1" MinWidth="200" />
+                                <Button x:Name="SettingsRepoListPathBrowseButton" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" />
+                                <CheckBox x:Name="SettingsAutoSyncEnabledCheckBox" Grid.Row="0" Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Left" />
+
+                                <!-- Row 1: Local Dev Directory + Sync Interval -->
+                                <TextBlock x:Name="SettingsLocalDevDirLabel" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" Margin="0,10,0,0" />
+                                <TextBox x:Name="SettingsLocalDevDirBox" Grid.Row="1" Grid.Column="1" MinWidth="200" Margin="0,10,12,0" />
+                                <Button x:Name="SettingsLocalDevDirBrowseButton" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Margin="8,10,0,0" />
+                                <StackPanel Grid.Row="1" Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,10,0,0">
+                                    <TextBlock x:Name="SettingsSyncIntervalLabel" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" Margin="0,0,8,0" />
+                                    <TextBox x:Name="SettingsSyncIntervalBox" Width="60" />
+                                    <TextBlock x:Name="SettingsSyncIntervalUnitLabel" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" Margin="6,0,0,0" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Status Section -->
+                        <Border Background="{DynamicResource Brush.Surface}" CornerRadius="8" Padding="16,12" Margin="0,12,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="32" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Status Row: Computer | Task Status | Last Sync + Result -->
+                                <TextBlock x:Name="SettingsComputerNameLabel" Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" Margin="0,0,6,0" />
+                                <TextBlock x:Name="SettingsComputerNameValue" Grid.Column="1" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" FontWeight="SemiBold" />
+
+                                <TextBlock x:Name="SettingsTaskStatusLabel" Grid.Column="3" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" Margin="0,0,6,0" />
+                                <TextBlock x:Name="SettingsTaskStatusValue" Grid.Column="4" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
+
+                                <TextBlock x:Name="SettingsLastSyncTimeLabel" Grid.Column="6" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" Margin="0,0,6,0" />
+                                <TextBlock x:Name="SettingsLastSyncTimeValue" Grid.Column="7" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
+
+                                <TextBlock x:Name="SettingsLastSyncResultLabel" Grid.Column="9" VerticalAlignment="Center" Foreground="{DynamicResource Brush.SecondaryText}" Margin="0,0,6,0" />
+                                <TextBlock x:Name="SettingsLastSyncResultValue" Grid.Column="10" VerticalAlignment="Center" Foreground="{DynamicResource Brush.PrimaryText}" />
+                            </Grid>
+                        </Border>
+
+                        <!-- Action Buttons Row -->
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Task Management Buttons (Left) -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <Button x:Name="SettingsRegisterSyncButton" MinWidth="140" Margin="0,0,8,0" />
+                                <Button x:Name="SettingsUnregisterSyncButton" MinWidth="140" />
+                            </StackPanel>
+
+                            <!-- Settings Actions (Right) -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <Button x:Name="SettingsQuickSyncButton" MinWidth="100" Margin="0,0,8,0" />
+                                <Button x:Name="SettingsSaveButton" MinWidth="100" Margin="0,0,8,0" />
+                                <Button x:Name="SettingsResetButton" MinWidth="100" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
                 </TabItem>
             </TabControl>
         </Border>

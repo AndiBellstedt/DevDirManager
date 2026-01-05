@@ -55,9 +55,9 @@
         each repository found and remote accessibility checks.
 
     .NOTES
-        Version   : 1.3.4
+        Version   : 1.3.5
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-09
+        Date      : 2026-01-05
         Keywords  : Git, Inventory, Repository
 
     .LINK
@@ -169,6 +169,7 @@
                         UserEmail          = $userInfo.UserEmail
                         StatusDate         = $statusDate
                         IsRemoteAccessible = $isRemoteAccessible
+                        SystemFilter       = $null  # Per-repo filter pattern (e.g., 'DEV-*', '!SERVER-*')
                     })
 
                 # Do NOT descend into subdirectories of a repository (treat repo as a leaf node)

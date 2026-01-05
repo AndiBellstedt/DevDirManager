@@ -67,12 +67,28 @@ KERNFUNKTIONEN
         Dashboard bietet:
 
         - Themen-bewusste Benutzeroberfläche (automatischer Hell-/Dunkelmodus)
-        - Registerkarten-Oberfläche mit Entdecken & Exportieren-, Importieren & Wiederherstellen- und Sync-Vorgängen
+        - Registerkarten-Oberfläche mit vier Hauptbereichen:
+          * Entdecken & Exportieren: Verzeichnisse scannen und Repository-Listen exportieren
+          * Importieren & Wiederherstellen: Listen laden und Repositories klonen
+          * Synchronisieren: Verzeichnisse mit Repository-Listen synchronisieren
+          * Einstellungen: Systemeinstellungen und Automatisierung konfigurieren
+        - Professionelles Layout mit konsistenter Steuerungsausrichtung
+        - Steuerelemente logisch über Datenrastern gruppiert für intuitiven Workflow
         - Visuelles Echtzeit-Feedback während langwieriger Vorgänge
+        - SystemFilter-Spalte in allen Rastern für Sichtbarkeit angezeigt
+        - Automatisches Vorausfüllen von Pfaden aus gespeicherten Systemeinstellungen
         - Größenveränderbare und neu anordbare Datengitter-Spalten
         - Automatische Synchronisierung von Repository-Listenpfaden über Registerkarten hinweg
         - Logo-Anzeige im Header
         - Umfassende Lokalisierung (Englisch, Spanisch, Französisch, Deutsch)
+
+        Funktionen der Einstellungen-Registerkarte:
+        - Repository-Listenpfad und lokalen Entwicklungsordner konfigurieren
+        - Automatische Synchronisierung mit konfigurierbarem Intervall aktivieren/deaktivieren
+        - Windows-Geplante-Aufgaben für Synchronisierung registrieren/deregistrieren
+        - Status anzeigen: Computername, Aufgabenstatus, letzte Synchronisierung und Ergebnis
+        - Schnellsynchronisierung-Schaltfläche für sofortige Synchronisierung
+        - Einstellungen speichern und Auf Standardwerte zurücksetzen
 
         Parameter:
         - RootPath: Optionaler Pfad zum Vorabfüllen der Registerkarte Entdecken
@@ -86,6 +102,7 @@ KERNFUNKTIONEN
         - Interaktive Repository-Entdeckung und -Verwaltung
         - Schnelle Export-/Importvorgänge ohne Befehlszeilensyntax
         - Visuelle Überprüfung von Repository-Sammlungen
+        - Konfigurieren und Überwachen automatisierter Synchronisierungsvorgänge
         - Benutzer, die grafische Oberflächen gegenüber PowerShell-Befehlen bevorzugen
 
     Repository-Entdeckung
@@ -161,6 +178,25 @@ KERNFUNKTIONEN
         Konvertiert CSV- und XML-Dateien automatisch in JSON für Gist-Kompatibilität.
         Erfordert ein GitHub Personal Access Token mit gist-Berechtigung.
 
+    Filter-Verwaltung
+    -----------------
+    Set-DevDirectoryFilter
+        Setzt oder löscht die SystemFilter-Eigenschaft auf Repository-Objekten. Dies
+        ermöglicht eine pro-Repository-Filterung während Restore-DevDirectory- und
+        Sync-DevDirectoryList-Operationen basierend auf Computername-Musterabgleich.
+
+        Parameter:
+        - InputObject: Zu modifizierende Repository-Objekte (unterstützt Pipeline-Eingabe)
+        - SystemFilter: Muster zum Abgleich mit $env:COMPUTERNAME (z.B. 'DEV-*', '!SERVER-*')
+        - Clear: Entfernt den SystemFilter (setzt auf $null, bedeutet "alle abgleichen")
+        - PassThru: Gibt die modifizierten Repository-Objekte zurück
+
+        Muster-Syntax:
+        - Wildcards: 'DEV-*' gleicht jeden Computer ab, der mit 'DEV-' beginnt
+        - Ausschluss: '!SERVER-*' schließt Computer aus, die mit 'SERVER-' beginnen
+        - Mehrere Muster: 'DEV-*,LAPTOP-*' gleicht eines der Muster ab
+        - Leer/null: Gleicht alle Systeme ab (keine Filterung)
+
 DATEIFORMAT-UNTERSTÜTZUNG
     DevDirManager unterstützt drei Dateiformate für Repository-Inventare:
 
@@ -205,14 +241,21 @@ BENUTZERDEFINIERTE TYPEN
         - UserName [string]: Repository-lokaler git user.name (aus .git/config)
         - UserEmail [string]: Repository-lokaler git user.email (aus .git/config)
         - StatusDate [datetime]: Datum des jüngsten Commits oder der Repository-Aktivität
+        - IsRemoteAccessible [bool]: Ob die Remote-URL zugänglich ist ($null wenn übersprungen)
+        - SystemFilter [string]: Pro-Repository-Filtermuster für Computername-Abgleich
 
         Benutzerdefinierte Formatansicht zeigt: RelativePath, RemoteName, RemoteUrl,
-        UserName, UserEmail, StatusDate
+        IsRemoteAccessible, SystemFilter, UserName, UserEmail, StatusDate
 
         Hinweis: UserName und UserEmail werden ausschließlich aus der lokalen .git/config-
         Datei des Repositorys extrahiert. Globale und System-Git-Konfigurationswerte werden
         absichtlich ignoriert, um eine genaue repository-spezifische Identitätsverfolgung
         zu gewährleisten.
+
+        SystemFilter-Muster: Wenn gesetzt, wird das Repository nur während
+        Restore-DevDirectory oder Sync-DevDirectoryList einbezogen, wenn das
+        Muster mit $env:COMPUTERNAME übereinstimmt. Unterstützt Wildcards und
+        Ausschlussmuster.
 
     DevDirManager.CloneResult
         Repräsentiert das Ergebnis eines Repository-Klonvorgangs. Enthält:
@@ -320,6 +363,32 @@ BEISPIELE
         Klont Repositories nach D:\Projects. Wenn die Repository-Metadaten UserName- und
         UserEmail-Eigenschaften enthalten, werden diese automatisch in jedem geklonten
         Repository mit 'git config --local user.name' und 'git config --local user.email' konfiguriert.
+
+    Beispiel 16: Systemfilter auf Repositories setzen
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -SystemFilter 'DEV-*' -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Lädt Repositories aus einer JSON-Datei, setzt einen Filter, sodass sie nur auf
+        Computern synchronisiert werden, deren Namen mit 'DEV-' beginnen, und speichert
+        die aktualisierte Liste zurück in die Datei.
+
+    Beispiel 17: Verschiedene Filter für bestimmte Repositories setzen
+        PS C:\> $repos = Import-DevDirectoryList -Path C:\Temp\repos.json
+        PS C:\> $repos | Where-Object RelativePath -like 'Work*' | Set-DevDirectoryFilter -SystemFilter 'WORK-PC'
+        PS C:\> $repos | Where-Object RelativePath -like 'Personal*' | Set-DevDirectoryFilter -SystemFilter 'HOME-*'
+        PS C:\> $repos | Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Weist verschiedenen Repository-Gruppen basierend auf ihren Pfaden unterschiedliche
+        SystemFilter-Muster zu, was eine feingranulare Kontrolle darüber ermöglicht,
+        welche Repos wo synchronisiert werden.
+
+    Beispiel 18: Systemfilter von allen Repositories entfernen
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -Clear -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Entfernt den SystemFilter von allen Repositories, sodass sie auf allen Systemen synchronisiert werden.
 
 WORKFLOW-MUSTER
     Gängige DevDirManager-Workflows:
@@ -495,6 +564,7 @@ SIEHE AUCH
     Import-DevDirectoryList
     Restore-DevDirectory
     Sync-DevDirectoryList
+    Set-DevDirectoryFilter
     Publish-DevDirectoryList
     about_PSFramework_Configuration
     Get-PSFConfig
