@@ -68,12 +68,28 @@ FUNCIONES PRINCIPALES
         panel presenta:
 
         - IU con reconocimiento de tema (modo claro/oscuro automático)
-        - Interfaz con pestañas con operaciones de Explorar & Exportar, Importar & Restaurar y Sincronizar
+        - Interfaz con pestañas con cuatro áreas principales:
+          * Explorar & Exportar: Escanear directorios y exportar listas de repositorios
+          * Importar & Restaurar: Cargar listas y clonar repositorios
+          * Sincronizar: Sincronizar directorios con listas de repositorios
+          * Configuración: Configurar ajustes del sistema y automatización
+        - Diseño profesional con alineación consistente de controles
+        - Controles agrupados lógicamente sobre cuadrículas para flujo intuitivo
         - Retroalimentación visual en tiempo real durante operaciones de larga duración
+        - Columna SystemFilter mostrada en todas las cuadrículas para visibilidad
+        - Pre-llenado automático de rutas desde configuración del sistema guardada
         - Columnas de cuadrícula de datos redimensionables y reordenables
         - Sincronización automática de rutas de lista de repositorios entre pestañas
         - Visualización de logotipo en encabezado
         - Localización completa (inglés, español, francés, alemán)
+
+        Características de la pestaña Configuración:
+        - Configurar ruta de lista de repositorios y carpeta de desarrollo local
+        - Activar/desactivar sincronización automática con intervalo configurable
+        - Registrar/desregistrar tareas programadas de Windows para sincronización
+        - Ver estado: nombre del equipo, estado de tarea, última sincronización y resultado
+        - Botón Sincronización Rápida para sincronización inmediata
+        - Botones Guardar Configuración y Restablecer Valores Predeterminados
 
         Parámetros:
         - RootPath: Ruta opcional para rellenar previamente la pestaña Descubrir
@@ -87,6 +103,7 @@ FUNCIONES PRINCIPALES
         - Descubrimiento y gestión interactiva de repositorios
         - Operaciones rápidas de exportación/importación sin sintaxis de línea de comandos
         - Verificación visual de colecciones de repositorios
+        - Configurar y monitorear operaciones de sincronización automatizadas
         - Usuarios que prefieren interfaces gráficas sobre comandos de PowerShell
 
     Descubrimiento de Repositorios

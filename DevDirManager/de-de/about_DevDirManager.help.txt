@@ -67,12 +67,28 @@ KERNFUNKTIONEN
         Dashboard bietet:
 
         - Themen-bewusste Benutzeroberfläche (automatischer Hell-/Dunkelmodus)
-        - Registerkarten-Oberfläche mit Entdecken & Exportieren-, Importieren & Wiederherstellen- und Sync-Vorgängen
+        - Registerkarten-Oberfläche mit vier Hauptbereichen:
+          * Entdecken & Exportieren: Verzeichnisse scannen und Repository-Listen exportieren
+          * Importieren & Wiederherstellen: Listen laden und Repositories klonen
+          * Synchronisieren: Verzeichnisse mit Repository-Listen synchronisieren
+          * Einstellungen: Systemeinstellungen und Automatisierung konfigurieren
+        - Professionelles Layout mit konsistenter Steuerungsausrichtung
+        - Steuerelemente logisch über Datenrastern gruppiert für intuitiven Workflow
         - Visuelles Echtzeit-Feedback während langwieriger Vorgänge
+        - SystemFilter-Spalte in allen Rastern für Sichtbarkeit angezeigt
+        - Automatisches Vorausfüllen von Pfaden aus gespeicherten Systemeinstellungen
         - Größenveränderbare und neu anordbare Datengitter-Spalten
         - Automatische Synchronisierung von Repository-Listenpfaden über Registerkarten hinweg
         - Logo-Anzeige im Header
         - Umfassende Lokalisierung (Englisch, Spanisch, Französisch, Deutsch)
+
+        Funktionen der Einstellungen-Registerkarte:
+        - Repository-Listenpfad und lokalen Entwicklungsordner konfigurieren
+        - Automatische Synchronisierung mit konfigurierbarem Intervall aktivieren/deaktivieren
+        - Windows-Geplante-Aufgaben für Synchronisierung registrieren/deregistrieren
+        - Status anzeigen: Computername, Aufgabenstatus, letzte Synchronisierung und Ergebnis
+        - Schnellsynchronisierung-Schaltfläche für sofortige Synchronisierung
+        - Einstellungen speichern und Auf Standardwerte zurücksetzen
 
         Parameter:
         - RootPath: Optionaler Pfad zum Vorabfüllen der Registerkarte Entdecken
@@ -86,6 +102,7 @@ KERNFUNKTIONEN
         - Interaktive Repository-Entdeckung und -Verwaltung
         - Schnelle Export-/Importvorgänge ohne Befehlszeilensyntax
         - Visuelle Überprüfung von Repository-Sammlungen
+        - Konfigurieren und Überwachen automatisierter Synchronisierungsvorgänge
         - Benutzer, die grafische Oberflächen gegenüber PowerShell-Befehlen bevorzugen
 
     Repository-Entdeckung

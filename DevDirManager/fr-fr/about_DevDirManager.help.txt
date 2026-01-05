@@ -68,25 +68,42 @@ FONCTIONS PRINCIPALES
         tableau de bord présente :
 
         - Interface utilisateur consciente du thème (mode clair/sombre automatique)
-        - Interface à onglets avec opérations Découvrir & Exporter, Importer & Restaurer et Synchroniser
+        - Interface à onglets avec quatre zones principales :
+          * Découvrir & Exporter : Scanner les répertoires et exporter les listes de dépôts
+          * Importer & Restaurer : Charger les listes et cloner les dépôts
+          * Synchroniser : Synchroniser les répertoires avec les listes de dépôts
+          * Paramètres : Configurer les paramètres système et l'automatisation
+        - Disposition professionnelle avec alignement cohérent des contrôles
+        - Contrôles regroupés logiquement au-dessus des grilles pour un flux intuitif
         - Retour visuel en temps réel pendant les opérations de longue durée
+        - Colonne SystemFilter affichée dans toutes les grilles pour la visibilité
+        - Préremplissage automatique des chemins à partir des paramètres système enregistrés
         - Colonnes de grille de données redimensionnables et réorganisables
         - Synchronisation automatique des chemins de liste de dépôts entre les onglets
-        - Affichage du logo d''en-tête
+        - Affichage du logo dans l'en-tête
         - Localisation complète (anglais, espagnol, français, allemand)
 
+        Fonctionnalités de l'onglet Paramètres :
+        - Configurer le chemin de la liste de dépôts et le dossier de développement local
+        - Activer/désactiver la synchronisation automatique avec intervalle configurable
+        - Enregistrer/désenregistrer les tâches planifiées Windows pour la synchronisation
+        - Afficher l'état : nom de l'ordinateur, état de la tâche, dernière synchro et résultat
+        - Bouton Synchronisation Rapide pour synchronisation immédiate
+        - Boutons Enregistrer les Paramètres et Réinitialiser aux Valeurs par Défaut
+
         Paramètres :
-        - RootPath : Chemin optionnel pour préremplir l''onglet Découvrir
-        - ShowWindow : Contrôle l''affichage de la fenêtre (par défaut : $true)
-        - PassThru : Retourne les objets fenêtre, contrôles et état pour l''automatisation
+        - RootPath : Chemin optionnel pour préremplir l'onglet Découvrir
+        - ShowWindow : Contrôle l'affichage de la fenêtre (par défaut : $true)
+        - PassThru : Retourne les objets fenêtre, contrôles et état pour l'automatisation
 
         Exemple :
         PS C:\> Show-DevDirectoryDashboard -RootPath C:\Projects
 
         Le tableau de bord est idéal pour :
         - Découverte et gestion interactives de dépôts
-        - Opérations d''exportation/importation rapides sans syntaxe de ligne de commande
+        - Opérations d'exportation/importation rapides sans syntaxe de ligne de commande
         - Vérification visuelle des collections de dépôts
+        - Configuration et surveillance des opérations de synchronisation automatisées
         - Utilisateurs préférant les interfaces graphiques aux commandes PowerShell
 
     Découverte de Dépôts

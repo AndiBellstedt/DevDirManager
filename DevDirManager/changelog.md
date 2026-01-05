@@ -3,7 +3,7 @@
 ## [1.5.1] - 2026-01-05
 
 ### Overview
-This release adds per-repository system filtering. You can now assign a `SystemFilter` pattern directly to individual repositories, allowing fine-grained control over which repositories are cloned or synchronized on specific computers. This complements the existing system-level filter configured via `Set-DevDirectorySetting`. No breaking changes.
+This release adds per-repository system filtering, a new Settings tab in the dashboard, and pre-fill functionality from saved settings. You can now assign a `SystemFilter` pattern directly to individual repositories, manage system configuration through the UI, and enjoy automatic path pre-fill across all tabs. No breaking changes.
 
 ### Added
 - **Per-Repository System Filter**
@@ -14,6 +14,26 @@ This release adds per-repository system filtering. You can now assign a `SystemF
   - Empty or null `SystemFilter` means "match all systems" (no filtering)
   - Skipped repositories are logged with verbose messages for observability
 
+- **Settings Tab in Dashboard**
+  - New fourth tab in the dashboard for managing system configuration
+  - Configure repository list path and local development folder directly in the UI
+  - Enable/disable automatic sync and set sync interval
+  - Register/unregister Windows scheduled tasks with one click
+  - View sync status: computer name, task registration status, last sync time and result
+  - Quick Sync button to run synchronization using saved settings
+  - Save Settings and Reset to Defaults buttons
+  - Compact horizontal design fits within default window size without scrollbar
+
+- **Pre-fill from Settings**
+  - Discover tab: Path pre-filled from LocalDevDirectory setting
+  - Export tab: Output file path pre-filled from RepositoryListPath setting
+  - Import tab: Repository list path and restore destination pre-filled from settings
+  - Sync tab: Directory and list path pre-filled from settings
+
+- **SystemFilter Column in Dashboard**
+  - All data grids (Discover, Import, Sync) now display the SystemFilter column
+  - Shows per-repository filter patterns for visibility
+
 ### Changed
 - **Get-DevDirectory**: Output objects now include the `SystemFilter` property (initialized to `$null`)
 - **Format views**: Table and list views now display the `SystemFilter` column
@@ -21,9 +41,10 @@ This release adds per-repository system filtering. You can now assign a `SystemF
 ### Technical Details
 - Uses the existing `Test-DevDirectorySystemFilter` internal function for pattern evaluation
 - Filter patterns are preserved during sync merge operations
+- Settings loaded on-demand when Settings tab is selected
 - Localization support for English, German, French, and Spanish
 
-## [1.5.0] - 2025-06-23
+## [1.5.0] - 2025-12-29
 
 ### Overview
 This release introduces system-level configuration management and automated sync capabilities. You can now configure centralized repository lists, filter repositories based on computer names using pattern matching, and schedule automatic synchronization via Windows Task Scheduler. No breaking changes.
