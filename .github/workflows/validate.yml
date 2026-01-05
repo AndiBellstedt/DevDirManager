@@ -4,6 +4,9 @@
             - main
     pull_request:
 
+permissions:
+    contents: read
+
 jobs:
     validate:
         if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' }}
