@@ -3,7 +3,7 @@
     RootModule           = 'DevDirManager.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '1.5.0'
+    ModuleVersion        = '1.5.1'
 
     # ID used to uniquely identify this module
     GUID                 = '6d7f0d28-926a-49ba-8a4f-d648b6ab6dff'
@@ -51,6 +51,7 @@
         'Publish-DevDirectoryList'
         'Register-DevDirectoryScheduledSync'
         'Restore-DevDirectory'
+        'Set-DevDirectoryFilter'
         'Set-DevDirectorySetting'
         'Show-DevDirectoryDashboard'
         'Sync-DevDirectoryList'

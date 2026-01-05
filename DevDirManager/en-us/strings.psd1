@@ -69,6 +69,7 @@
     'RestoreDevDirectory.CloneFailed'                                    = "git clone for '{0}' failed with exit code {1}."
     'RestoreDevDirectory.ConfigFailed'                                   = "Failed to set git config {0} to '{1}' for repository at {2}. Exit code: {3}"
     'RestoreDevDirectory.InaccessibleRemoteSkipped'                      = "Skipping repository '{0}' with inaccessible remote: {1}"
+    'RestoreDevDirectory.SystemFilterExcluded'                           = "Skipping repository '{0}' due to SystemFilter '{1}' not matching computer '{2}'"
     'RestoreDevDirectory.Complete'                                       = "Restore operation completed. Processed {0} repositories"
 
     # Sync-DevDirectoryList
@@ -88,7 +89,15 @@
     'SyncDevDirectoryList.MissingRemoteUrl'                              = 'Repository list entry {0} lacks a RemoteUrl and cannot be cloned.'
     'SyncDevDirectoryList.MissingRootDirectory'                          = 'Repository root directory {0} does not exist; skipping clone operations.'
     'SyncDevDirectoryList.InaccessibleRemoteSkipped'                     = "Skipping repository '{0}' with inaccessible remote: {1}"
+    'SyncDevDirectoryList.SystemFilterExcluded'                          = "Skipping repository '{0}' due to SystemFilter '{1}' not matching computer '{2}'"
     'SyncDevDirectoryList.Complete'                                      = "Synchronization completed. Final repository count: {0}"
+
+    # Set-DevDirectoryFilter
+    'SetDevDirectoryFilter.Start'                                        = "Starting Set-DevDirectoryFilter with ParameterSetName: '{0}', SystemFilter: '{1}', Clear: {2}"
+    'SetDevDirectoryFilter.ActionSet'                                    = "Set SystemFilter on '{0}' to '{1}'"
+    'SetDevDirectoryFilter.Updating'                                     = "Updating SystemFilter for '{0}' from '{1}' to '{2}'"
+    'SetDevDirectoryFilter.Updated'                                      = "SystemFilter updated for '{0}' to '{1}'"
+    'SetDevDirectoryFilter.Complete'                                     = "Set-DevDirectoryFilter completed"
 
     # Publish-DevDirectoryList
     'PublishDevDirectoryList.Start'                                      = "Starting Publish-DevDirectoryList with ParameterSet: '{0}', Public: {1}, GistId: '{2}'"

@@ -159,6 +159,25 @@ CORE FUNCTIONS
         Automatically converts CSV and XML files to JSON for Gist compatibility.
         Requires a GitHub Personal Access Token with gist scope.
 
+    Filter Management
+    -----------------
+    Set-DevDirectoryFilter
+        Sets or clears the SystemFilter property on repository objects. This allows
+        per-repository filtering during Restore-DevDirectory and Sync-DevDirectoryList
+        operations based on computer name pattern matching.
+
+        Parameters:
+        - InputObject: Repository objects to modify (supports pipeline input)
+        - SystemFilter: Pattern to match against $env:COMPUTERNAME (e.g., 'DEV-*', '!SERVER-*')
+        - Clear: Removes the SystemFilter (sets to $null, meaning "match all")
+        - PassThru: Returns the modified repository objects
+
+        Pattern syntax:
+        - Wildcards: 'DEV-*' matches any computer starting with 'DEV-'
+        - Exclusion: '!SERVER-*' excludes computers starting with 'SERVER-'
+        - Multiple patterns: 'DEV-*,LAPTOP-*' matches either pattern
+        - Empty/null: Matches all systems (no filtering)
+
 FILE FORMAT SUPPORT
     DevDirManager supports three file formats for repository inventories:
 
@@ -203,13 +222,19 @@ CUSTOM TYPES
         - UserName [string]: Repository-local git user.name (from .git/config)
         - UserEmail [string]: Repository-local git user.email (from .git/config)
         - StatusDate [datetime]: Most recent commit or repository activity date
+        - IsRemoteAccessible [bool]: Whether the remote URL is accessible ($null if skipped)
+        - SystemFilter [string]: Per-repo filter pattern for computer name matching
 
-        Custom format view displays: RelativePath, RemoteName, RemoteUrl, UserName,
-        UserEmail, StatusDate
+        Custom format view displays: RelativePath, RemoteName, RemoteUrl,
+        IsRemoteAccessible, SystemFilter, UserName, UserEmail, StatusDate
 
         Note: UserName and UserEmail are extracted exclusively from the repository's
         local .git/config file. Global and system git configuration values are
         intentionally ignored to ensure accurate per-repository identity tracking.
+
+        SystemFilter Pattern: When set, the repository is only included during
+        Restore-DevDirectory or Sync-DevDirectoryList if the pattern matches
+        $env:COMPUTERNAME. Supports wildcards and exclusion patterns.
 
     DevDirManager.CloneResult
         Represents the result of a repository clone operation. Contains:
@@ -317,6 +342,30 @@ EXAMPLES
         Clones repositories to D:\Projects. If the repository metadata includes UserName
         and UserEmail properties, these are automatically configured in each cloned
         repository using 'git config --local user.name' and 'git config --local user.email'.
+
+    Example 16: Set a system filter on repositories
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -SystemFilter 'DEV-*' -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Loads repositories from a JSON file, sets a filter so they only sync on computers
+        whose names start with 'DEV-', and saves the updated list back to the file.
+
+    Example 17: Set different filters for specific repositories
+        PS C:\> $repos = Import-DevDirectoryList -Path C:\Temp\repos.json
+        PS C:\> $repos | Where-Object RelativePath -like 'Work*' | Set-DevDirectoryFilter -SystemFilter 'WORK-PC'
+        PS C:\> $repos | Where-Object RelativePath -like 'Personal*' | Set-DevDirectoryFilter -SystemFilter 'HOME-*'
+        PS C:\> $repos | Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Assigns different SystemFilter patterns to different groups of repositories
+        based on their paths, allowing fine-grained control over which repos sync where.
+
+    Example 18: Clear system filters from all repositories
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -Clear -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Removes SystemFilter from all repositories, causing them to sync on all systems.
 
 WORKFLOW PATTERNS
     Common DevDirManager workflows:
@@ -490,6 +539,7 @@ SEE ALSO
     Import-DevDirectoryList
     Restore-DevDirectory
     Sync-DevDirectoryList
+    Set-DevDirectoryFilter
     Publish-DevDirectoryList
     about_PSFramework_Configuration
     Get-PSFConfig

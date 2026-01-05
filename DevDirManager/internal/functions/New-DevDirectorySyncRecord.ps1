@@ -30,6 +30,11 @@
     .PARAMETER StatusDate
         The most recent commit or modification date. May be null if not available.
 
+    .PARAMETER SystemFilter
+        The per-repository computer name filter pattern (e.g., "DEV-*", "!SERVER-*").
+        Used to determine which computers should restore or sync this repository.
+        May be null or empty to indicate no filtering (sync to all systems).
+
     .OUTPUTS
         [pscustomobject] A repository sync record with properties:
             - RootPath: the base directory path
@@ -40,6 +45,7 @@
             - UserName: the repository-local git user.name
             - UserEmail: the repository-local git user.email
             - StatusDate: the most recent activity date
+            - SystemFilter: the computer name filter pattern
 
     .EXAMPLE
         PS C:\> New-DevDirectorySyncRecord -RelativePath "MyProject" -RemoteUrl "https://github.com/user/repo.git" -RemoteName "origin" -RootDirectory "C:\Repos"
@@ -48,8 +54,8 @@
 
     .NOTES
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-09
-        Version   : 1.1.1
+        Date      : 2026-01-05
+        Version   : 1.1.2
         Keywords  : Internal, Helper, Sync
 
     #>
@@ -90,7 +96,13 @@
         [Parameter()]
         [AllowNull()]
         [datetime]
-        $StatusDate
+        $StatusDate,
+
+        [Parameter()]
+        [AllowNull()]
+        [AllowEmptyString()]
+        [string]
+        $SystemFilter
     )
 
     Write-PSFMessage -Level Debug -Message "Creating sync record for RelativePath: '$($RelativePath)', RootDirectory: '$($RootDirectory)'" -Tag "NewDevDirectorySyncRecord", "Start"
@@ -120,6 +132,7 @@
         UserName     = $UserName             # Repository-local git user.name
         UserEmail    = $UserEmail            # Repository-local git user.email
         StatusDate   = $StatusDate           # Most recent commit or modification date
+        SystemFilter = $SystemFilter         # Per-repo computer name filter pattern
     }
 
     Write-PSFMessage -Level Verbose -Message "Sync record created for '$($effectiveRelativePath)' (FullPath: '$($fullPath)')" -Tag "NewDevDirectorySyncRecord", "Result"

@@ -161,6 +161,25 @@ FONCTIONS PRINCIPALES
         Convertit automatiquement les fichiers CSV et XML en JSON pour la compatibilité
         Gist. Nécessite un Token d''Accès Personnel GitHub avec portée gist.
 
+    Gestion des Filtres
+    -------------------
+    Set-DevDirectoryFilter
+        Définit ou efface la propriété SystemFilter sur les objets de dépôt. Cela
+        permet un filtrage par dépôt lors des opérations Restore-DevDirectory et
+        Sync-DevDirectoryList basé sur la correspondance de motifs de nom d''ordinateur.
+
+        Paramètres :
+        - InputObject : Objets de dépôt à modifier (supporte l''entrée pipeline)
+        - SystemFilter : Motif à comparer avec $env:COMPUTERNAME (ex. ''DEV-*'', ''!SERVER-*'')
+        - Clear : Supprime le SystemFilter (définit à $null, signifie "correspondre à tous")
+        - PassThru : Retourne les objets de dépôt modifiés
+
+        Syntaxe des motifs :
+        - Caractères génériques : ''DEV-*'' correspond à tout ordinateur commençant par ''DEV-''
+        - Exclusion : ''!SERVER-*'' exclut les ordinateurs commençant par ''SERVER-''
+        - Motifs multiples : ''DEV-*,LAPTOP-*'' correspond à l''un des motifs
+        - Vide/null : Correspond à tous les systèmes (pas de filtrage)
+
 SUPPORT DE FORMAT DE FICHIER
     DevDirManager prend en charge trois formats de fichier pour les inventaires de dépôts :
 
@@ -205,14 +224,20 @@ TYPES PERSONNALISÉS
         - UserName [string] : git user.name local du dépôt (depuis .git/config)
         - UserEmail [string] : git user.email local du dépôt (depuis .git/config)
         - StatusDate [datetime] : Date du commit le plus récent ou date d''activité du dépôt
+        - IsRemoteAccessible [bool] : Si l''URL distante est accessible ($null si ignoré)
+        - SystemFilter [string] : Motif de filtre par dépôt pour correspondance de nom d''ordinateur
 
         La vue de format personnalisée affiche : RelativePath, RemoteName, RemoteUrl,
-        UserName, UserEmail, StatusDate
+        IsRemoteAccessible, SystemFilter, UserName, UserEmail, StatusDate
 
         Note : UserName et UserEmail sont extraits exclusivement du fichier local
         .git/config du dépôt. Les valeurs de configuration git globale et système
         sont intentionnellement ignorées pour garantir un suivi précis d''identité
         par dépôt.
+
+        Motif SystemFilter : Lorsque défini, le dépôt est inclus uniquement lors de
+        Restore-DevDirectory ou Sync-DevDirectoryList si le motif correspond à
+        $env:COMPUTERNAME. Supporte les caractères génériques et motifs d''exclusion.
 
     DevDirManager.CloneResult
         Représente le résultat d''une opération de clonage de dépôt. Contient :
@@ -321,6 +346,32 @@ EXEMPLES
         propriétés UserName et UserEmail, celles-ci sont automatiquement configurées
         dans chaque dépôt cloné en utilisant ''git config --local user.name'' et
         ''git config --local user.email''.
+
+    Exemple 16 : Définir un filtre système sur les dépôts
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -SystemFilter ''DEV-*'' -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Charge les dépôts depuis un fichier JSON, définit un filtre pour qu''ils ne se
+        synchronisent que sur les ordinateurs dont les noms commencent par ''DEV-'', et
+        sauvegarde la liste mise à jour dans le fichier.
+
+    Exemple 17 : Définir différents filtres pour des dépôts spécifiques
+        PS C:\> $repos = Import-DevDirectoryList -Path C:\Temp\repos.json
+        PS C:\> $repos | Where-Object RelativePath -like ''Work*'' | Set-DevDirectoryFilter -SystemFilter ''WORK-PC''
+        PS C:\> $repos | Where-Object RelativePath -like ''Personal*'' | Set-DevDirectoryFilter -SystemFilter ''HOME-*''
+        PS C:\> $repos | Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Attribue différents motifs SystemFilter à différents groupes de dépôts
+        en fonction de leurs chemins, permettant un contrôle fin sur les dépôts
+        qui se synchronisent où.
+
+    Exemple 18 : Effacer les filtres système de tous les dépôts
+        PS C:\> Import-DevDirectoryList -Path C:\Temp\repos.json |
+                Set-DevDirectoryFilter -Clear -PassThru |
+                Export-DevDirectoryList -Path C:\Temp\repos.json
+
+        Supprime le SystemFilter de tous les dépôts, les faisant se synchroniser sur tous les systèmes.
 
 MODÈLES DE FLUX DE TRAVAIL
     Flux de travail communs de DevDirManager :
@@ -495,6 +546,7 @@ VOIR AUSSI
     Import-DevDirectoryList
     Restore-DevDirectory
     Sync-DevDirectoryList
+    Set-DevDirectoryFilter
     Publish-DevDirectoryList
     about_PSFramework_Configuration
     Get-PSFConfig

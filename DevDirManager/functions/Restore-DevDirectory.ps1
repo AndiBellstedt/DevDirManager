@@ -70,9 +70,9 @@
         useful for validating the restoration plan.
 
     .NOTES
-        Version   : 1.4.3
+        Version   : 1.4.4
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-09
+        Date      : 2026-01-05
         Keywords  : Git, Restore, Clone
 
     .LINK
@@ -183,6 +183,15 @@
             # Skip repositories with inaccessible remotes (if IsRemoteAccessible property is set to false)
             if ($repository.PSObject.Properties.Match('IsRemoteAccessible') -and $repository.IsRemoteAccessible -eq $false) {
                 Write-PSFMessage -Level Warning -String 'RestoreDevDirectory.InaccessibleRemoteSkipped' -StringValues @($relativePath, $remoteUrl)
+                $currentIndex++
+                continue
+            }
+
+            # Skip repositories whose SystemFilter does not match the current computer name.
+            # Empty/null SystemFilter means "match all systems" (no filtering).
+            $systemFilterValue = if ($repository.PSObject.Properties.Match('SystemFilter')) { $repository.SystemFilter } else { $null }
+            if (-not (Test-DevDirectorySystemFilter -SystemFilter $systemFilterValue)) {
+                Write-PSFMessage -Level Verbose -String 'RestoreDevDirectory.SystemFilterExcluded' -StringValues @($relativePath, $systemFilterValue, $env:COMPUTERNAME) -Tag "RestoreDevDirectory", "SystemFilter"
                 $currentIndex++
                 continue
             }

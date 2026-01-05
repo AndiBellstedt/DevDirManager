@@ -75,9 +75,9 @@
         list, useful for forcing a clean state.
 
     .NOTES
-        Version   : 1.4.2
+        Version   : 1.4.3
         Author    : Andi Bellstedt, Copilot
-        Date      : 2025-11-09
+        Date      : 2026-01-05
         Keywords  : Git, Sync, Repository
 
     .LINK
@@ -211,6 +211,7 @@
             $userEmail = if ($entry.PSObject.Properties.Match("UserEmail")) { [string]$entry.UserEmail } else { $null }
             $statusDate = if ($entry.PSObject.Properties.Match("StatusDate")) { $entry.StatusDate } else { $null }
             $isRemoteAccessible = if ($entry.PSObject.Properties.Match("IsRemoteAccessible")) { $entry.IsRemoteAccessible } else { $null }
+            $systemFilter = if ($entry.PSObject.Properties.Match("SystemFilter")) { $entry.SystemFilter } else { $null }
 
             # Store a lightweight info object for later comparison with local repositories
             $info = [pscustomobject]@{
@@ -223,6 +224,7 @@
                 UserEmail          = $userEmail
                 StatusDate         = $statusDate
                 IsRemoteAccessible = $isRemoteAccessible
+                SystemFilter       = $systemFilter
             }
 
             $fileEntriesInfo[$relative] = $info
@@ -251,6 +253,13 @@
                 continue
             }
 
+            # Preserve SystemFilter from file entry if it exists (file entry is authoritative for filter)
+            $localSystemFilter = if ($fileEntriesInfo.ContainsKey($relative) -and $fileEntriesInfo[$relative].SystemFilter) {
+                $fileEntriesInfo[$relative].SystemFilter
+            } else {
+                $null
+            }
+
             # Create a sync record using the internal helper function
             $record = New-DevDirectorySyncRecord `
                 -RelativePath $relative `
@@ -259,7 +268,8 @@
                 -RootDirectory $trimmedDirectory `
                 -UserName ([string]$entry.UserName) `
                 -UserEmail ([string]$entry.UserEmail) `
-                -StatusDate $entry.StatusDate
+                -StatusDate $entry.StatusDate `
+                -SystemFilter $localSystemFilter
 
             # Add to both the local map (for later comparison) and the final map
             $localMap[$relative] = $record
@@ -328,24 +338,29 @@
                     -RootDirectory $trimmedDirectory `
                     -UserName $info.UserName `
                     -UserEmail $info.UserEmail `
-                    -StatusDate $info.StatusDate
+                    -StatusDate $info.StatusDate `
+                    -SystemFilter $info.SystemFilter
                 $finalMap[$relative] = $record
                 $changesMade = $true
 
-                # Queue for cloning if it has a valid remote URL
+                # Queue for cloning if it has a valid remote URL and passes SystemFilter check
                 if ([string]::IsNullOrWhiteSpace($remoteUrl)) {
                     Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.MissingRemoteUrl' -StringValues @($relative)
                 } elseif ($info.PSObject.Properties.Match('IsRemoteAccessible') -and $info.IsRemoteAccessible -eq $false) {
                     # Skip repositories with inaccessible remotes
                     Write-PSFMessage -Level Warning -String 'SyncDevDirectoryList.InaccessibleRemoteSkipped' -StringValues @($relative, $remoteUrl)
+                } elseif (-not (Test-DevDirectorySystemFilter -SystemFilter $info.SystemFilter)) {
+                    # Skip repositories whose SystemFilter does not match the current computer name
+                    Write-PSFMessage -Level Verbose -String 'SyncDevDirectoryList.SystemFilterExcluded' -StringValues @($relative, $info.SystemFilter, $env:COMPUTERNAME) -Tag "SyncDevDirectoryList", "SystemFilter"
                 } else {
-                    # Include UserName and UserEmail in the clone object so Restore-DevDirectory can configure them
+                    # Include UserName, UserEmail, and SystemFilter in the clone object so Restore-DevDirectory can use them
                     $repositoriesToClone.Add([pscustomobject]@{
                             RelativePath       = $relative
                             RemoteUrl          = $remoteUrl
                             UserName           = $info.UserName
                             UserEmail          = $info.UserEmail
                             IsRemoteAccessible = $info.IsRemoteAccessible
+                            SystemFilter       = $info.SystemFilter
                         })
                 }
 

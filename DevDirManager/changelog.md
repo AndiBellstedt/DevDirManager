@@ -1,5 +1,28 @@
 ﻿# Changelog
 
+## [1.5.1] - 2026-01-05
+
+### Overview
+This release adds per-repository system filtering. You can now assign a `SystemFilter` pattern directly to individual repositories, allowing fine-grained control over which repositories are cloned or synchronized on specific computers. This complements the existing system-level filter configured via `Set-DevDirectorySetting`. No breaking changes.
+
+### Added
+- **Per-Repository System Filter**
+  - **Set-DevDirectoryFilter**: New cmdlet to set or clear `SystemFilter` patterns on repository objects
+  - Repository objects now include a `SystemFilter` property that can be stored in repository list files (CSV, JSON, XML)
+  - Restore-DevDirectory and Sync-DevDirectoryList now evaluate per-repo `SystemFilter` during operations
+  - Supports wildcards (`*`, `DEV-*`), exclusion patterns (`!SERVER-*`), and multiple patterns with comma separation
+  - Empty or null `SystemFilter` means "match all systems" (no filtering)
+  - Skipped repositories are logged with verbose messages for observability
+
+### Changed
+- **Get-DevDirectory**: Output objects now include the `SystemFilter` property (initialized to `$null`)
+- **Format views**: Table and list views now display the `SystemFilter` column
+
+### Technical Details
+- Uses the existing `Test-DevDirectorySystemFilter` internal function for pattern evaluation
+- Filter patterns are preserved during sync merge operations
+- Localization support for English, German, French, and Spanish
+
 ## [1.5.0] - 2025-06-23
 
 ### Overview
