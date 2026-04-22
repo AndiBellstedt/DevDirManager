@@ -114,14 +114,14 @@
 
     #region -- -- Name of the innter block
 
-    #regionend -- Name of the innter block
+    #endregion -- Name of the innter block
 
-    #regionend Name of the outer block
+    #endregion Name of the outer block
     ```
   - Even if there is no nesting of region block, the region block has to look like this in any way: (I want to have the name of the region block on the same indention for begin and end block)
   ```powershell
   #region -- Name of the block
-  #regionend Name of the block
+  #endregion Name of the block
   ```
 
 # Versioning
